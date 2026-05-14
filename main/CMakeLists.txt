@@ -4,11 +4,15 @@ idf_component_register(
         vehicle/vehicle_data.c
         simulator/sim_engine.c
         display/boot_screen.c
+        display/screen_ride.c
+        display/ui_manager.c
+        display/widgets/speedo_arc.c
     INCLUDE_DIRS
         .
         vehicle
         simulator
         display
+        display/widgets
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl
 )
 

@@ -5,6 +5,7 @@
 #include "freertos/task.h"
 
 #include "boot_screen.h"
+#include "ui_manager.h"
 #include "vehicle_data.h"
 #include "sim_engine.h"
 
@@ -27,6 +28,7 @@ void app_main(void)
 
     vehicle_data_init();
     sim_engine_start();
+    ui_manager_init();
 
     ESP_LOGI(TAG, "boot complete, simulator running");
     while (1) {
