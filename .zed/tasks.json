@@ -1,0 +1,32 @@
+[
+  {
+    "label": "ESP-IDF Build",
+    "command": ". /Users/stsepelin/.espressif/tools/activate_idf_v6.0.1.sh >/dev/null && python /Users/stsepelin/.espressif/v6.0.1/esp-idf/tools/idf.py build",
+    "use_new_terminal": false,
+    "reveal": "always"
+  },
+  {
+    "label": "ESP-IDF Flash + Monitor",
+    "command": ". /Users/stsepelin/.espressif/tools/activate_idf_v6.0.1.sh >/dev/null && python /Users/stsepelin/.espressif/v6.0.1/esp-idf/tools/idf.py -p /dev/cu.usbmodem* flash monitor",
+    "use_new_terminal": true,
+    "reveal": "always"
+  },
+  {
+    "label": "ESP-IDF Monitor",
+    "command": ". /Users/stsepelin/.espressif/tools/activate_idf_v6.0.1.sh >/dev/null && python /Users/stsepelin/.espressif/v6.0.1/esp-idf/tools/idf.py -p /dev/cu.usbmodem* monitor",
+    "use_new_terminal": true,
+    "reveal": "always"
+  },
+  {
+    "label": "ESP-IDF menuconfig",
+    "command": ". /Users/stsepelin/.espressif/tools/activate_idf_v6.0.1.sh >/dev/null && python /Users/stsepelin/.espressif/v6.0.1/esp-idf/tools/idf.py menuconfig",
+    "use_new_terminal": true,
+    "reveal": "always"
+  },
+  {
+    "label": "ESP-IDF Clean",
+    "command": ". /Users/stsepelin/.espressif/tools/activate_idf_v6.0.1.sh >/dev/null && python /Users/stsepelin/.espressif/v6.0.1/esp-idf/tools/idf.py fullclean",
+    "use_new_terminal": false,
+    "reveal": "always"
+  }
+]

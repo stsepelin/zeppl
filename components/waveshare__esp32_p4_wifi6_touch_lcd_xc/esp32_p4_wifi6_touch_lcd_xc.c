@@ -871,10 +871,13 @@ esp_err_t bsp_display_new_with_handles(const bsp_display_config_t *config, bsp_l
         .dpi_clk_src = MIPI_DSI_DPI_CLK_SRC_DEFAULT,
         .dpi_clock_freq_mhz = 80,
         .virtual_channel = 0,
+// IDF v6: pixel_format split into in/out_color_format (FourCC); use_dma2d flag removed.
 #if CONFIG_BSP_LCD_COLOR_FORMAT_RGB888
-        .pixel_format = LCD_COLOR_PIXEL_FORMAT_RGB888,
+        .in_color_format = LCD_COLOR_FMT_RGB888,
+        .out_color_format = LCD_COLOR_FMT_RGB888,
 #else
-        .pixel_format = LCD_COLOR_PIXEL_FORMAT_RGB565,
+        .in_color_format = LCD_COLOR_FMT_RGB565,
+        .out_color_format = LCD_COLOR_FMT_RGB565,
 #endif
         .num_fbs = 1,
         .video_timing = {
@@ -887,7 +890,6 @@ esp_err_t bsp_display_new_with_handles(const bsp_display_config_t *config, bsp_l
             .vsync_pulse_width = 4,
             .vsync_front_porch = 24,
         },
-        .flags.use_dma2d = true,
     };
     dpi_config.num_fbs = CONFIG_BSP_LCD_DPI_BUFFER_NUMS;
 
