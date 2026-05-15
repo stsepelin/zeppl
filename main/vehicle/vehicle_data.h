@@ -16,12 +16,19 @@ typedef struct {
     uint8_t  fuel_level;          // 0..6, matches J1850 encoding
     bool     turn_left;
     bool     turn_right;
+    bool     low_beam;
     bool     high_beam;
     bool     neutral;
     bool     oil_pressure_warning;
     bool     check_engine;
+    bool     abs_warning;
+    bool     battery_warning;
+    bool     immobiliser_warning;
     uint32_t odometer_m;
     uint32_t trip_m;
+    // Mock time-of-day driven by the sim until we have an RTC/SNTP source.
+    uint8_t  clock_hours;
+    uint8_t  clock_minutes;
 } vehicle_data_t;
 
 void vehicle_data_init(void);

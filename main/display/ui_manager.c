@@ -16,7 +16,7 @@ static void ui_update_task(void *arg)
         screen_ride_update(&d);
         bsp_display_unlock();
 
-        vTaskDelay(pdMS_TO_TICKS(33));   // ~30 FPS
+        vTaskDelay(pdMS_TO_TICKS(33));   // ~30 FPS; matches LVGL render budget
     }
 }
 
