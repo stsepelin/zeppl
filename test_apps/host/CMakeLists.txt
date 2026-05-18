@@ -57,6 +57,7 @@ add_library(vrod_widgets STATIC
     ${MAIN_DIR}/display/widgets/odometer_display.c
     ${MAIN_DIR}/display/widgets/trip_display.c
     ${MAIN_DIR}/display/widgets/warning_lights.c
+    ${MAIN_DIR}/display/widget_util.c
     external/lvgl_stub/lvgl_stub.c
 )
 target_include_directories(vrod_widgets PUBLIC

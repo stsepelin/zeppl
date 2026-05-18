@@ -13,7 +13,7 @@ typedef enum {
     // Virtual slot whose icon rotates between low-beam and high-beam every
     // few seconds. State follows whichever variant is currently displayed.
     LAMP_BEAM,
-    LAMP_COUNT_,
+    LAMP_COUNT,
 } lamp_id_t;
 
 typedef enum {

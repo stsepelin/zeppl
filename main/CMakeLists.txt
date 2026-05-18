@@ -9,6 +9,7 @@ idf_component_register(
         display/screen_ride.c
         display/ui_manager.c
         display/format.c
+        display/widget_util.c
         display/widgets/tach_arc.c
         display/widgets/smooth.c
         display/widgets/speed_display.c

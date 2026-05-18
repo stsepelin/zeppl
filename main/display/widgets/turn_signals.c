@@ -1,6 +1,7 @@
 #include "turn_signals.h"
 #include "lvgl.h"
 #include "theme.h"
+#include "widget_util.h"
 
 LV_FONT_DECLARE(mdi_96);
 
@@ -30,12 +31,7 @@ static lv_obj_t *make_arrow(lv_obj_t *parent, const char *icon, lv_align_t align
 
 lv_obj_t *turn_signals_create(lv_obj_t *parent)
 {
-    lv_obj_t *cont = lv_obj_create(parent);
-    lv_obj_set_size(cont, CONT_W, CONT_H);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(cont, 0, 0);
-    lv_obj_set_style_pad_all(cont, 0, 0);
-    lv_obj_remove_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t *cont = widget_container_create(parent, CONT_W, CONT_H);
 
     turn_data_t *td = lv_malloc(sizeof(turn_data_t));
     td->left  = make_arrow(cont, ICON_ARROW_LEFT_BOLD,  LV_ALIGN_LEFT_MID);

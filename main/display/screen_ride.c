@@ -87,17 +87,18 @@ void screen_ride_update(const vehicle_data_t *data)
     warning_lights_update(s_warn_r, data);
 
     // Rotating info slot: cycle clock → odo → trip1 → trip2 every ~5 s
-    // (30 FPS × 150 frames). Only update the visible widget — the hidden
-    // ones get a fresh value when they cycle in. And only flip HIDDEN flags
-    // on actual mode changes, otherwise every frame would invalidate all
-    // four slot widgets for nothing.
+    // (UI runs at ~30 FPS, so 150 frames). Only update the visible widget —
+    // hidden ones get a fresh value when they cycle in. And only flip
+    // HIDDEN flags on actual mode changes, otherwise every frame would
+    // invalidate all four slot widgets for nothing.
+    enum { INFO_SLOT_FRAMES = 150, INFO_SLOT_COUNT = 4 };
     static uint32_t info_tick = 0;
     static int      prev_mode = -1;
     info_tick++;
-    int mode = (info_tick / 150) % 4;
+    int mode = (info_tick / INFO_SLOT_FRAMES) % INFO_SLOT_COUNT;
     if (mode != prev_mode) {
-        lv_obj_t *slots[4] = { s_clock, s_odo, s_trip1, s_trip2 };
-        for (int i = 0; i < 4; i++) lv_obj_add_flag(slots[i], LV_OBJ_FLAG_HIDDEN);
+        lv_obj_t *slots[INFO_SLOT_COUNT] = { s_clock, s_odo, s_trip1, s_trip2 };
+        for (int i = 0; i < INFO_SLOT_COUNT; i++) lv_obj_add_flag(slots[i], LV_OBJ_FLAG_HIDDEN);
         lv_obj_remove_flag(slots[mode], LV_OBJ_FLAG_HIDDEN);
         prev_mode = mode;
     }

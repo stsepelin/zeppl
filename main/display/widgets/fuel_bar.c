@@ -1,16 +1,19 @@
 #include "fuel_bar.h"
 #include "lvgl.h"
 #include "theme.h"
+#include "widget_util.h"
 
 LV_FONT_DECLARE(mdi_60);
 
-#define ICON_FUEL        "\xF3\xB0\x9F\x8A"   // U+F07CA gas pump
-#define FUEL_SEGMENTS    6
-#define ICON_SLOT_W      70
-#define BAR_W            225
-#define BAR_H            38
-#define SEG_GAP          5
-#define CONT_H           75
+#define ICON_FUEL              "\xF3\xB0\x9F\x8A"   // U+F07CA gas pump
+#define FUEL_SEGMENTS          6
+#define FUEL_RED_SEGMENTS      2     // level <= this: lit segments turn red
+#define FUEL_ICON_RED_SEGMENTS 1     // level <= this: gas-pump icon also red
+#define ICON_SLOT_W            70
+#define BAR_W                  225
+#define BAR_H                  38
+#define SEG_GAP                5
+#define CONT_H                 75
 
 typedef struct {
     lv_obj_t *icon;
@@ -21,12 +24,7 @@ typedef struct {
 
 lv_obj_t *fuel_bar_create(lv_obj_t *parent)
 {
-    lv_obj_t *cont = lv_obj_create(parent);
-    lv_obj_set_size(cont, ICON_SLOT_W + BAR_W + 8, CONT_H);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(cont, 0, 0);
-    lv_obj_set_style_pad_all(cont, 0, 0);
-    lv_obj_remove_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t *cont = widget_container_create(parent, ICON_SLOT_W + BAR_W + 8, CONT_H);
 
     // Gas-pump icon on the left.
     lv_obj_t *icon = lv_label_create(cont);
@@ -36,12 +34,7 @@ lv_obj_t *fuel_bar_create(lv_obj_t *parent)
     lv_obj_align(icon, LV_ALIGN_LEFT_MID, 0, 0);
 
     // Segmented bar to the right of the icon, centered vertically.
-    lv_obj_t *bar = lv_obj_create(cont);
-    lv_obj_set_size(bar, BAR_W, BAR_H);
-    lv_obj_set_style_bg_opa(bar, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(bar, 0, 0);
-    lv_obj_set_style_pad_all(bar, 0, 0);
-    lv_obj_remove_flag(bar, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t *bar = widget_container_create(cont, BAR_W, BAR_H);
     lv_obj_align(bar, LV_ALIGN_RIGHT_MID, 0, 0);
 
     int seg_w = (BAR_W - (FUEL_SEGMENTS - 1) * SEG_GAP) / FUEL_SEGMENTS;
@@ -76,11 +69,11 @@ void fuel_bar_set_level(lv_obj_t *cont, uint8_t level)
     for (int i = 0; i < FUEL_SEGMENTS; i++) {
         uint32_t color = VROD_SEGMENT_OFF;
         if (i < level) {
-            color = (level <= 2) ? VROD_RED_BRIGHT : VROD_ORANGE;
+            color = (level <= FUEL_RED_SEGMENTS) ? VROD_RED_BRIGHT : VROD_ORANGE;
         }
         lv_obj_set_style_bg_color(fd->segments[i], lv_color_hex(color), 0);
     }
     // Pump icon goes red when fuel is critically low (≤ 1 segment left).
-    uint32_t icon_color = (level <= 1) ? VROD_RED_BRIGHT : VROD_ICON;
+    uint32_t icon_color = (level <= FUEL_ICON_RED_SEGMENTS) ? VROD_RED_BRIGHT : VROD_ICON;
     lv_obj_set_style_text_color(fd->icon, lv_color_hex(icon_color), 0);
 }

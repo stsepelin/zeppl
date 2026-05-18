@@ -1,5 +1,6 @@
 #include "clock_display.h"
 #include "theme.h"
+#include "widget_util.h"
 #include <stdio.h>
 
 LV_FONT_DECLARE(jbm_bold_26);
@@ -13,12 +14,7 @@ typedef struct {
 
 lv_obj_t *clock_display_create(lv_obj_t *parent)
 {
-    lv_obj_t *cont = lv_obj_create(parent);
-    lv_obj_set_size(cont, LV_SIZE_CONTENT, 32);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(cont, 0, 0);
-    lv_obj_set_style_pad_all(cont, 0, 0);
-    lv_obj_remove_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t *cont = widget_container_create(parent, LV_SIZE_CONTENT, 32);
 
     lv_obj_t *lbl = lv_label_create(cont);
     lv_obj_set_style_text_font(lbl, &jbm_bold_26, 0);

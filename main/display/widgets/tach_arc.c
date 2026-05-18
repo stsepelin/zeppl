@@ -2,6 +2,7 @@
 #include "lvgl.h"
 #include "theme.h"
 #include "smooth.h"
+#include "widget_util.h"
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include <math.h>
@@ -293,33 +294,38 @@ static lv_obj_t *make_arc(lv_obj_t *parent, int dia, int start_deg, int end_deg)
     return arc;
 }
 
-lv_obj_t *tach_arc_create(lv_obj_t *parent)
+// One-shot setup for the three lv_style_t objects that recolour the scale
+// ticks above REDLINE_RPM. Idempotent — safe to call multiple times.
+static void redline_section_styles_init(lv_style_t *indicator,
+                                        lv_style_t *items,
+                                        lv_style_t *main)
 {
-    glow_image_init();
-    cursor_image_init();
+    lv_style_init(indicator);
+    lv_style_set_line_color(indicator, lv_color_hex(VROD_RED_TICK));
+    lv_style_init(items);
+    lv_style_set_line_color(items, lv_color_hex(VROD_RED_TICK_DIM));
+    lv_style_init(main);
+}
 
-    lv_obj_t *cont = lv_obj_create(parent);
-    lv_obj_set_size(cont, 800, 800);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(cont, 0, 0);
-    lv_obj_set_style_pad_all(cont, 0, 0);
-    lv_obj_remove_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+// --- Sub-builders for the tach widget --------------------------------------
+// Each makes one visible element of the tach and (where needed) stashes the
+// child obj into the tach_data_t. tach_arc_create just calls them in order
+// so the function reads like a checklist.
 
-    // Track: a thin gray "rail" at the bezel radius — the unselected half of
-    // the main line. The orange / red line arcs draw on top in the selected
-    // sweep range.
+// Thin gray "rail" at the bezel radius — the unselected half of the main
+// line. The orange/red line arcs draw on top in the selected sweep range.
+static void build_track(lv_obj_t *cont)
+{
     lv_obj_t *track = make_arc(cont, TRACK_DIA, START_DEG, START_DEG + SWEEP_DEG);
     lv_obj_set_style_arc_color(track, lv_color_hex(VROD_RAIL), LV_PART_MAIN);
     lv_obj_set_style_arc_width(track, 5, LV_PART_MAIN);
     lv_obj_set_style_arc_opa(track, LV_OPA_TRANSP, LV_PART_INDICATOR);
+}
 
-    tach_data_t *td = lv_malloc(sizeof(tach_data_t));
-    td->displayed_rpm = 0;
-    td->last_applied_rpm = 0;
-    td->last_redline = false;
-    td->has_applied = false;
-
-    // Glow tail
+// Glow tail — a pre-baked Gaussian ARGB image painted as the arc's
+// indicator brush. Falls back to a flat orange if the image alloc failed.
+static void build_tail_glow(lv_obj_t *cont, tach_data_t *td)
+{
     lv_obj_t *tail = make_arc(cont, TAIL_ARC_DIA, START_DEG, START_DEG + SWEEP_DEG);
     lv_arc_set_range(tail, 0, RPM_MAX);
     lv_obj_set_style_arc_opa(tail, LV_OPA_TRANSP, LV_PART_MAIN);
@@ -331,11 +337,14 @@ lv_obj_t *tach_arc_create(lv_obj_t *parent)
     }
     lv_obj_set_style_arc_rounded(tail, false, LV_PART_INDICATOR);
     td->tail_arc = tail;
+}
 
-    // Solid lines at the bezel, value-clipped to current RPM. Drawn ABOVE
-    // the gradient image so they stay crisp and fully opaque; cover the
-    // gray rail in the selected portion. Two arcs split the colour: orange
-    // up to REDLINE_RPM, red above it.
+// Solid orange + red lines at the bezel, value-clipped to current RPM.
+// Drawn above the gradient so they stay crisp and fully opaque; cover the
+// gray rail in the selected portion. Two arcs split the colour: orange up
+// to REDLINE_RPM, red above it.
+static void build_line_arcs(lv_obj_t *cont, tach_data_t *td)
+{
     for (int variant = 0; variant < 2; variant++) {
         bool is_red = (variant == 1);
         int start = is_red ? REDLINE_SPLIT_DEG : START_DEG;
@@ -353,15 +362,33 @@ lv_obj_t *tach_arc_create(lv_obj_t *parent)
         if (is_red) td->line_arc_redline = line;
         else        td->line_arc_normal  = line;
     }
+}
 
-    // Cursor: single rotated image instead of stacked layers, so the gradient
-    // is as smooth as the tail's.
+// Cursor: a single rotated image (not stacked layers), so the gradient is
+// as smooth as the tail's. Position + rotation are set per-frame by
+// cursor_set_state().
+static void build_cursor(lv_obj_t *cont, tach_data_t *td)
+{
     lv_obj_t *cursor = lv_image_create(cont);
     lv_image_set_src(cursor, &s_cursor_normal_dsc);
     lv_image_set_pivot(cursor, CURSOR_IMG_W / 2, CURSOR_IMG_H / 2);
     td->cursor_img = cursor;
+}
 
-    // Scale: ticks only (labels are drawn manually below for the zoom effect).
+// Scale: ticks only (labels are rendered as separate widgets below for the
+// per-frame zoom effect). Major ticks above REDLINE_RPM are recoloured red
+// via a section + the file-scope style block.
+static void build_scale(lv_obj_t *cont, tach_data_t *td)
+{
+    static lv_style_t s_redline_indicator;
+    static lv_style_t s_redline_items;
+    static lv_style_t s_redline_main;
+    static bool s_redline_styled = false;
+    if (!s_redline_styled) {
+        redline_section_styles_init(&s_redline_indicator, &s_redline_items, &s_redline_main);
+        s_redline_styled = true;
+    }
+
     lv_obj_t *scale = lv_scale_create(cont);
     lv_obj_set_size(scale, SCALE_DIA, SCALE_DIA);
     lv_scale_set_mode(scale, LV_SCALE_MODE_ROUND_INNER);
@@ -370,7 +397,7 @@ lv_obj_t *tach_arc_create(lv_obj_t *parent)
     lv_scale_set_range(scale, 0, RPM_MAX);
     lv_scale_set_angle_range(scale, SWEEP_DEG);
     lv_scale_set_rotation(scale, START_DEG);
-    lv_scale_set_label_show(scale, false);    // we render labels ourselves
+    lv_scale_set_label_show(scale, false);
     lv_obj_remove_flag(scale, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_opa(scale, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(scale, 0, 0);
@@ -383,29 +410,21 @@ lv_obj_t *tach_arc_create(lv_obj_t *parent)
     lv_obj_set_style_line_width(scale, 5, LV_PART_INDICATOR);
     lv_obj_set_style_length(scale, 30, LV_PART_INDICATOR);
     lv_obj_center(scale);
-    td->scale = scale;
 
-    // Red redline section: colors the major and minor ticks above REDLINE_RPM.
-    static lv_style_t s_redline_indicator;
-    static lv_style_t s_redline_items;
-    static lv_style_t s_redline_main;
-    static bool s_redline_styled = false;
-    if (!s_redline_styled) {
-        lv_style_init(&s_redline_indicator);
-        lv_style_set_line_color(&s_redline_indicator, lv_color_hex(VROD_RED_TICK));
-        lv_style_init(&s_redline_items);
-        lv_style_set_line_color(&s_redline_items, lv_color_hex(VROD_RED_TICK_DIM));
-        lv_style_init(&s_redline_main);
-        s_redline_styled = true;
-    }
     lv_scale_section_t *redline = lv_scale_add_section(scale);
     lv_scale_section_set_range(redline, REDLINE_RPM, RPM_MAX);
     lv_scale_section_set_style(redline, LV_PART_INDICATOR, &s_redline_indicator);
     lv_scale_section_set_style(redline, LV_PART_ITEMS,     &s_redline_items);
     lv_scale_section_set_style(redline, LV_PART_MAIN,      &s_redline_main);
 
-    // Manual labels: 6 lv_label widgets, scaled per-frame so the one nearest
-    // the cursor grows to 2x. Color is red for the redline values (8, 10).
+    td->scale = scale;
+}
+
+// Manual labels: 6 lv_label widgets at the major tick positions, scaled
+// per-frame by labels_update() so the one nearest the cursor grows to 2x.
+// Colour is red for redline values (8, 10).
+static void build_labels(lv_obj_t *cont, tach_data_t *td)
+{
     for (int i = 0; i < MAJOR_LABEL_COUNT; i++) {
         lv_obj_t *lbl = lv_label_create(cont);
         lv_label_set_text(lbl, k_label_strs[i]);
@@ -423,6 +442,27 @@ lv_obj_t *tach_arc_create(lv_obj_t *parent)
         lv_obj_align(lbl, LV_ALIGN_CENTER, px - CENTER_XY, py - CENTER_XY);
         td->labels[i] = lbl;
     }
+}
+
+lv_obj_t *tach_arc_create(lv_obj_t *parent)
+{
+    glow_image_init();
+    cursor_image_init();
+
+    lv_obj_t *cont = widget_container_create(parent, 800, 800);
+
+    tach_data_t *td = lv_malloc(sizeof(tach_data_t));
+    td->displayed_rpm    = 0;
+    td->last_applied_rpm = 0;
+    td->last_redline     = false;
+    td->has_applied      = false;
+
+    build_track(cont);
+    build_tail_glow(cont, td);
+    build_line_arcs(cont, td);
+    build_cursor(cont, td);
+    build_scale(cont, td);
+    build_labels(cont, td);
 
     lv_obj_set_user_data(cont, td);
     cursor_set_state(td, 0, false);

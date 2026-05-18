@@ -24,8 +24,9 @@ void app_main(void)
     vehicle_data_init();
     sim_engine_start();
 
-    // boot_screen_show() draws the Lottie splash, then schedules a one-shot
-    // timer that swaps to the ride screen and starts the UI update task.
+    // boot_screen_show() plays the embedded GIF splash, then hands off
+    // (on LV_EVENT_READY or the safety timer) to the ride screen and
+    // starts the UI update task.
     bsp_display_lock(-1);
     boot_screen_show();
     bsp_display_unlock();

@@ -1,5 +1,6 @@
 #include "warning_lights.h"
 #include "theme.h"
+#include "widget_util.h"
 
 LV_FONT_DECLARE(mdi_50);
 
@@ -15,14 +16,14 @@ LV_FONT_DECLARE(mdi_50);
 #define LAMP_GAP             16
 #define LAMP_CELL            56      // generous cell so glyph variance is covered
 #define BEAM_ROTATE_FRAMES   150     // ~5 s at 30 FPS
-#define MAX_LAMPS            LAMP_COUNT_
+#define MAX_LAMPS            LAMP_COUNT
 
 typedef struct {
     const char *icon;
     uint32_t    on_color;
 } lamp_spec_t;
 
-static const lamp_spec_t k_specs[LAMP_COUNT_] = {
+static const lamp_spec_t k_specs[LAMP_COUNT] = {
     [LAMP_OIL]         = {ICON_OIL,         VROD_RED_WARNING},
     [LAMP_ENGINE]      = {ICON_ENGINE,      VROD_AMBER_WARNING},
     [LAMP_ABS]         = {ICON_ABS,         VROD_AMBER_WARNING},
@@ -58,19 +59,11 @@ lv_obj_t *warning_lights_create(lv_obj_t *parent,
         layout = WARN_LAYOUT_COLUMN;  // fall back if caller passes wrong count
     }
 
-    lv_obj_t *cont = lv_obj_create(parent);
-    lv_obj_set_style_bg_opa(cont, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(cont, 0, 0);
-    lv_obj_set_style_pad_all(cont, 0, 0);
-    lv_obj_remove_flag(cont, LV_OBJ_FLAG_SCROLLABLE);
+    int w = (layout == WARN_LAYOUT_CHEVRON) ? (2 * LAMP_CELL + LAMP_GAP) : LV_SIZE_CONTENT;
+    int h = (layout == WARN_LAYOUT_CHEVRON) ? (2 * LAMP_CELL + LAMP_GAP) : LV_SIZE_CONTENT;
+    lv_obj_t *cont = widget_container_create(parent, w, h);
 
-    if (layout == WARN_LAYOUT_CHEVRON) {
-        int w = 2 * LAMP_CELL + LAMP_GAP;
-        int h = 2 * LAMP_CELL + LAMP_GAP;
-        lv_obj_set_size(cont, w, h);
-        // no flex: positions set per-child below
-    } else {
-        lv_obj_set_size(cont, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
+    if (layout != WARN_LAYOUT_CHEVRON) {
         lv_obj_set_flex_flow(cont,
             layout == WARN_LAYOUT_ROW ? LV_FLEX_FLOW_ROW : LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(cont, LV_FLEX_ALIGN_CENTER,
@@ -78,6 +71,7 @@ lv_obj_t *warning_lights_create(lv_obj_t *parent,
         if (layout == WARN_LAYOUT_ROW) lv_obj_set_style_pad_column(cont, LAMP_GAP, 0);
         else                           lv_obj_set_style_pad_row(cont, LAMP_GAP, 0);
     }
+    // For chevron, child positions are set per-child below.
 
     warn_data_t *wd = lv_malloc(sizeof(warn_data_t));
     wd->count = count;
