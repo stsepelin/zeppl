@@ -15,6 +15,12 @@ typedef struct lv_obj_t {
     void *user_data;
 } lv_obj_t;
 
+typedef struct lv_timer_t {
+    void *user_data;
+} lv_timer_t;
+
+typedef void (*lv_timer_cb_t)(lv_timer_t *t);
+
 typedef struct { uint32_t v; } lv_color_t;
 typedef struct lv_font_t { int _opaque; } lv_font_t;
 typedef int   lv_align_t;
@@ -96,3 +102,8 @@ lv_color_t lv_color_black(void);
 
 void *lv_malloc(size_t size);
 void  lv_free(void *ptr);
+
+lv_timer_t *lv_timer_create(lv_timer_cb_t cb, uint32_t period_ms, void *user_data);
+void        lv_timer_delete(lv_timer_t *t);
+void        lv_timer_set_user_data(lv_timer_t *t, void *user_data);
+void       *lv_timer_get_user_data(lv_timer_t *t);

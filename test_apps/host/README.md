@@ -49,7 +49,9 @@ lcov --rc branch_coverage=1 --gcov-tool /usr/bin/gcov \
        '*/main/simulator/gear_table.c' \
        '*/main/simulator/sim_math.c' \
        '*/main/display/format.c' \
+       '*/main/display/units.c' \
        '*/main/display/widgets/smooth.c' \
+       '*/main/settings/settings.c' \
        '*/main/vehicle/vehicle_data.c' \
      --output-file build-cov/coverage.tested.info
 
@@ -76,8 +78,10 @@ Today that's:
 |---|---|
 | `main/simulator/gear_table.c` | Pure math: speed → (gear, RPM) |
 | `main/simulator/sim_math.c` | Distance integrator, clock advance / split, fuel cycle state machine |
-| `main/display/format.c` | Pure formatters: km grouping, km tenths |
+| `main/display/format.c` | Pure formatters: thousand-separated integer |
+| `main/display/units.c` | Pure math: km/h ↔ mph and metre ↔ km/mi conversions |
 | `main/display/widgets/smooth.c` | Pure math: single-pole step with snap |
+| `main/settings/settings.c` | Defaults + validate for the persisted prefs struct |
 | `main/vehicle/vehicle_data.c` | Mutex-guarded latest-value store. Tested with a FreeRTOS stub. |
 
 ### Behaviour-checked but not coverage-measured

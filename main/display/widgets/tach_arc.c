@@ -6,6 +6,7 @@
 #include "esp_heap_caps.h"
 #include "esp_log.h"
 #include <math.h>
+#include <string.h>
 
 // JetBrains Mono Bold — monospaced, OFL. Used for tabular gauge labels.
 LV_FONT_DECLARE(jbm_bold_45);
@@ -33,13 +34,24 @@ LV_FONT_DECLARE(jbm_bold_45);
 #define TAIL_ARC_WIDTH     BLOOM_WIDTH
 
 // Track + cursor + labels all sit relative to TAIL_OUTER_R.
-#define TRACK_DIA          (TAIL_OUTER_R * 2)
-#define SCALE_DIA          (TAIL_OUTER_R * 2)
 #define CURSOR_OUTER_R     TAIL_OUTER_R
 #define CURSOR_LEN         60
 #define CURSOR_INNER_R     (CURSOR_OUTER_R - CURSOR_LEN)
 #define CURSOR_MID_R       ((CURSOR_INNER_R + CURSOR_OUTER_R) / 2)
 #define LABEL_R            330              // labels sit inside the ticks
+
+// Static background sprites. Bottom layer: gray track ring at the bezel.
+// Top layer (above line arcs + cursor, below labels): 21 scale ticks
+// with redline-section colours. Pre-baked once at boot into PSRAM —
+// turns the per-frame lv_arc + lv_scale rendering into two ARGB blits.
+#define BG_IMG_SIZE        800
+#define TRACK_HALF_W       2          // yields 5-px ring width
+#define TICK_MAJOR_W       5
+#define TICK_MAJOR_L       30
+#define TICK_MINOR_W       3
+#define TICK_MINOR_L       18
+#define TICK_COUNT         21
+#define TICK_MAJOR_EVERY   4
 
 // Solid "main line" along the bezel edge, drawn over the glow. Split at
 // REDLINE_SPLIT_DEG into an orange normal-zone arc and a red redline-zone arc.
@@ -57,7 +69,6 @@ LV_FONT_DECLARE(jbm_bold_45);
 #define MAJOR_LABEL_COUNT  6
 
 typedef struct {
-    lv_obj_t *scale;
     lv_obj_t *tail_arc;
     lv_obj_t *line_arc_normal;      // orange line over 0..REDLINE_RPM
     lv_obj_t *line_arc_redline;     // red line over REDLINE_RPM..RPM_MAX
@@ -65,6 +76,7 @@ typedef struct {
     lv_obj_t *labels[MAJOR_LABEL_COUNT];
     int32_t  displayed_rpm;
     int32_t  last_applied_rpm;      // last value pushed through to LVGL
+    int32_t  last_label_scale[MAJOR_LABEL_COUNT];  // per-label cache: skip unchanged transform_scale sets
     bool     last_redline;          // last cursor red-state we applied
     bool     has_applied;
 } tach_data_t;
@@ -94,7 +106,7 @@ static bool glow_image_init(void)
     // Redline arc: last 20% of the sweep. Sweep 135..405; redline starts at
     // 135 + 270*0.8 = 351 deg. After wrap to 0..360: redline is 351..360 OR
     // 0..45.
-    const float redline_start_deg = (float)REDLINE_SPLIT_DEG;
+    const float redline_start_deg   = (float)REDLINE_SPLIT_DEG;
     const float redline_end_wrapped = (float)START_DEG + (float)SWEEP_DEG - 360.0f;
 
     for (int y = 0; y < GLOW_IMG_SIZE; y++) {
@@ -107,12 +119,7 @@ static bool glow_image_init(void)
             uint8_t r = 0xFF, g = 0x66, b = 0x00;
             if (d <= (float)TAIL_OUTER_R) {
                 float d_in = (float)TAIL_OUTER_R - d;
-
-                // Pure Gaussian bloom — the bright "line" itself is now a
-                // separate solid arc on top, so the image just carries the
-                // soft halo fading inward. Peak alpha capped so the bloom
-                // doesn't compete with the solid line at the bezel.
-                float a_f = 210.0f * expf(-d_in * d_in / two_sigma_sq);
+                float a_f  = 210.0f * expf(-d_in * d_in / two_sigma_sq);
                 a = (a_f >= 255.0f) ? 255 : (uint8_t)(a_f + 0.5f);
 
                 float angle_rad = atan2f(dy, dx);
@@ -121,7 +128,7 @@ static bool glow_image_init(void)
                 bool is_redline = (angle_deg >= redline_start_deg)
                                || (angle_deg <= redline_end_wrapped);
 
-                g = is_redline ? 0x00 : 0x66;       // orange / red bloom hue
+                g = is_redline ? 0x00 : 0x66;
                 b = 0x00;
             }
 
@@ -209,6 +216,148 @@ static void bake_cursor_sprite(uint8_t *buf, lv_image_dsc_t *dsc,
     dsc->data          = buf;
 }
 
+// --- Static background sprites: track ring + scale ticks ------------------
+//
+// Both sprites are 800×800 ARGB8888 in PSRAM, mostly transparent. They
+// replace the per-frame lv_arc track + lv_scale tick rendering with two
+// cheap ARGB blits. Built once at boot; never invalidated thereafter.
+//
+// The track sprite goes at the BOTTOM of the tach (under the line arcs,
+// which cover it in the active sweep). The ticks sprite goes ABOVE the
+// line arcs so the full tick length still shows through.
+
+static uint8_t       *s_track_img_data = NULL;
+static lv_image_dsc_t s_track_img_dsc;
+static uint8_t       *s_ticks_img_data = NULL;
+static lv_image_dsc_t s_ticks_img_dsc;
+
+static inline void put_px(uint8_t *buf, int x, int y, uint32_t argb_le)
+{
+    if (x < 0 || y < 0 || x >= BG_IMG_SIZE || y >= BG_IMG_SIZE) return;
+    *(uint32_t *)(buf + (y * BG_IMG_SIZE + x) * 4) = argb_le;
+}
+
+// ARGB8888 stored little-endian: byte order in memory is B, G, R, A.
+// Returning A<<24 | R<<16 | G<<8 | B writes those bytes correctly on
+// the RISC-V (LE) target.
+static inline uint32_t hex_to_argb(uint32_t hex_rgb)
+{
+    return 0xFF000000u | hex_rgb;
+}
+
+static void bake_bg_descriptor(lv_image_dsc_t *dsc, uint8_t *data)
+{
+    dsc->header.magic  = LV_IMAGE_HEADER_MAGIC;
+    dsc->header.cf     = LV_COLOR_FORMAT_ARGB8888;
+    dsc->header.w      = BG_IMG_SIZE;
+    dsc->header.h      = BG_IMG_SIZE;
+    dsc->header.stride = BG_IMG_SIZE * 4;
+    dsc->data_size     = (size_t)BG_IMG_SIZE * BG_IMG_SIZE * 4;
+    dsc->data          = data;
+}
+
+// Walk along the ring at a fine angular step (≈0.5 px arc length at the
+// outer radius) so consecutive pixel coords overlap and the ring stays
+// gap-free without per-pixel sqrt.
+static void draw_track_ring(uint8_t *buf, uint32_t color)
+{
+    const float step_deg = (0.5f / (float)TAIL_OUTER_R) * 180.0f / (float)M_PI;
+    for (float a = (float)START_DEG; a <= (float)(START_DEG + SWEEP_DEG); a += step_deg) {
+        float ar = a * (float)M_PI / 180.0f;
+        float cx_u = cosf(ar), cy_u = sinf(ar);
+        for (int dr = -TRACK_HALF_W; dr <= TRACK_HALF_W; dr++) {
+            int r  = TAIL_OUTER_R + dr;
+            int px = CENTER_XY + (int)lroundf((float)r * cx_u);
+            int py = CENTER_XY + (int)lroundf((float)r * cy_u);
+            put_px(buf, px, py, color);
+        }
+    }
+}
+
+// Filled rectangle in tick-local space, rotated by angle_deg. The
+// bounding box is small (≤31×31 even for a major tick), so a per-pixel
+// scan is cheap and trivially correct.
+static void draw_tick(uint8_t *buf, float angle_deg, int width, int length, uint32_t color)
+{
+    float ar    = angle_deg * (float)M_PI / 180.0f;
+    float dir_x = cosf(ar), dir_y = sinf(ar);
+    float per_x = -dir_y,   per_y = dir_x;
+    float outer = (float)TAIL_OUTER_R;
+    float inner = outer - (float)length;
+    float halfw = (float)width / 2.0f;
+
+    float corners_r[2] = {inner, outer};
+    float corners_w[2] = {-halfw, +halfw};
+    float min_x = 1e9f, max_x = -1e9f, min_y = 1e9f, max_y = -1e9f;
+    for (int ci = 0; ci < 2; ci++) {
+        for (int cj = 0; cj < 2; cj++) {
+            float wx = corners_r[ci] * dir_x + corners_w[cj] * per_x;
+            float wy = corners_r[ci] * dir_y + corners_w[cj] * per_y;
+            if (wx < min_x) min_x = wx;
+            if (wx > max_x) max_x = wx;
+            if (wy < min_y) min_y = wy;
+            if (wy > max_y) max_y = wy;
+        }
+    }
+    int bb_x0 = (int)floorf(min_x) - 1, bb_x1 = (int)ceilf(max_x) + 1;
+    int bb_y0 = (int)floorf(min_y) - 1, bb_y1 = (int)ceilf(max_y) + 1;
+
+    for (int dy = bb_y0; dy <= bb_y1; dy++) {
+        for (int dx = bb_x0; dx <= bb_x1; dx++) {
+            float rad  = (float)dx * dir_x + (float)dy * dir_y;
+            float perp = (float)dx * per_x + (float)dy * per_y;
+            if (rad < inner || rad > outer) continue;
+            if (fabsf(perp) > halfw)        continue;
+            put_px(buf, CENTER_XY + dx, CENTER_XY + dy, color);
+        }
+    }
+}
+
+static bool track_image_init(void)
+{
+    if (s_track_img_data) return true;
+    const size_t bytes = (size_t)BG_IMG_SIZE * BG_IMG_SIZE * 4;
+    s_track_img_data = heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!s_track_img_data) {
+        ESP_LOGE("tach", "track sprite alloc failed (%u bytes)", (unsigned)bytes);
+        return false;
+    }
+    memset(s_track_img_data, 0, bytes);
+    draw_track_ring(s_track_img_data, hex_to_argb(VROD_RAIL));
+    bake_bg_descriptor(&s_track_img_dsc, s_track_img_data);
+    return true;
+}
+
+static bool ticks_image_init(void)
+{
+    if (s_ticks_img_data) return true;
+    const size_t bytes = (size_t)BG_IMG_SIZE * BG_IMG_SIZE * 4;
+    s_ticks_img_data = heap_caps_malloc(bytes, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    if (!s_ticks_img_data) {
+        ESP_LOGE("tach", "ticks sprite alloc failed (%u bytes)", (unsigned)bytes);
+        return false;
+    }
+    memset(s_ticks_img_data, 0, bytes);
+
+    for (int i = 0; i < TICK_COUNT; i++) {
+        float angle = (float)START_DEG
+                    + ((float)i / (float)(TICK_COUNT - 1)) * (float)SWEEP_DEG;
+        bool major   = (i % TICK_MAJOR_EVERY) == 0;
+        int  rpm     = i * RPM_MAX / (TICK_COUNT - 1);
+        bool redline = rpm >= REDLINE_RPM;
+        uint32_t hex = major
+            ? (redline ? VROD_RED_TICK     : VROD_TEXT)
+            : (redline ? VROD_RED_TICK_DIM : VROD_TICK_MINOR);
+        draw_tick(s_ticks_img_data, angle,
+                  major ? TICK_MAJOR_W : TICK_MINOR_W,
+                  major ? TICK_MAJOR_L : TICK_MINOR_L,
+                  hex_to_argb(hex));
+    }
+
+    bake_bg_descriptor(&s_ticks_img_dsc, s_ticks_img_data);
+    return true;
+}
+
 static void cursor_image_init(void)
 {
     if (s_cursor_images_built) return;
@@ -273,6 +422,14 @@ static void labels_update(tach_data_t *td, int32_t value)
         float scale = 2.0f - 1.0f * smooth_t;
 
         int scale_int = (int)(scale * 256.0f + 0.5f);
+        // Skip set_style on labels whose scale didn't change since last
+        // frame. During a hard RPM transient (e.g. WOT → cruise) only 1-2
+        // labels are near the cursor and actually change scale; the other
+        // four stay locked at 1.0× but were re-invalidated every frame.
+        // 6 labels × 2 styles × ~15 transient frames = 180 redundant
+        // invalidations per WOT exit — the user could feel them.
+        if (scale_int == td->last_label_scale[i]) continue;
+        td->last_label_scale[i] = scale_int;
         lv_obj_set_style_transform_scale_x(td->labels[i], scale_int, 0);
         lv_obj_set_style_transform_scale_y(td->labels[i], scale_int, 0);
     }
@@ -294,32 +451,20 @@ static lv_obj_t *make_arc(lv_obj_t *parent, int dia, int start_deg, int end_deg)
     return arc;
 }
 
-// One-shot setup for the three lv_style_t objects that recolour the scale
-// ticks above REDLINE_RPM. Idempotent — safe to call multiple times.
-static void redline_section_styles_init(lv_style_t *indicator,
-                                        lv_style_t *items,
-                                        lv_style_t *main)
-{
-    lv_style_init(indicator);
-    lv_style_set_line_color(indicator, lv_color_hex(VROD_RED_TICK));
-    lv_style_init(items);
-    lv_style_set_line_color(items, lv_color_hex(VROD_RED_TICK_DIM));
-    lv_style_init(main);
-}
-
 // --- Sub-builders for the tach widget --------------------------------------
 // Each makes one visible element of the tach and (where needed) stashes the
 // child obj into the tach_data_t. tach_arc_create just calls them in order
 // so the function reads like a checklist.
 
-// Thin gray "rail" at the bezel radius — the unselected half of the main
-// line. The orange/red line arcs draw on top in the selected sweep range.
-static void build_track(lv_obj_t *cont)
+// Pre-baked gray rail at the bezel — the unselected half of the main line.
+// The orange/red line arcs draw on top in the selected sweep range.
+// Sprite created once in track_image_init().
+static void build_track_image(lv_obj_t *cont)
 {
-    lv_obj_t *track = make_arc(cont, TRACK_DIA, START_DEG, START_DEG + SWEEP_DEG);
-    lv_obj_set_style_arc_color(track, lv_color_hex(VROD_RAIL), LV_PART_MAIN);
-    lv_obj_set_style_arc_width(track, 5, LV_PART_MAIN);
-    lv_obj_set_style_arc_opa(track, LV_OPA_TRANSP, LV_PART_INDICATOR);
+    lv_obj_t *img = lv_image_create(cont);
+    lv_image_set_src(img, &s_track_img_dsc);
+    lv_obj_remove_flag(img, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_center(img);
 }
 
 // Glow tail — a pre-baked Gaussian ARGB image painted as the arc's
@@ -375,49 +520,15 @@ static void build_cursor(lv_obj_t *cont, tach_data_t *td)
     td->cursor_img = cursor;
 }
 
-// Scale: ticks only (labels are rendered as separate widgets below for the
-// per-frame zoom effect). Major ticks above REDLINE_RPM are recoloured red
-// via a section + the file-scope style block.
-static void build_scale(lv_obj_t *cont, tach_data_t *td)
+// Pre-baked 21-tick scale (major every 4, redline subset coloured red).
+// Sprite created once in ticks_image_init(); sits above the line arcs +
+// cursor so the full tick length shows through.
+static void build_ticks_image(lv_obj_t *cont)
 {
-    static lv_style_t s_redline_indicator;
-    static lv_style_t s_redline_items;
-    static lv_style_t s_redline_main;
-    static bool s_redline_styled = false;
-    if (!s_redline_styled) {
-        redline_section_styles_init(&s_redline_indicator, &s_redline_items, &s_redline_main);
-        s_redline_styled = true;
-    }
-
-    lv_obj_t *scale = lv_scale_create(cont);
-    lv_obj_set_size(scale, SCALE_DIA, SCALE_DIA);
-    lv_scale_set_mode(scale, LV_SCALE_MODE_ROUND_INNER);
-    lv_scale_set_total_tick_count(scale, 21);
-    lv_scale_set_major_tick_every(scale, 4);
-    lv_scale_set_range(scale, 0, RPM_MAX);
-    lv_scale_set_angle_range(scale, SWEEP_DEG);
-    lv_scale_set_rotation(scale, START_DEG);
-    lv_scale_set_label_show(scale, false);
-    lv_obj_remove_flag(scale, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_opa(scale, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(scale, 0, 0);
-    lv_obj_set_style_pad_all(scale, 0, 0);
-    lv_obj_set_style_line_width(scale, 0, LV_PART_MAIN);
-    lv_obj_set_style_line_color(scale, lv_color_hex(VROD_TICK_MINOR), LV_PART_ITEMS);
-    lv_obj_set_style_line_width(scale, 3, LV_PART_ITEMS);
-    lv_obj_set_style_length(scale, 18, LV_PART_ITEMS);
-    lv_obj_set_style_line_color(scale, lv_color_hex(VROD_TEXT), LV_PART_INDICATOR);
-    lv_obj_set_style_line_width(scale, 5, LV_PART_INDICATOR);
-    lv_obj_set_style_length(scale, 30, LV_PART_INDICATOR);
-    lv_obj_center(scale);
-
-    lv_scale_section_t *redline = lv_scale_add_section(scale);
-    lv_scale_section_set_range(redline, REDLINE_RPM, RPM_MAX);
-    lv_scale_section_set_style(redline, LV_PART_INDICATOR, &s_redline_indicator);
-    lv_scale_section_set_style(redline, LV_PART_ITEMS,     &s_redline_items);
-    lv_scale_section_set_style(redline, LV_PART_MAIN,      &s_redline_main);
-
-    td->scale = scale;
+    lv_obj_t *img = lv_image_create(cont);
+    lv_image_set_src(img, &s_ticks_img_dsc);
+    lv_obj_remove_flag(img, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_center(img);
 }
 
 // Manual labels: 6 lv_label widgets at the major tick positions, scaled
@@ -448,6 +559,8 @@ lv_obj_t *tach_arc_create(lv_obj_t *parent)
 {
     glow_image_init();
     cursor_image_init();
+    track_image_init();
+    ticks_image_init();
 
     lv_obj_t *cont = widget_container_create(parent, 800, 800);
 
@@ -456,12 +569,16 @@ lv_obj_t *tach_arc_create(lv_obj_t *parent)
     td->last_applied_rpm = 0;
     td->last_redline     = false;
     td->has_applied      = false;
+    for (int i = 0; i < MAJOR_LABEL_COUNT; i++) td->last_label_scale[i] = -1;
 
-    build_track(cont);
+    // Z-order matters: track at the bottom, then glow, then the dynamic
+    // line arcs + cursor, then the ticks sprite above them (so ticks
+    // stay visible through the lines), then the animated labels on top.
+    build_track_image(cont);
     build_tail_glow(cont, td);
     build_line_arcs(cont, td);
     build_cursor(cont, td);
-    build_scale(cont, td);
+    build_ticks_image(cont);
     build_labels(cont, td);
 
     lv_obj_set_user_data(cont, td);

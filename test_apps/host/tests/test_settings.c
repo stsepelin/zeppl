@@ -7,14 +7,25 @@ static void test_defaults_known_values(void)
     settings_default(&s);
     TEST_ASSERT_EQUAL_UINT8(UNITS_KPH, s.units);
     TEST_ASSERT_EQUAL_UINT8(60,        s.brightness);
+    TEST_ASSERT_TRUE       (           s.sound_enabled);
+    TEST_ASSERT_EQUAL_UINT8(70,        s.volume);
 }
 
 static void test_validate_passes_valid_values(void)
 {
-    settings_t s = { .units = UNITS_MPH, .brightness = 50 };
+    settings_t s = { .units = UNITS_MPH, .brightness = 50, .sound_enabled = false, .volume = 25 };
     settings_validate(&s);
     TEST_ASSERT_EQUAL_UINT8(UNITS_MPH, s.units);
     TEST_ASSERT_EQUAL_UINT8(50,        s.brightness);
+    TEST_ASSERT_FALSE      (           s.sound_enabled);
+    TEST_ASSERT_EQUAL_UINT8(25,        s.volume);
+}
+
+static void test_validate_clamps_volume_over_max(void)
+{
+    settings_t s = { .units = UNITS_KPH, .brightness = 60, .volume = 200 };
+    settings_validate(&s);
+    TEST_ASSERT_EQUAL_UINT8(100, s.volume);
 }
 
 static void test_validate_clamps_brightness_over_max(void)
@@ -64,6 +75,7 @@ void RunTests(void)
     RUN_TEST(test_validate_passes_valid_values);
     RUN_TEST(test_validate_clamps_brightness_over_max);
     RUN_TEST(test_validate_clamps_brightness_below_min);
+    RUN_TEST(test_validate_clamps_volume_over_max);
     RUN_TEST(test_validate_repairs_bad_units_enum);
     RUN_TEST(test_validate_is_idempotent);
 }

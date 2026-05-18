@@ -37,7 +37,9 @@ SCOPED=(
     '*/main/simulator/gear_table.c'
     '*/main/simulator/sim_math.c'
     '*/main/display/format.c'
+    '*/main/display/units.c'
     '*/main/display/widgets/smooth.c'
+    '*/main/settings/settings.c'
     '*/main/vehicle/vehicle_data.c'
 )
 

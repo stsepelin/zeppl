@@ -49,10 +49,12 @@ CONFIG_PTHREAD_TASK_CORE_DEFAULT=1
 # override in main/CMakeLists.txt (GCC 15 rejects IRAM_ATTR's __COUNTER__).
 # CONFIG_LV_ATTRIBUTE_FAST_MEM_USE_IRAM is not set
 
-# Boot screen uses Montserrat (22 + 48); the live gauge UI uses JetBrains
-# Mono Bold compiled in as custom .c files (see main/display/fonts).
-CONFIG_LV_FONT_MONTSERRAT_22=y
-CONFIG_LV_FONT_MONTSERRAT_48=y
+# All UI text uses JetBrains Mono Bold compiled in as custom .c files
+# (see main/display/fonts). Only Montserrat 14 stays enabled because
+# LVGL's Kconfig forces SOME built-in font as the default — the bigger
+# Montserrat sizes used to be there for the boot-screen text fallback,
+# which now reuses JBM Bold.
+CONFIG_LV_FONT_MONTSERRAT_14=y
 
 # IDF v6 experimental features (BSP needs DSI etc.)
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y

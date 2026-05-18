@@ -12,11 +12,11 @@
 #include "theme.h"
 #include "ui_manager.h"
 
-// Shift-light: flashing red ring at the bezel above SHIFT_LIGHT_RPM, telling
-// the rider to upshift now. ~5 Hz blink (3 frames on, 3 off at 30 FPS).
-#define SHIFT_LIGHT_ENABLED 1
-#define SHIFT_LIGHT_RPM     9000
-#define SHIFT_LIGHT_FRAMES  3
+// Upshift warning threshold: above this RPM the gear digit blinks red.
+// Lives on the small gear widget so the per-blink invalidation is a tiny
+// ~80×110 region rather than the full 800×800 tach area — that's what
+// made the previous tach-arc-based warnings feel laggy.
+#define WARNING_RPM     9000
 
 static lv_obj_t *s_screen;
 static lv_obj_t *s_tach;
@@ -31,37 +31,11 @@ static lv_obj_t *s_clock;
 static lv_obj_t *s_odo;
 static lv_obj_t *s_trip1;
 static lv_obj_t *s_trip2;
-static lv_obj_t *s_shift_light;
 
-// Long-press → settings, polled from the indev's raw state. Times the
-// hold with lv_tick_elapsed so a stalled frame doesn't make the press
-// feel sluggish (frame-count timing would lose ~33 ms per dropped frame).
-// LVGL's own LV_EVENT_LONG_PRESSED is not used here because press events
-// were not reaching the ride screen on this BSP — see commit history.
-#define LONG_PRESS_MS 600
-
-static bool long_press_should_fire(void)
-{
-    static uint32_t press_start_tick;
-    static bool     pressing;
-    static bool     fired;
-
-    lv_indev_t *indev = lv_indev_get_next(NULL);
-    if (!indev || lv_indev_get_state(indev) != LV_INDEV_STATE_PRESSED) {
-        pressing = false;
-        fired    = false;
-        return false;
-    }
-
-    if (!pressing) {
-        pressing         = true;
-        press_start_tick = lv_tick_get();
-    }
-    if (fired) return false;
-    if (lv_tick_elaps(press_start_tick) < LONG_PRESS_MS) return false;
-    fired = true;
-    return true;
-}
+// Long-press and turn-signal-edge detection used to live here, but both
+// were starved during heavy frames because they ran inside the UI task,
+// which gates on the LVGL lock. They moved into a 100 Hz event-watcher
+// task in ui_manager.c that polls vehicle_data and the indev directly.
 
 lv_obj_t *screen_ride_create(void)
 {
@@ -110,22 +84,6 @@ lv_obj_t *screen_ride_create(void)
     s_temp = temp_display_create(s_screen);
     lv_obj_align(s_temp, LV_ALIGN_BOTTOM_MID, 0, -25);
 
-#if SHIFT_LIGHT_ENABLED
-    // Shift-light ring — added LAST so it draws on top of everything else.
-    // Full-screen 800×800 circular border at the bezel; hidden until rpm
-    // crosses the shift threshold, then blinked by screen_ride_update.
-    s_shift_light = lv_obj_create(s_screen);
-    lv_obj_set_size(s_shift_light, 800, 800);
-    lv_obj_set_style_bg_opa(s_shift_light, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_color(s_shift_light, lv_color_hex(VROD_RED_BRIGHT), 0);
-    lv_obj_set_style_border_width(s_shift_light, 15, 0);
-    lv_obj_set_style_radius(s_shift_light, 400, 0);
-    lv_obj_set_style_pad_all(s_shift_light, 0, 0);
-    lv_obj_center(s_shift_light);
-    lv_obj_remove_flag(s_shift_light, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_flag(s_shift_light, LV_OBJ_FLAG_HIDDEN);
-#endif
-
     return s_screen;
 }
 
@@ -133,18 +91,12 @@ void screen_ride_update(const vehicle_data_t *data, const settings_t *settings)
 {
     if (!s_tach) return;
 
-    // Guard the long-press hand-off so a hold on the settings screen
-    // doesn't bounce straight back here.
-    if (lv_screen_active() == s_screen && long_press_should_fire()) {
-        ui_manager_show_settings();
-        return;
-    }
-
     display_units_t units = settings->units;
 
     tach_arc_set_value(s_tach, data->rpm);
     speed_display_set_value(s_speed, data->speed_kmh, units);
     gear_indicator_set(s_gear, data->gear);
+    gear_indicator_set_warning(s_gear, data->rpm > WARNING_RPM);
     fuel_bar_set_level(s_fuel, data->fuel_level);
     turn_signals_set(s_turn, data->turn_left, data->turn_right);
     temp_display_set_value(s_temp, data->engine_temp_c);
@@ -173,21 +125,4 @@ void screen_ride_update(const vehicle_data_t *data, const settings_t *settings)
         case 2: trip_display_set(s_trip1, data->trip1_m, units);                    break;
         case 3: trip_display_set(s_trip2, data->trip2_m, units);                    break;
     }
-
-#if SHIFT_LIGHT_ENABLED
-    // Shift-light blink. Toggle visibility only when the *displayed* state
-    // changes — most frames stay quiet (rpm below threshold, or mid-blink
-    // half-cycle still showing the same on/off as last frame).
-    static uint32_t shift_tick = 0;
-    static bool     shift_shown = false;
-    shift_tick++;
-    bool above_threshold = data->rpm > SHIFT_LIGHT_RPM;
-    bool show = above_threshold
-             && ((shift_tick / SHIFT_LIGHT_FRAMES) & 1) == 0;
-    if (show != shift_shown) {
-        if (show) lv_obj_remove_flag(s_shift_light, LV_OBJ_FLAG_HIDDEN);
-        else      lv_obj_add_flag(s_shift_light, LV_OBJ_FLAG_HIDDEN);
-        shift_shown = show;
-    }
-#endif
 }

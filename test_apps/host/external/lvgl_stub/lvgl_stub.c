@@ -94,3 +94,20 @@ const lv_font_t mdi_60               = {0};
 const lv_font_t mdi_96               = {0};
 const lv_font_t lv_font_montserrat_22 = {0};
 const lv_font_t lv_font_montserrat_48 = {0};
+
+// --- Timer stubs -----------------------------------------------------------
+// The cache-regression tests only exercise the create / delete / get-user-data
+// surface (gear_indicator's warning blink). We don't actually fire the
+// timer — the per-tick behaviour is verified on device.
+
+lv_timer_t *lv_timer_create(lv_timer_cb_t cb, uint32_t period_ms, void *user_data)
+{
+    (void)cb; (void)period_ms;
+    lv_timer_t *t = calloc(1, sizeof(lv_timer_t));
+    if (t) t->user_data = user_data;
+    return t;
+}
+
+void  lv_timer_delete(lv_timer_t *t)                          { free(t); }
+void  lv_timer_set_user_data(lv_timer_t *t, void *user_data)  { if (t) t->user_data = user_data; }
+void *lv_timer_get_user_data(lv_timer_t *t)                   { return t ? t->user_data : NULL; }

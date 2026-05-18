@@ -3,6 +3,7 @@ idf_component_register(
         main.c
         settings/settings.c
         settings/settings_store.c
+        sound/sound.c
         vehicle/vehicle_data.c
         simulator/sim_engine.c
         simulator/gear_table.c
@@ -37,6 +38,7 @@ idf_component_register(
     INCLUDE_DIRS
         .
         settings
+        sound
         vehicle
         simulator
         display
@@ -45,6 +47,7 @@ idf_component_register(
     EMBED_FILES
         assets/boot.gif
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl nvs_flash
+             espressif__esp_codec_dev
 )
 
 # Generated font files (from lv_font_conv) use `#ifdef LV_LVGL_H_INCLUDE_SIMPLE`

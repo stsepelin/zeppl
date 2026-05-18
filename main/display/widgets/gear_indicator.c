@@ -6,11 +6,32 @@
 LV_FONT_DECLARE(jbm_bold_72);
 LV_FONT_DECLARE(jbm_bold_33);
 
+// Blink half-period for the upshift warning. 250 ms × 2 = 500 ms cycle
+// (2 Hz) — visible, not stressful, and only invalidates the small gear
+// label rather than the whole tach area.
+#define WARN_BLINK_MS  250
+
 typedef struct {
-    lv_obj_t *value;
-    gear_t    last_gear;
-    bool      has_value;
+    lv_obj_t   *value;
+    lv_timer_t *blink_timer;
+    gear_t      last_gear;
+    bool        has_value;
+    bool        warn_active;
+    bool        blink_red;
 } gear_data_t;
+
+static void apply_color(gear_data_t *gd)
+{
+    uint32_t hex = (gd->warn_active && gd->blink_red) ? VROD_RED_BRIGHT : VROD_ORANGE;
+    lv_obj_set_style_text_color(gd->value, lv_color_hex(hex), 0);
+}
+
+static void blink_cb(lv_timer_t *t)
+{
+    gear_data_t *gd = lv_timer_get_user_data(t);
+    gd->blink_red = !gd->blink_red;
+    apply_color(gd);
+}
 
 lv_obj_t *gear_indicator_create(lv_obj_t *parent)
 {
@@ -30,9 +51,12 @@ lv_obj_t *gear_indicator_create(lv_obj_t *parent)
     lv_obj_align(value, LV_ALIGN_BOTTOM_MID, 0, 0);
 
     gear_data_t *gd = lv_malloc(sizeof(gear_data_t));
-    gd->value = value;
-    gd->last_gear = GEAR_NEUTRAL;
-    gd->has_value = false;
+    gd->value       = value;
+    gd->blink_timer = NULL;
+    gd->last_gear   = GEAR_NEUTRAL;
+    gd->has_value   = false;
+    gd->warn_active = false;
+    gd->blink_red   = false;
     lv_obj_set_user_data(cont, gd);
     return cont;
 }
@@ -56,4 +80,26 @@ void gear_indicator_set(lv_obj_t *cont, gear_t gear)
         default:           text = "-"; break;
     }
     lv_label_set_text(gd->value, text);
+}
+
+void gear_indicator_set_warning(lv_obj_t *cont, bool active)
+{
+    gear_data_t *gd = lv_obj_get_user_data(cont);
+    if (!gd || gd->warn_active == active) return;
+    gd->warn_active = active;
+
+    if (active) {
+        gd->blink_red = true;
+        if (!gd->blink_timer) {
+            gd->blink_timer = lv_timer_create(blink_cb, WARN_BLINK_MS, NULL);
+            lv_timer_set_user_data(gd->blink_timer, gd);
+        }
+    } else {
+        if (gd->blink_timer) {
+            lv_timer_delete(gd->blink_timer);
+            gd->blink_timer = NULL;
+        }
+        gd->blink_red = false;
+    }
+    apply_color(gd);
 }

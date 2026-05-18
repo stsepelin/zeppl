@@ -53,19 +53,23 @@ static void boot_safety_cb(lv_timer_t *t)
 
 static void show_text_fallback(lv_obj_t *scr)
 {
-    LV_FONT_DECLARE(lv_font_montserrat_48);
-    LV_FONT_DECLARE(lv_font_montserrat_22);
+    // Reuse JetBrains Mono Bold (already loaded for the gauge readouts)
+    // instead of pulling Montserrat into the binary for this fallback —
+    // it only runs if the embedded boot.gif fails to decode, which never
+    // happens at runtime because the GIF is statically embedded.
+    LV_FONT_DECLARE(jbm_bold_45);
+    LV_FONT_DECLARE(jbm_bold_33);
 
     lv_obj_t *title = lv_label_create(scr);
     lv_label_set_text(title, "V-ROD");
     lv_obj_set_style_text_color(title, lv_color_hex(VROD_ORANGE), 0);
-    lv_obj_set_style_text_font(title, &lv_font_montserrat_48, 0);
+    lv_obj_set_style_text_font(title, &jbm_bold_45, 0);
     lv_obj_align(title, LV_ALIGN_CENTER, 0, -10);
 
     lv_obj_t *subtitle = lv_label_create(scr);
     lv_label_set_text(subtitle, "VRSCF MUSCLE");
     lv_obj_set_style_text_color(subtitle, lv_color_hex(VROD_TEXT_DIM), 0);
-    lv_obj_set_style_text_font(subtitle, &lv_font_montserrat_22, 0);
+    lv_obj_set_style_text_font(subtitle, &jbm_bold_33, 0);
     lv_obj_align(subtitle, LV_ALIGN_CENTER, 0, 30);
 }
 

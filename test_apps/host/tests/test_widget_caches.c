@@ -78,6 +78,30 @@ static void test_gear_cache_fires_on_change(void)
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
 }
 
+// Warning blink toggles the gear digit's text colour. Same-state calls
+// must not invalidate; a real edge fires exactly one set_style_text_color.
+static void test_gear_warning_cache_skips_unchanged(void)
+{
+    lv_obj_t *w = gear_indicator_create(NULL);
+    gear_indicator_set_warning(w, true);   // prime active
+    lv_stub_reset();
+    for (int i = 0; i < REPEAT; i++) gear_indicator_set_warning(w, true);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, g_lv_obj_set_style_text_color_calls,
+        "repeated set_warning(true) must not re-paint");
+}
+
+static void test_gear_warning_fires_on_edge(void)
+{
+    lv_obj_t *w = gear_indicator_create(NULL);
+    // Fresh widget starts inactive — calling set_warning(false) is a no-op.
+    lv_stub_reset();
+    gear_indicator_set_warning(w, true);
+    TEST_ASSERT_EQUAL_INT(1, g_lv_obj_set_style_text_color_calls);
+    lv_stub_reset();
+    gear_indicator_set_warning(w, false);
+    TEST_ASSERT_EQUAL_INT(1, g_lv_obj_set_style_text_color_calls);
+}
+
 // --- temp_display ----------------------------------------------------------
 // temp updates both the value label (snprintf + set_text) and recolours
 // both icon + value (two text_color calls).
@@ -273,6 +297,8 @@ void RunTests(void)
     RUN_TEST(test_speed_cache_fires_on_units_change);
     RUN_TEST(test_gear_cache_skips_unchanged);
     RUN_TEST(test_gear_cache_fires_on_change);
+    RUN_TEST(test_gear_warning_cache_skips_unchanged);
+    RUN_TEST(test_gear_warning_fires_on_edge);
     RUN_TEST(test_temp_cache_skips_unchanged);
     RUN_TEST(test_temp_cache_fires_on_change);
     RUN_TEST(test_turn_signals_cache_skips_unchanged);

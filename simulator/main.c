@@ -50,10 +50,36 @@ int main(void)
     //    LVGL render. The sim updates s_data on its own thread;
     //    vehicle_data_get gives us a snapshot under the mutex so we never
     //    see a torn struct.
+    //
+    //    Long-press detection runs inline here because on the desktop
+    //    there's no FreeRTOS to pin a separate task to — the firmware
+    //    side does it in event_watcher_task.
+    uint32_t press_start_tick = 0;
+    bool     pressing         = false;
+    bool     long_fired       = false;
+
     while (1) {
         vehicle_data_t snapshot;
         vehicle_data_get(&snapshot);
         screen_ride_update(&snapshot, settings_store_current());
+
+        lv_indev_t *indev = lv_indev_get_next(NULL);
+        if (indev) {
+            bool pressed = (lv_indev_get_state(indev) == LV_INDEV_STATE_PRESSED);
+            if (!pressed) {
+                pressing   = false;
+                long_fired = false;
+            } else {
+                if (!pressing) {
+                    pressing         = true;
+                    press_start_tick = lv_tick_get();
+                }
+                if (!long_fired && lv_tick_elaps(press_start_tick) >= 600) {
+                    long_fired = true;
+                    ui_manager_show_settings();
+                }
+            }
+        }
 
         lv_timer_handler();
         usleep(UI_TICK_MS * 1000);

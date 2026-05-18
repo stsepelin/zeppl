@@ -81,6 +81,7 @@ target_include_directories(vrod_sim PRIVATE
     ${MAIN_DIR}/display/fonts
     ${MAIN_DIR}/settings
     ${MAIN_DIR}/simulator
+    ${MAIN_DIR}/sound
     ${MAIN_DIR}/vehicle
     ${SIM_DIR}/external/freertos_shim
     ${SIM_DIR}/external/esp_compat
