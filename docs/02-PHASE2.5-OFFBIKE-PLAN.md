@@ -110,9 +110,9 @@ parallel with stages 1–2 by another contributor (or in sequence).
 > with a Nordic-UART-shaped GATT layout (RX write / TX notify), via
 > ESP-HOSTED's SDIO link to the onboard ESP32-C6 controller. Getting
 > here required working around a binutils 2.45 / IDF P4-rev<3 link
-> trap — see `ble-bringup-bisect.md` for the resolution notes and
+> trap — see `firmware/docs/ble-bringup-bisect.md` for the resolution notes and
 > the `default_registered_chips[]` + LVGL-fast-mem-to-flash workaround
-> that's now baked into `main/`. What remains in Stage 3 is the
+> that's now baked into `firmware/main/`. What remains in Stage 3 is the
 > *protocol* work below; the bring-up blocker is gone.
 
 ### Scope

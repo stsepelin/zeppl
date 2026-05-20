@@ -25,36 +25,48 @@ Custom digital instrument cluster replacement for a **2009 Harley-Davidson VRSCF
 ## Repository Structure
 
 ```
-cluster/
-├── CLAUDE.md                          # Working conventions (read this first)
-├── README docs in docs/               # Project planning + brief
+harley/
+├── CLAUDE.md                          # Top-level pointer → per-component CLAUDE.md
+├── docs/                              # Cross-system docs
 │   ├── PROJECT-BRIEF.md               # This file
 │   ├── 00-MASTER-PROJECT-PLAN.md      # Full v5 project plan + budget
-│   └── 01-PHASE2-DISPLAY-PLAN.md      # Phase 2 plan (✅ complete)
-├── main/                              # Firmware sources
-│   ├── main.c                         # app_main: BSP init + boot screen
-│   ├── assets/boot.gif                # Embedded boot animation
-│   ├── vehicle/                       # Shared mutex-guarded state
-│   ├── simulator/                     # Sim engine + sim math + gear table
-│   ├── display/                       # Screens + widgets + fonts + theme
-│   │   ├── boot_screen.{c,h}, screen_ride.{c,h}, ui_manager.{c,h}
-│   │   ├── format.{c,h}, theme.h, widget_util.{c,h}
-│   │   ├── fonts/                     # JBM Bold + MDI font subsets
-│   │   └── widgets/                   # tach_arc, speed, gear, fuel, temp,
-│   │                                  # turn signals, warning lamps, clock,
-│   │                                  # odo, trip, smooth helper
-│   └── CMakeLists.txt
-├── test_apps/host/                    # Unity + Linux-target unit tests
-├── simulator/                         # SDL2 + LVGL desktop simulator
-├── components/                        # Patched Waveshare BSP
-├── managed_components/                # LVGL, ESP LCD/Touch, esp_lvgl_adapter
+│   └── 02-PHASE2.5-OFFBIKE-PLAN.md    # Phase 2.5 (touch / settings / BLE / cameras)
+├── firmware/                          # ESP-IDF cluster firmware
+│   ├── CLAUDE.md                      # Firmware-specific working notes
+│   ├── docs/                          # Firmware-internal docs
+│   │   ├── 01-PHASE2-DISPLAY-PLAN.md  # Phase 2 plan (✅ complete)
+│   │   ├── ARCHITECTURE.md            # Threading, render pipeline, boot
+│   │   ├── ble-bringup-bisect.md      # Resolution notes for the link trap
+│   │   └── waveshare-reference/       # Vendor examples kept for reference
+│   ├── CMakeLists.txt                 # ESP-IDF project root
+│   ├── partitions.csv
+│   ├── sdkconfig.defaults
+│   ├── main/                          # app_main + per-feature subdirs
+│   │   ├── main.c                     # boot sequence + chip-driver table
+│   │   ├── assets/boot.gif            # Embedded boot animation
+│   │   ├── ble/                       # NimBLE peripheral over esp_hosted VHCI
+│   │   ├── phone/                     # Phone-payload protocol parser
+│   │   ├── vehicle/                   # Shared mutex-guarded state
+│   │   ├── simulator/                 # Sim engine + math + gear table
+│   │   ├── settings/                  # NVS-backed user settings
+│   │   ├── sound/                     # ES8311 audio + click samples
+│   │   └── display/                   # Screens + widgets + fonts + theme
+│   ├── components/                    # Patched Waveshare BSP
+│   ├── managed_components/            # LVGL, ESP LCD/Touch, esp_hosted, etc. (gitignored)
+│   ├── simulator/                     # Desktop SDL2 + LVGL simulator
+│   └── test_apps/host/                # Unity + Linux-target unit tests
+├── companion/                         # Android BLE-central app
+│   ├── README.md
+│   ├── app/                           # Kotlin sources (ble/, media/, notif/, ui/)
+│   ├── build.gradle.kts
+│   └── gradlew
 ├── .github/workflows/                 # firmware-build.yml + host-tests.yml
-└── docs/waveshare-reference/          # Vendor examples kept for reference
+└── LICENSE
 ```
 
 ## Current status
 
-- ✅ **Phase 2 — Display & Gauge UI** complete (see `01-PHASE2-DISPLAY-PLAN.md`).
+- ✅ **Phase 2 — Display & Gauge UI** complete (see `firmware/docs/01-PHASE2-DISPLAY-PLAN.md`).
 - ⏳ **Phase 2.5 — Off-bike feature work** in progress (see
   `02-PHASE2.5-OFFBIKE-PLAN.md`): touch + screen switching, settings,
   units toggle, BLE, speed-camera framework. All possible on the
@@ -70,8 +82,8 @@ ABS, battery, immobiliser, low + high beam — beam slot rotates),
 clock + odometer + dual trip counters cycling in a shared slot, and
 an embedded GIF boot animation (LVGL's AnimatedGIF decoder; PPA HW
 accel was tried and dropped — caused banding on this BSP).
-Same widget code drives a desktop SDL2 simulator under `simulator/`
-for iteration without flashing.
+Same widget code drives a desktop SDL2 simulator under
+`firmware/simulator/` for iteration without flashing.
 
 ### Immediate next step: Phase 2.5 — Stage 1
 

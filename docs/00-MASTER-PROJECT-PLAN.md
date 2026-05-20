@@ -331,9 +331,9 @@ J1850 VPW uses CRC-8 with polynomial 0x1D. Implement in firmware or use existing
   shift-light), speedometer, gear, fuel, temp, turn signals, 7 warning
   lamps in chevrons, clock + odo + dual trip counters
 - UI driven by `vehicle_data_t` (mutex-guarded), produced by a
-  synthetic 32-s driving cycle in `main/simulator/sim_engine.c`
+  synthetic 32-s driving cycle in `firmware/main/simulator/sim_engine.c`
 - 30 FPS rendering with skip-if-unchanged caches; sim/UI core-pinned
-- See `01-PHASE2-DISPLAY-PLAN.md` "Outcome" for the full delta
+- See `firmware/docs/01-PHASE2-DISPLAY-PLAN.md` "Outcome" for the full delta
 
 ### Phase 2.5: Off-bike feature work — ⏳ next
 While J1850 + GPS hardware ships, work the features that need only the
@@ -404,7 +404,7 @@ See `02-PHASE2.5-OFFBIKE-PLAN.md` for the full plan + ordering.
       update is interrupted.
     - Out of scope for the link-bring-up bisect; flagged here so it
       isn't forgotten once BLE is fully wired in. See
-      `docs/ble-bringup-bisect.md` for the build-blocker history.
+      `firmware/docs/ble-bringup-bisect.md` for the build-blocker history.
 - Vector map rendering (future)
 - Voice commands via P4's onboard mics (future)
 

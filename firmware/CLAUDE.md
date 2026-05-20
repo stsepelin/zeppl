@@ -6,13 +6,18 @@ ESP-IDF v6.0.1 / LVGL 9.4 / GCC 15 (RISC-V).
 
 Background:
 
-- `docs/PROJECT-BRIEF.md` — what we're building
-- `docs/00-MASTER-PROJECT-PLAN.md` — phases / roadmap
-- `docs/01-PHASE2-DISPLAY-PLAN.md` / `docs/02-PHASE2.5-OFFBIKE-PLAN.md`
-- `docs/ARCHITECTURE.md` — threading, render pipeline, decision history
+- Cross-system docs at the monorepo root:
+  - `../docs/PROJECT-BRIEF.md` — what we're building
+  - `../docs/00-MASTER-PROJECT-PLAN.md` — phases / roadmap
+  - `../docs/02-PHASE2.5-OFFBIKE-PLAN.md` — current phase
+- Firmware-internal docs (here in `firmware/docs/`):
+  - `docs/01-PHASE2-DISPLAY-PLAN.md` — Phase 2 plan (complete)
+  - `docs/ARCHITECTURE.md` — threading, render pipeline, decision history
+  - `docs/ble-bringup-bisect.md` — BLE link-trap resolution notes
 
-This file is for *how to work in the code*, not what we're working
-toward or why each decision is the way it is.
+This file is for *how to work in the firmware code*, not what we're
+working toward or why each decision is the way it is. Path references
+below are relative to this `firmware/` directory.
 
 ## Build & run
 
