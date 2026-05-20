@@ -67,5 +67,14 @@
             </intent-filter>
         </service>
 
+        <!-- Foreground service hosting the BLE link. The 'connectedDevice'
+             type is the right subtype on A14+ for a phone↔companion
+             radio link; matches the FOREGROUND_SERVICE_CONNECTED_DEVICE
+             permission declared above. -->
+        <service
+            android:name=".ble.BleService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
     </application>
 </manifest>

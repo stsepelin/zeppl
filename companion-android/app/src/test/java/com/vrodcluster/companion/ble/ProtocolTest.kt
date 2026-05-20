@@ -130,6 +130,54 @@ class ProtocolTest {
         assertArrayEquals(expected, out)
     }
 
+    // --- UUID byte-shape vs firmware -------------------------------------
+
+    @Test fun `service UUID bytes match the firmware's BLE_UUID128_INIT order`() {
+        // The firmware writes:
+        //   BLE_UUID128_INIT(0x9e, 0xca, 0xdc, 0x24, 0x0e, 0xe5, 0xa9, 0xe0,
+        //                    0x93, 0xf3, 0xa3, 0xb5, 0x01, 0x00, 0x40, 0x6e)
+        // NimBLE stores 128-bit UUIDs little-endian, so the macro bytes
+        // are the reverse of the canonical string form.
+        // Reading them MSB-first → 6E400001-B5A3-F393-E0A9-E50E24DCCA9E.
+        // This test pins that round-trip so a swap on either side fails
+        // loudly instead of producing a different service on the air.
+        val expectedLe = byteArrayOf(
+            0x9e.toByte(), 0xca.toByte(), 0xdc.toByte(), 0x24.toByte(),
+            0x0e.toByte(), 0xe5.toByte(), 0xa9.toByte(), 0xe0.toByte(),
+            0x93.toByte(), 0xf3.toByte(), 0xa3.toByte(), 0xb5.toByte(),
+            0x01.toByte(), 0x00.toByte(), 0x40.toByte(), 0x6e.toByte(),
+        )
+        assertArrayEquals(expectedLe, uuidToLeBytes(Protocol.SERVICE_UUID))
+    }
+
+    @Test fun `RX UUID differs from service by the last-payload byte`() {
+        // RX = SVC but with the second-from-end byte = 0x02. This is
+        // the only byte the firmware's NUS_UUID_BYTES macro varies.
+        val svc = uuidToLeBytes(Protocol.SERVICE_UUID)
+        val rx  = uuidToLeBytes(Protocol.RX_UUID)
+        // Bytes 12 differ: 0x01 → 0x02.
+        assertEquals(0x01.toByte(), svc[12])
+        assertEquals(0x02.toByte(), rx[12])
+        // Everything else identical.
+        for (i in 0 until 16) if (i != 12) assertEquals("byte $i", svc[i], rx[i])
+    }
+
+    @Test fun `TX UUID is RX with the variant byte stepped to 0x03`() {
+        val tx = uuidToLeBytes(Protocol.TX_UUID)
+        assertEquals(0x03.toByte(), tx[12])
+    }
+
+    /** Serialise a UUID to its on-wire little-endian byte form (the
+     *  order NimBLE expects, and the order BLE_UUID128_INIT lists). */
+    private fun uuidToLeBytes(u: java.util.UUID): ByteArray {
+        val msb = u.mostSignificantBits
+        val lsb = u.leastSignificantBits
+        val be  = ByteArray(16)
+        for (i in 0 until 8) be[i]     = ((msb ushr (8 * (7 - i))) and 0xFF).toByte()
+        for (i in 0 until 8) be[8 + i] = ((lsb ushr (8 * (7 - i))) and 0xFF).toByte()
+        return be.reversedArray()
+    }
+
     @Test fun `notif id with sign bit set round-trips correctly`() {
         // 0x80000000 — first bit set. A naive Int.toByteArray would
         // include a sign-extended leading byte; our LE u32 must stay

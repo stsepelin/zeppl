@@ -1,0 +1,117 @@
+package com.vrodcluster.companion.ble
+
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.Service
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ServiceInfo
+import android.os.IBinder
+import android.util.Log
+import androidx.core.app.NotificationCompat
+import com.vrodcluster.companion.MainActivity
+import com.vrodcluster.companion.R
+
+/**
+ * Foreground service that keeps the BLE link alive while the screen is
+ * off. Owns the [BleClient] instance and swaps itself into
+ * [OutboundSink.send] for the duration — the NotificationListener and
+ * MediaWatcher don't know or care that there's a radio now; they
+ * still hand bytes to the sink the same way.
+ *
+ * `FOREGROUND_SERVICE_CONNECTED_DEVICE` is the right subtype on
+ * Android 14+ for a phone-to-companion BLE link. The user sees a
+ * persistent notification while we hold the link.
+ */
+class BleService : Service() {
+
+    private var client:           BleClient?     = null
+    private var previousSinkSend: ((ByteArray) -> Unit)? = null
+
+    override fun onCreate() {
+        super.onCreate()
+        ensureChannel()
+        startForeground(NOTIF_ID, buildNotification(), FG_TYPE)
+
+        client = BleClient(applicationContext).also { c ->
+            // Swap the global sink so any future notif / media event
+            // goes straight to GATT instead of the default logcat path.
+            // Remember the prior lambda so we can restore it in
+            // onDestroy — letting the NotificationListener continue
+            // working in logcat mode after the service stops.
+            previousSinkSend = OutboundSink.send
+            OutboundSink.send = { bytes -> c.write(bytes) }
+            c.start()
+        }
+        Log.i(TAG, "service started; scanning for cluster")
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // STICKY so Android restarts us after a low-memory kill once
+        // pressure subsides. The user's pairing intent is implicit:
+        // they tapped Connect at some point.
+        return START_STICKY
+    }
+
+    override fun onDestroy() {
+        Log.i(TAG, "service stopping")
+        client?.stop()
+        client = null
+        previousSinkSend?.let { OutboundSink.send = it }
+        previousSinkSend = null
+        super.onDestroy()
+    }
+
+    override fun onBind(intent: Intent?): IBinder? = null
+
+    // --- notification scaffolding ---------------------------------------
+
+    private fun ensureChannel() {
+        val nm = getSystemService(NotificationManager::class.java)
+        if (nm.getNotificationChannel(CHANNEL_ID) == null) {
+            nm.createNotificationChannel(
+                NotificationChannel(
+                    CHANNEL_ID,
+                    getString(R.string.ble_channel_name),
+                    // LOW: the user already chose to start us. No need
+                    // for sound or vibration when the link comes up.
+                    NotificationManager.IMPORTANCE_LOW,
+                )
+            )
+        }
+    }
+
+    private fun buildNotification(): Notification {
+        val tap = android.app.PendingIntent.getActivity(
+            this, 0,
+            Intent(this, MainActivity::class.java),
+            android.app.PendingIntent.FLAG_IMMUTABLE,
+        )
+        return NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle(getString(R.string.app_name))
+            .setContentText(getString(R.string.ble_notif_active))
+            .setSmallIcon(android.R.drawable.stat_sys_data_bluetooth)
+            .setContentIntent(tap)
+            .setOngoing(true)
+            .build()
+    }
+
+    companion object {
+        private const val TAG        = "BleService"
+        private const val CHANNEL_ID = "vrod_ble"
+        private const val NOTIF_ID   = 1
+        // ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE — the
+        // permission we declared in the manifest is the gate.
+        private const val FG_TYPE    = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+
+        fun start(context: Context) {
+            val intent = Intent(context, BleService::class.java)
+            context.startForegroundService(intent)
+        }
+
+        fun stop(context: Context) {
+            context.stopService(Intent(context, BleService::class.java))
+        }
+    }
+}

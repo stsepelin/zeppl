@@ -2,6 +2,7 @@ package com.vrodcluster.companion.ble
 
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.UUID
 
 /**
  * Outbound wire format for the V-Rod cluster GATT characteristic.
@@ -26,6 +27,14 @@ object Protocol {
         const val NOTIF_MSG_MAX    = 128
         const val MEDIA_FIELD_MAX  = 48
     }
+
+    // GATT addresses — mirror `main/ble/ble_peripheral.c` on the cluster.
+    // We borrow the Nordic UART Service layout (6E400001-...) because
+    // every generic BLE explorer labels these as "RX / TX" for free
+    // during early validation. The payload bytes are our own TLV.
+    val SERVICE_UUID: UUID = UUID.fromString("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
+    val RX_UUID:      UUID = UUID.fromString("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")   // phone → cluster (write)
+    val TX_UUID:      UUID = UUID.fromString("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")   // cluster → phone (notify)
 
     // Mirrors phone_event_type_t.
     private const val TYPE_NOTIF         : Byte = 0x01

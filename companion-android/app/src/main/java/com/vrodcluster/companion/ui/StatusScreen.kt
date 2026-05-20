@@ -1,5 +1,7 @@
 package com.vrodcluster.companion.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +20,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-// Moved out of the Compose UI module in Lifecycle 2.8; the old location
-// (androidx.compose.ui.platform) still exists but is deprecated.
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.vrodcluster.companion.R
+import com.vrodcluster.companion.ble.BleAccess
+import com.vrodcluster.companion.ble.BleConnState
+import com.vrodcluster.companion.ble.BleService
+import com.vrodcluster.companion.ble.BleState
 import com.vrodcluster.companion.notif.AllowList
 import com.vrodcluster.companion.notif.NotifAccess
 
@@ -34,21 +38,31 @@ fun StatusScreen(onConfigureApps: () -> Unit) {
     val context = LocalContext.current
     val owner   = LocalLifecycleOwner.current
 
-    // No callback fires when the user toggles notification access in
-    // Settings, so we just re-check whenever we come back to the
-    // foreground. Same trick covers any allowlist edits — the count
-    // refreshes on resume from AppListScreen.
-    var granted    by remember { mutableStateOf(NotifAccess.isGranted(context)) }
-    var mutedCount by remember { mutableStateOf(AllowList.blocked(context).size) }
+    // Re-check Settings-managed grants whenever we come back to the
+    // foreground. Notification access has no callback when toggled in
+    // Settings, and the user might also flip an app's allowlist row
+    // before returning here.
+    var notifGranted by remember { mutableStateOf(NotifAccess.isGranted(context)) }
+    var mutedCount   by remember { mutableStateOf(AllowList.blocked(context).size) }
+    var blePerms     by remember { mutableStateOf(BleAccess.allGranted(context)) }
     DisposableEffect(owner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                granted    = NotifAccess.isGranted(context)
-                mutedCount = AllowList.blocked(context).size
+                notifGranted = NotifAccess.isGranted(context)
+                mutedCount   = AllowList.blocked(context).size
+                blePerms     = BleAccess.allGranted(context)
             }
         }
         owner.lifecycle.addObserver(observer)
         onDispose { owner.lifecycle.removeObserver(observer) }
+    }
+
+    // Multi-permission grant for BLE_SCAN + BLE_CONNECT + POST_NOTIFICATIONS.
+    val perm = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        blePerms = result.values.all { it }
+        if (blePerms) BleService.start(context)
     }
 
     Scaffold { pad ->
@@ -63,13 +77,13 @@ fun StatusScreen(onConfigureApps: () -> Unit) {
                 Text(stringResource(R.string.app_name),
                      style = MaterialTheme.typography.headlineMedium)
 
+                // --- notification access section --------------------
                 Text(
-                    if (granted) stringResource(R.string.notif_access_granted)
-                    else         stringResource(R.string.notif_access_missing),
+                    if (notifGranted) stringResource(R.string.notif_access_granted)
+                    else              stringResource(R.string.notif_access_missing),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-
-                if (!granted) {
+                if (!notifGranted) {
                     Button(onClick = { context.startActivity(NotifAccess.grantIntent()) }) {
                         Text(stringResource(R.string.grant_notif_access))
                     }
@@ -83,7 +97,38 @@ fun StatusScreen(onConfigureApps: () -> Unit) {
                         Text(stringResource(R.string.configure_apps))
                     }
                 }
+
+                // --- BLE link section -------------------------------
+                Text(bleStatusText(),
+                     style = MaterialTheme.typography.bodyLarge)
+                if (!blePerms) {
+                    Text(stringResource(R.string.ble_perms_missing),
+                         style = MaterialTheme.typography.bodySmall,
+                         color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Button(onClick = { perm.launch(BleAccess.REQUIRED) }) {
+                        Text(stringResource(R.string.grant_ble_perms))
+                    }
+                } else {
+                    when (BleState.conn) {
+                        BleConnState.IDLE,
+                        BleConnState.DISCONNECTED -> Button(onClick = { BleService.start(context) }) {
+                            Text(stringResource(R.string.connect_cluster))
+                        }
+                        else -> Button(onClick = { BleService.stop(context) }) {
+                            Text(stringResource(R.string.disconnect_cluster))
+                        }
+                    }
+                }
             }
         }
     }
+}
+
+@Composable
+private fun bleStatusText(): String = when (BleState.conn) {
+    BleConnState.IDLE         -> stringResource(R.string.ble_state_idle)
+    BleConnState.SCANNING     -> stringResource(R.string.ble_state_scanning)
+    BleConnState.CONNECTING   -> stringResource(R.string.ble_state_connecting, BleState.deviceName ?: "…")
+    BleConnState.CONNECTED    -> stringResource(R.string.ble_state_connected,  BleState.deviceName ?: "?")
+    BleConnState.DISCONNECTED -> stringResource(R.string.ble_state_disconnected)
 }

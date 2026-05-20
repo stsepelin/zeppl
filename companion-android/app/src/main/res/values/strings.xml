@@ -11,4 +11,15 @@
     <string name="forwarding_all">All apps forwarding</string>
     <string name="forwarding_some_muted">%1$d apps muted</string>
     <string name="back">Back</string>
+    <string name="ble_channel_name">Cluster link</string>
+    <string name="ble_notif_active">Connected to V-Rod cluster</string>
+    <string name="connect_cluster">Connect cluster</string>
+    <string name="disconnect_cluster">Disconnect</string>
+    <string name="ble_state_idle">Not connected</string>
+    <string name="ble_state_scanning">Scanning…</string>
+    <string name="ble_state_connecting">Connecting to %1$s…</string>
+    <string name="ble_state_connected">Connected to %1$s</string>
+    <string name="ble_state_disconnected">Disconnected</string>
+    <string name="ble_perms_missing">Bluetooth + notification permissions needed</string>
+    <string name="grant_ble_perms">Grant Bluetooth permissions</string>
 </resources>
