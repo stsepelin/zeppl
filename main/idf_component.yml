@@ -5,3 +5,18 @@ dependencies:
   lvgl/lvgl:
     version: "^9"
     public: true
+  # esp_hosted provides the VHCI transport shim that satisfies the BT
+  # NimBLE host's ble_transport_to_ll_* symbols. On this board the BLE
+  # controller lives on the ESP32-C6 coproc; esp_hosted talks to it over
+  # SDIO. Gated to P4/H2 so other targets don't pick it up by mistake.
+  espressif/esp_hosted:
+    version: '*'
+    rules:
+      - if: target in [esp32p4, esp32h2]
+  # esp_hosted depends on esp_wifi_remote transitively, but only IDF <6.1
+  # needs us to pin it (IDF 6.1+ provides it natively).
+  espressif/esp_wifi_remote:
+    version: '>=1.3.1'
+    rules:
+      - if: target in [esp32p4, esp32h2]
+      - if: idf_version <6.1

@@ -73,6 +73,18 @@ static int access_rx_cb(uint16_t conn_handle, uint16_t attr_handle,
     return 0;
 }
 
+// NimBLE's ble_gatts_chr_is_sane() rejects entries with access_cb == NULL
+// (table validation, not runtime gate), so even notify-only TX needs a
+// non-NULL stub. The central can't actually read or write TX — the flag
+// set has neither READ nor WRITE — so this is never invoked in practice;
+// notifications go out via ble_gatts_notify_custom() instead.
+static int access_tx_cb(uint16_t conn_handle, uint16_t attr_handle,
+                        struct ble_gatt_access_ctxt *ctxt, void *arg)
+{
+    (void)conn_handle; (void)attr_handle; (void)ctxt; (void)arg;
+    return BLE_ATT_ERR_READ_NOT_PERMITTED;
+}
+
 // --- GATT service table ---------------------------------------------------
 
 static const struct ble_gatt_chr_def chrs[] = {
@@ -84,9 +96,9 @@ static const struct ble_gatt_chr_def chrs[] = {
     {
         // TX (cluster → phone). Notify-only; the command channel that
         // delivers CALL_ACCEPT etc. plugs in here once #33 lands.
-        .uuid      = &TX_UUID.u,
-        .access_cb = NULL,
-        .flags     = BLE_GATT_CHR_F_NOTIFY,
+        .uuid       = &TX_UUID.u,
+        .access_cb  = access_tx_cb,
+        .flags      = BLE_GATT_CHR_F_NOTIFY,
         .val_handle = &s_tx_attr_handle,
     },
     { 0 },

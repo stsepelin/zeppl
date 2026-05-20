@@ -1,6 +1,7 @@
 idf_component_register(
     SRCS
         main.c
+        ble/ble_peripheral.c
         phone/phone_data.c
         phone/phone_protocol.c
         settings/settings.c
@@ -43,6 +44,7 @@ idf_component_register(
         display/fonts/mdi_96.c
     INCLUDE_DIRS
         .
+        ble
         phone
         settings
         sound
@@ -54,7 +56,7 @@ idf_component_register(
     EMBED_FILES
         assets/boot.gif
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl nvs_flash
-             espressif__esp_codec_dev
+             espressif__esp_codec_dev bt spi_flash
 )
 
 # Generated font files (from lv_font_conv) use `#ifdef LV_LVGL_H_INCLUDE_SIMPLE`
@@ -62,26 +64,36 @@ idf_component_register(
 # simple form so the font .c files compile inside the main component.
 target_compile_definitions(${COMPONENT_LIB} PRIVATE LV_LVGL_H_INCLUDE_SIMPLE)
 
-# GCC 15 (IDF v6) rejects LVGL's LV_ATTRIBUTE_FAST_MEM=IRAM_ATTR because
-# IRAM_ATTR's __COUNTER__ puts the header decl and the .c def in different
-# .iram1.N sections. Override with a stable name; paired with
-# CONFIG_LV_ATTRIBUTE_FAST_MEM_USE_IRAM=n in sdkconfig.defaults.
 # LVGL's bundled AnimatedGIF decoder hard-caps width at 480 px. Our boot GIF
-# is 800×800; patch the constant up to 1024 so GIF_openRAM accepts the file.
-# Idempotent — no-op once already patched. Runs each configure so a clean
-# managed_components fetch (CI, fresh clone) re-applies it automatically.
-set(_ANIM_GIF_H "${CMAKE_SOURCE_DIR}/managed_components/lvgl__lvgl/src/libs/gif/AnimatedGIF/src/AnimatedGIF.h")
+# is 800×800; patch the constant up to 800 to match the panel width so
+# GIF_openRAM accepts the file. Idempotent — no-op once already patched.
+# Runs each configure so a clean managed_components fetch (CI, fresh clone)
+# re-applies it automatically.
+set(_ANIM_GIF_H "${CMAKE_SOURCE_DIR}/managed_components/lvgl__lvgl/src/libs/gif/AnimatedGIF.h")
 if(EXISTS "${_ANIM_GIF_H}")
     file(READ "${_ANIM_GIF_H}" _content)
-    string(REPLACE "#define MAX_WIDTH 480" "#define MAX_WIDTH 1024" _patched "${_content}")
+    string(REPLACE "#define MAX_WIDTH 480" "#define MAX_WIDTH 800" _patched "${_content}")
     if(NOT "${_patched}" STREQUAL "${_content}")
         file(WRITE "${_ANIM_GIF_H}" "${_patched}")
-        message(STATUS "Patched AnimatedGIF MAX_WIDTH 480 -> 1024")
+        message(STATUS "Patched AnimatedGIF MAX_WIDTH 480 -> 800")
     endif()
 endif()
 
+# LVGL fast-mem section override. Two concerns served by this one line:
+#  1) GCC 15 rejects LVGL's bundled LV_ATTRIBUTE_FAST_MEM=IRAM_ATTR because
+#     IRAM_ATTR's __COUNTER__ produces different .iram1.N section names for
+#     the header decl and the .c definition. A stable section name fixes it.
+#  2) Routing the section to .text.lvgl_fast (flash via XIP) keeps ~118 KB
+#     of LVGL fast-path code out of IRAM. On P4 silicon revs < v3,
+#     esp_system unconditionally adds -Wl,--enable-non-contiguous-regions
+#     to the link; with LVGL fast-mem also in IRAM, the placer can't fit
+#     the spi_flash chip-driver sections, and binutils 2.45 hangs at the
+#     final ld step instead of erroring out. Steady-state rendering at
+#     60 FPS / 800×800 is unaffected — the L2 cache (256 KB) plus 80 MHz
+#     QIO flash easily covers the LVGL working set. See
+#     docs/ble-bringup-bisect.md for the full investigation.
 idf_component_get_property(LVGL_LIB lvgl__lvgl COMPONENT_LIB)
 target_compile_definitions(${LVGL_LIB} PUBLIC
-    "LV_ATTRIBUTE_FAST_MEM=__attribute__((section(\".iram1.lvgl_fast\")))"
+    "LV_ATTRIBUTE_FAST_MEM=__attribute__((section(\".text.lvgl_fast\")))"
 )
 
