@@ -8,9 +8,7 @@ idf_component_register(
         settings/settings_store.c
         sound/sound.c
         vehicle/vehicle_data.c
-        simulator/sim_engine.c
         simulator/gear_table.c
-        simulator/sim_math.c
         display/boot_screen.c
         display/screen_ride.c
         display/screen_settings.c
@@ -60,6 +58,18 @@ idf_component_register(
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl nvs_flash
              espressif__esp_codec_dev bt spi_flash
 )
+
+# Synthetic driving-cycle simulator. Pulled in by default for bench
+# builds where the gauge needs to visibly swing; compiled out when
+# CONFIG_VROD_INCLUDE_SIM_ENGINE=n so real-bike builds (Phase 3 J1850
+# driver as the producer) don't carry dead weight. gear_table.c stays
+# unconditional — the gear indicator widget reads from it independently.
+if(CONFIG_VROD_INCLUDE_SIM_ENGINE)
+    target_sources(${COMPONENT_LIB} PRIVATE
+        simulator/sim_engine.c
+        simulator/sim_math.c
+    )
+endif()
 
 # Generated font files (from lv_font_conv) use `#ifdef LV_LVGL_H_INCLUDE_SIMPLE`
 # to pick between `#include "lvgl.h"` and `#include "lvgl/lvgl.h"`. We want the

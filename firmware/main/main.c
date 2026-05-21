@@ -12,7 +12,9 @@
 #include "emoji_font.h"
 #include "phone_data.h"
 #include "vehicle_data.h"
+#if CONFIG_VROD_INCLUDE_SIM_ENGINE
 #include "sim_engine.h"
+#endif
 #include "settings_store.h"
 #include "sound.h"
 
@@ -49,7 +51,9 @@ void app_main(void)
     // against an uninitialised vehicle_data store.
     vehicle_data_init();
     phone_data_init();
+#if CONFIG_VROD_INCLUDE_SIM_ENGINE
     sim_engine_start();
+#endif
 
     // Backlight strategy. bsp_display_brightness_init() leaves the LEDC
     // channel at duty 0 (backlight off). bsp_display_brightness_set() and
