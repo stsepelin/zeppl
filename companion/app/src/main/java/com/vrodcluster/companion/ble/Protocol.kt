@@ -53,8 +53,8 @@ object Protocol {
 
     /** A new (or replacing) notification. */
     fun encodeNotif(id: UInt, kind: NotifKind, sender: String, message: String): ByteArray {
-        val senderBytes  = truncatedUtf8(sender,  Limits.NOTIF_SENDER_MAX)
-        val messageBytes = truncatedUtf8(message, Limits.NOTIF_MSG_MAX)
+        val senderBytes  = truncatedUtf8(sanitize(sender),  Limits.NOTIF_SENDER_MAX)
+        val messageBytes = truncatedUtf8(sanitize(message), Limits.NOTIF_MSG_MAX)
         // payload: u32 id, u8 kind, u8 sender_len, sender, u16 msg_len, message
         val payloadLen = 4 + 1 + 1 + senderBytes.size + 2 + messageBytes.size
         val buf = ByteBuffer.allocate(3 + payloadLen).order(ByteOrder.LITTLE_ENDIAN)
@@ -83,8 +83,8 @@ object Protocol {
      * pulls down the media banner if it was showing.
      */
     fun encodeMedia(state: MediaState, artist: String, title: String): ByteArray {
-        val artistBytes = truncatedUtf8(artist, Limits.MEDIA_FIELD_MAX)
-        val titleBytes  = truncatedUtf8(title,  Limits.MEDIA_FIELD_MAX)
+        val artistBytes = truncatedUtf8(sanitize(artist), Limits.MEDIA_FIELD_MAX)
+        val titleBytes  = truncatedUtf8(sanitize(title),  Limits.MEDIA_FIELD_MAX)
         val payloadLen = 1 + 1 + artistBytes.size + 1 + titleBytes.size
         val buf = ByteBuffer.allocate(3 + payloadLen).order(ByteOrder.LITTLE_ENDIAN)
         buf.put(TYPE_MEDIA)
@@ -98,12 +98,34 @@ object Protocol {
     }
 
     /**
+     * Collapse embedded line breaks to a single space so the cluster
+     * label can word-wrap on width alone. Everything else passes
+     * through unchanged — emoji and other codepoints outside the
+     * cluster font's range will render as boxes until a fallback emoji
+     * font is added, but we'd rather show "something is here" than
+     * silently drop content.
+     */
+    internal fun sanitize(s: String): String {
+        val out = StringBuilder(s.length)
+        var i = 0
+        while (i < s.length) {
+            val cp = s.codePointAt(i)
+            when (cp) {
+                0x09, 0x0A, 0x0D -> out.append(' ')
+                else             -> out.appendCodePoint(cp)
+            }
+            i += Character.charCount(cp)
+        }
+        return out.toString()
+    }
+
+    /**
      * Truncate to fit the cluster's fixed buffer. The cluster reserves
      * one byte for the NUL terminator, so we send at most `max - 1`
      * bytes and the receiver appends `\0`. We truncate on a UTF-8
      * codepoint boundary so we never split a multi-byte sequence in
-     * half (the cluster doesn't render emoji yet, but the buffer
-     * shouldn't end with an orphan continuation byte regardless).
+     * half — sanitize already drops non-renderable codepoints, but
+     * Cyrillic is still 2-byte UTF-8.
      */
     private fun truncatedUtf8(s: String, max: Int): ByteArray {
         val raw = s.toByteArray(Charsets.UTF_8)

@@ -88,16 +88,34 @@ class ProtocolTest {
     }
 
     @Test fun `multibyte utf8 sender truncates on codepoint boundary`() {
-        // 16 × "テ" (3 bytes each in UTF-8) = 48 bytes — exactly the cap.
-        // MAX-1 = 47 bytes is the budget; the continuation walk must
-        // back up past the half-encoded "テ" landing us at 15 × 3 = 45.
-        // Pinned exact (not just `% 3 == 0`) so a regression in the
-        // back-walk surfaces precisely instead of producing some other
-        // multiple of three.
-        val s = "テ".repeat(16)
+        // 24 × Cyrillic "Я" (2 bytes each in UTF-8) = 48 bytes — exactly
+        // the cap. MAX-1 = 47 bytes is the budget; the continuation walk
+        // must back up past the half-encoded "Я" landing us at 23 × 2 = 46.
+        // Cyrillic was chosen over Japanese here because sanitize() now
+        // strips codepoints outside the cluster's font range, and the
+        // basic Cyrillic block (0x0400-0x045F) survives — Hiragana would
+        // be dropped entirely, defeating the truncation check.
+        val s = "Я".repeat(24)
         val out = Protocol.encodeNotif(1u, Protocol.NotifKind.APP, s, "")
         val senderLen = out[8].toInt() and 0xFF
-        assertEquals(45, senderLen)
+        assertEquals(46, senderLen)
+    }
+
+    @Test fun `sanitize keeps emoji on the wire`() {
+        // Cluster's JBM font can't render them yet — they'll show as a
+        // box until a fallback emoji font lands — but better visible-but-
+        // ugly than silently dropped. Round-trips identically.
+        assertEquals("hi 😀", Protocol.sanitize("hi 😀"))
+    }
+
+    @Test fun `sanitize keeps ascii cyrillic and degree`() {
+        assertEquals("Привет 25°C", Protocol.sanitize("Привет 25°C"))
+    }
+
+    @Test fun `sanitize collapses control whitespace to spaces`() {
+        // Tab / newline / CR collapse to a single space — the cluster
+        // word-wraps on its own and doesn't honour embedded line breaks.
+        assertEquals("a b c d", Protocol.sanitize("a\tb\nc\rd"))
     }
 
     @Test fun `ascii sender exactly at MAX-1 bytes is not truncated further`() {

@@ -112,6 +112,16 @@ One-liners — see `docs/ARCHITECTURE.md` for the why.
   in `settings.h` clamps loads.
 - **Don't try Lottie again** for the boot screen unless ThorVG's
   rasteriser gets much faster.
+- **`jbm_bold_26.c` / `jbm_bold_33.c` have a manually-stripped `const`** on
+  the `lv_font_t` struct definition (not on the big bitmap/dsc tables —
+  those stay in flash). `emoji_font.c` writes `.fallback` on those two
+  structs at boot to attach the Noto-COLRv1 FreeType font; the P4 maps
+  `.rodata` to flash (XIP), so the struct has to live in `.data`. If you
+  regenerate either font via `lv_font_conv` (see the `Opts:` line in the
+  file header), re-apply the strip on the `lv_font_t jbm_bold_XX = {`
+  line so the assignment doesn't fault at boot. The other JBM sizes (45,
+  72, 144) and the MDI sizes keep their `const` — they're numeric/icon
+  fonts with no emoji to fall back to.
 
 ## Testing
 

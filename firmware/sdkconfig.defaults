@@ -55,6 +55,25 @@ CONFIG_PTHREAD_TASK_CORE_DEFAULT=1
 # which now reuses JBM Bold.
 CONFIG_LV_FONT_MONTSERRAT_14=y
 
+# FreeType runtime font rendering — used for color emoji. The lv_font_conv
+# pipeline can only bake single-color bitmaps, so emoji land here as a
+# runtime fallback (lv_font_t.fallback chain). FT_DISABLE_PNG is on in
+# the espressif freetype port, which rules out NotoColorEmoji's sbix
+# format — we ship Noto-COLRv1 (vector COLR/CPAL) instead.
+#
+# LV_USE_FS_MEMFS lets us hand the FreeType create_font path an in-memory
+# buffer wrapped in lv_fs_path_ex_t instead of a real filesystem path —
+# the TTF is embedded via EMBED_FILES so it lives in flash, not on SD.
+# 'M' = 0x4D is the drive letter the docs suggest.
+CONFIG_LV_USE_FREETYPE=y
+CONFIG_LV_FREETYPE_USE_LVGL_PORT=y
+CONFIG_ESP_LVGL_ADAPTER_ENABLE_FREETYPE=y
+CONFIG_LV_USE_FS_MEMFS=y
+CONFIG_LV_FS_MEMFS_LETTER=77
+# FreeType's COLR rasterizer is stack-hungry — LVGL refuses to compile
+# unless the draw-thread stack is at least 32 KB.
+CONFIG_LV_DRAW_THREAD_STACK_SIZE=32768
+
 # IDF v6 experimental features (BSP needs DSI etc.)
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 

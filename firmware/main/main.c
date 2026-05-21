@@ -10,6 +10,7 @@
 
 #include "ble_peripheral.h"
 #include "boot_screen.h"
+#include "emoji_font.h"
 #include "phone_data.h"
 #include "vehicle_data.h"
 #include "sim_engine.h"
@@ -38,6 +39,10 @@ void app_main(void)
     };
     bsp_display_start_with_config(&cfg);
     settings_store_init();
+    // FreeType + memfs are up by the time bsp_display_start has called
+    // lv_init. Attach the emoji fallback before any widgets get created
+    // so the very first frame can render emoji correctly.
+    emoji_font_init();
 
     // Data sources used by ui_manager_show_ride() at boot-hand-off must
     // exist before boot_screen_show(); otherwise a GIF decode failure

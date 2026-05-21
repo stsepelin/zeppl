@@ -33,6 +33,7 @@ idf_component_register(
         display/widgets/notification_banner.c
         display/widgets/now_playing_display.c
         display/widgets/media_banner.c
+        display/fonts/emoji_font.c
         display/fonts/jbm_bold_26.c
         display/fonts/jbm_bold_33.c
         display/fonts/jbm_bold_45.c
@@ -55,6 +56,7 @@ idf_component_register(
         display/fonts
     EMBED_FILES
         assets/boot.gif
+        assets/emoji.ttf
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl nvs_flash
              espressif__esp_codec_dev bt spi_flash
 )
@@ -78,6 +80,16 @@ if(EXISTS "${_ANIM_GIF_H}")
         message(STATUS "Patched AnimatedGIF MAX_WIDTH 480 -> 800")
     endif()
 endif()
+
+# jbm_bold_26 / jbm_bold_33 have their `lv_font_t` struct definition
+# manually patched to drop `const` (search the .c files for the literal
+# "lv_font_t jbm_bold_" — no `const` qualifier on those lines). Without
+# that the FreeType emoji fallback can't be attached at boot: ESP32-P4
+# maps .rodata to flash (XIP), so writing to the fallback field through
+# a const cast would fault. The big glyph bitmap and dsc tables still
+# have `const` and stay in flash. If you regenerate either font via
+# lv_font_conv (see the `Opts:` comment in each file's header), re-apply
+# the const strip on the lv_font_t line — see CLAUDE.md note.
 
 # LVGL fast-mem section override. Two concerns served by this one line:
 #  1) GCC 15 rejects LVGL's bundled LV_ATTRIBUTE_FAST_MEM=IRAM_ATTR because
