@@ -99,6 +99,14 @@ CONFIG_BT_NIMBLE_NVS_PERSIST=y
 CONFIG_ESP_HOSTED_ENABLED=y
 CONFIG_ESP_HOSTED_ENABLE_BT_NIMBLE=y
 
+# Security manager — LE Secure Connections + numeric-comparison passkey.
+# SM_LEGACY off so we can't fall back to the older (weaker) pairing flow.
+# SM_SC needs the C6 controller side to advertise SC support too, which
+# the esp_hosted bundle does by default. Bonds persist in NVS via
+# BT_NIMBLE_NVS_PERSIST above.
+CONFIG_BT_NIMBLE_SM_LEGACY=n
+CONFIG_BT_NIMBLE_SM_SC=y
+
 # Drop the vendor-specific spi_flash chip-driver registration so
 # winbond / mxic / issi / boya / th don't compete with the generic driver
 # for IRAM placement on P4 < v3 silicon under

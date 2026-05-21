@@ -12,6 +12,7 @@ idf_component_register(
         display/boot_screen.c
         display/screen_ride.c
         display/screen_settings.c
+        display/screen_pairing.c
         display/ui_manager.c
         display/format.c
         display/gesture.c

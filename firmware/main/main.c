@@ -11,6 +11,7 @@
 #include "boot_screen.h"
 #include "emoji_font.h"
 #include "phone_data.h"
+#include "screen_pairing.h"
 #include "vehicle_data.h"
 #if CONFIG_VROD_INCLUDE_SIM_ENGINE
 #include "sim_engine.h"
@@ -87,6 +88,10 @@ void app_main(void)
     sound_init();
     sound_set_volume(settings_store_current()->volume);
     sound_set_enabled(settings_store_current()->sound_enabled);
+    // Register the pairing-prompt UI hook before bringing up the radio,
+    // so a paired phone reconnecting at boot doesn't briefly hit a
+    // null callback during the SM exchange.
+    ble_peripheral_pair_set_callback(screen_pairing_show);
     ble_peripheral_init();
 
     ESP_LOGI(TAG, "boot complete");

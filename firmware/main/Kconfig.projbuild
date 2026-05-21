@@ -20,4 +20,23 @@ menu "V-Rod cluster"
 
             Default y while the bike harness is still pending.
 
+    config VROD_BLE_INSECURE
+        bool "Skip BLE pairing — any central can connect"
+        default n
+        help
+            Disables the LE Secure Connections pairing + bonding flow
+            and lets any nearby central read / write the cluster's
+            characteristics without authentication.
+
+            DO NOT enable on a bike. Only useful for bench work where
+            re-pairing every flash cycle is annoying — e.g. iterating
+            on the notification banner via tools/notify.py while
+            verifying the on-device render path.
+
+            When n (the default): the cluster requires LE Secure
+            Connections numeric-comparison pairing on first connect,
+            shows the 6-digit passkey on the settings screen for the
+            rider to confirm, and stores the bond in NVS so subsequent
+            connects are silent.
+
 endmenu
