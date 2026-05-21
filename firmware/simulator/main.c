@@ -19,6 +19,7 @@
 #include "gesture.h"
 #include "phone_data.h"
 #include "phone_mock.h"
+#include "test_bridge.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,19 +31,30 @@
 
 int main(void)
 {
-    // 1) LVGL core + SDL2 backend
+    // 1) Vehicle state + bridge listener. Comes before SDL window creation
+    //    so headless smoke tests (no display, e.g. CI) can still bind the
+    //    bridge port and validate the parse/apply path even when window
+    //    creation will fail seconds later.
+    vehicle_data_init();
+    phone_data_init();
+    test_bridge_start();       // localhost:7700 listener for ad-hoc payloads
+
+    // 2) LVGL core + SDL2 backend
     lv_init();
     lv_display_t *display = lv_sdl_window_create(DISPLAY_W, DISPLAY_H);
     if (!display) {
-        fprintf(stderr, "failed to create SDL window\n");
-        return 1;
+        // No display attached — common in CI or when SDL_VIDEODRIVER=dummy.
+        // Keep the process alive so the bridge thread (already listening
+        // on localhost:7700) can still service notify.py round-trips for
+        // protocol-level smoke testing without a window.
+        fprintf(stderr, "no SDL display — staying alive for bridge-only mode\n");
+        pause();
+        return 0;
     }
     lv_sdl_window_set_title(display, "V-Rod cluster simulator");
     lv_sdl_mouse_create();
 
-    // 2) Vehicle state + sim cycle (starts a pthread via the FreeRTOS shim)
-    vehicle_data_init();
-    phone_data_init();
+    // 3) Producers that drive vehicle_data + phone_data behind the UI.
     sim_engine_start();
     phone_mock_start();        // scripted notification/media timeline
 

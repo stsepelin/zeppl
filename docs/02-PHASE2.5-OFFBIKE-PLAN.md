@@ -261,10 +261,11 @@ on macOS, fire a payload via CLI, see the rendered banner.
 
 ### Scope
 
-- `firmware/simulator/test_bridge.c` — TCP listener on `localhost:9000`,
+- `firmware/simulator/test_bridge.c` — TCP listener on `localhost:7700`,
   reads raw bytes off the socket → `phone_protocol_parse` →
   `phone_data_apply`. Same pipeline the cluster's BLE RX uses, so the
-  wire format is the single source of truth.
+  wire format is the single source of truth. (7700 chosen so we don't
+  collide with PHP-FPM on 9000.)
 - `tools/notify.py` — small CLI that encodes payloads using the same
   TLV layout (mirrors `companion/.../Protocol.kt` byte-for-byte):
   - `--call "Alice"` → CALL notification, banner shows REJECT/ACCEPT

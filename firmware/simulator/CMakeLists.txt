@@ -56,6 +56,7 @@ add_executable(vrod_sim
     ui_manager_shim.c
     phone_mock.c
     ble_peripheral_shim.c
+    test_bridge.c
     ${MAIN_DIR}/display/widgets/tach_arc.c
     ${MAIN_DIR}/display/widgets/speed_display.c
     ${MAIN_DIR}/display/widgets/gear_indicator.c
