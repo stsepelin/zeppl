@@ -1,0 +1,31 @@
+---
+# Style for firmware C / C++ code. Tuned against the existing tree —
+# applying this format to a clean file should not move a single
+# character. Auto-runs via pre-commit on staged *.c / *.h files in
+# firmware/ (see .pre-commit-config.yaml).
+Language: Cpp
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 100
+# Linux braces: functions get a newline before `{`, control flow keeps
+# the `{` on the same line. Matches the existing tree.
+BreakBeforeBraces: Linux
+AlignAfterOpenBracket: Align
+PointerAlignment: Right
+SortIncludes: false
+SpacesBeforeTrailingComments: 2
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+KeepEmptyLinesAtTheStartOfBlocks: false
+IncludeBlocks: Preserve
+# Column-aligned blocks of macros / assignments / declarations are an
+# established style in the firmware tree (e.g. the #define stacks at the
+# top of every widget). Preserve them; reformatting would create a
+# week's worth of noise diffs the day this config lands.
+AlignConsecutiveMacros: Consecutive
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: Consecutive
+...

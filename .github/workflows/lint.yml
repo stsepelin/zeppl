@@ -1,0 +1,26 @@
+name: lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # Run every hook from .pre-commit-config.yaml against every tracked
+      # file — same surface contributors hit locally. host-tests is
+      # skipped here; the dedicated host-tests.yml job runs it with
+      # coverage gating so duplicating it would just double CI cost.
+      - uses: pre-commit/action@v3.0.1
+        env:
+          SKIP: host-tests
+        with:
+          extra_args: --all-files --show-diff-on-failure

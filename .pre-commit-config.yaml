@@ -1,0 +1,46 @@
+# Run on commit via `pre-commit install` (see firmware/CLAUDE.md). CI
+# re-runs the same hooks on PR via .github/workflows/lint.yml — same
+# config, single source of truth.
+#
+# host-tests is stage-tagged pre-commit so it runs locally on `git commit`
+# but the CI lint workflow skips it (the dedicated host-tests.yml job
+# already runs it with coverage gating; running it twice in CI would
+# double the queue with no signal upside).
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '^(firmware/managed_components|firmware/components/waveshare__esp32_p4_wifi6_touch_lcd_xc|firmware/docs/waveshare-reference|firmware/main/display/fonts|firmware/test_apps/host/external)/'
+      - id: end-of-file-fixer
+        exclude: '^(firmware/managed_components|firmware/components/waveshare__esp32_p4_wifi6_touch_lcd_xc|firmware/docs/waveshare-reference|firmware/main/display/fonts|firmware/test_apps/host/external)/'
+      - id: check-yaml
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: [--maxkb=2048]
+
+  # git clang-format reformats only the changed regions of the staged
+  # diff, not whole files. Keeps the existing tree intact and only
+  # enforces style on lines the current commit touches — the standard
+  # "boy scout rule" pattern.
+  - repo: local
+    hooks:
+      - id: clang-format-diff
+        name: clang-format (changed regions)
+        entry: bash -c 'files=$(git diff --cached --name-only --diff-filter=ACM | grep -E "^firmware/(main|simulator|test_apps)/.*\.(c|h)$" | grep -v "^firmware/main/display/fonts/" || true); if [ -n "$files" ]; then git clang-format --style=file --extensions=c,h -- $files; fi'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+
+  - repo: local
+    hooks:
+      - id: host-tests
+        name: firmware host unit tests
+        entry: bash -c 'cd firmware/test_apps/host && cmake -B build -S . >/dev/null && cmake --build build >/dev/null && ctest --test-dir build --output-on-failure'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+        # Trigger only when something in the tested-by-policy scope or
+        # the host test infra itself changes — no point reverifying when
+        # only docs / sdkconfig / companion code moved.
+        files: '^firmware/(main|test_apps/host)/.*\.(c|h|cmake|txt|CMakeLists\.txt)$'

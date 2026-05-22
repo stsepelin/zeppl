@@ -36,8 +36,21 @@ cd simulator
 cmake -B build -S . && cmake --build build && ./build/vrod_sim
 ```
 
-CI: `host-tests.yml` (Unity + 100 % line/branch gate on the policy scope)
-and `firmware-build.yml` (`espressif/idf:v6.0.1` container).
+CI: `host-tests.yml` (Unity + 100 % line/branch gate on the policy scope),
+`firmware-build.yml` (`espressif/idf:v6.0.1` container), and `lint.yml`
+(clang-format + hygiene hooks via pre-commit).
+
+## Pre-commit hooks
+
+```sh
+pipx install pre-commit          # one-shot, host-wide
+pre-commit install               # in the repo root, once per clone
+```
+
+Runs clang-format on staged C / H under `firmware/`, the standard
+whitespace / EOF / yaml / merge-conflict checks, and the host unit
+tests when something in the tested scope changes. Config lives at
+`.pre-commit-config.yaml` at the repo root.
 
 ## Code style
 
