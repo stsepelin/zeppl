@@ -50,6 +50,25 @@ class NotifMapperTest {
         assertEquals(Protocol.NotifKind.APP, NotifMapper.kindFor("promo"))
     }
 
+    @Test fun `CallStyle template maps to CALL even with null category`() {
+        // Modern dialers (API 31+) use Notification.CallStyle and don't
+        // always set category="call" alongside it. Template wins so the
+        // call still classifies correctly.
+        assertEquals(
+            Protocol.NotifKind.CALL,
+            NotifMapper.kindFor(null, "android.app.Notification\$CallStyle"),
+        )
+    }
+
+    @Test fun `CallStyle template wins over generic category`() {
+        // A CallStyle notification with a non-call category (some dialers
+        // tag it "service" or similar) should still classify as CALL.
+        assertEquals(
+            Protocol.NotifKind.CALL,
+            NotifMapper.kindFor("service", "android.app.Notification\$CallStyle"),
+        )
+    }
+
     // --- drop rules --------------------------------------------------------
 
     @Test fun `own package is dropped`() {
@@ -80,6 +99,22 @@ class NotifMapperTest {
         // call. Same reasoning as the ongoing exemption above.
         val out = encode(category = "call", flags = 0x40)
         assertEquals(0x01.toByte(), out!![0])
+    }
+
+    @Test fun `CallStyle template incoming call survives ongoing and fg-service filters`() {
+        // Reproduces the Samsung Galaxy Fold incoming-call case: dialer
+        // posts a CallStyle notification with category null, isOngoing
+        // true, and FLAG_FOREGROUND_SERVICE set. Pre-fix this combination
+        // was silently dropped; the rider missed every incoming call.
+        val out = encode(
+            category    = null,
+            template    = "android.app.Notification\$CallStyle",
+            isOngoing   = true,
+            flags       = 0x40,   // FLAG_FOREGROUND_SERVICE
+            title       = "John Smith",
+            text        = "Incoming call",
+        )
+        assertEquals(0x01.toByte(), out!![0])    // PHONE_EVT_NOTIF
     }
 
     @Test fun `group summary notifications are dropped`() {

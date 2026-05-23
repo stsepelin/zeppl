@@ -7,11 +7,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
 
-private enum class Screen { Status, AppList }
+private enum class Screen { Status, AppList, Scan }
 
 /**
- * Two-screen root. A navigation library is overkill for the
- * configuration→status loop; `rememberSaveable` survives config
+ * Three-screen root. A navigation library is overkill for the
+ * configuration→status→scan loop; `rememberSaveable` survives config
  * changes (rotation, dark-mode toggle) without a NavController.
  */
 @Composable
@@ -19,8 +19,12 @@ fun App() {
     var screen by rememberSaveable { mutableStateOf(Screen.Status) }
     MaterialTheme {
         when (screen) {
-            Screen.Status  -> StatusScreen (onConfigureApps = { screen = Screen.AppList })
-            Screen.AppList -> AppListScreen(onBack          = { screen = Screen.Status })
+            Screen.Status  -> StatusScreen (
+                onConfigureApps = { screen = Screen.AppList },
+                onPickCluster   = { screen = Screen.Scan },
+            )
+            Screen.AppList -> AppListScreen(onBack = { screen = Screen.Status })
+            Screen.Scan    -> ScanScreen   (onBack = { screen = Screen.Status })
         }
     }
 }

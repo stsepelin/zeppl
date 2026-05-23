@@ -45,6 +45,13 @@ internal object NotifMapper {
     // verbatim — escape it for the Kotlin compiler only.
     private const val TEMPLATE_MEDIA_STYLE = "android.app.Notification\$MediaStyle"
 
+    // Notification.CallStyle (API 31+) is what modern dialers use for
+    // incoming and ongoing calls — Samsung Phone, Google Phone, most
+    // SIP/VoIP apps. They don't always set category="call" alongside it,
+    // so a category-only classifier silently drops the most important
+    // notification we surface on the bike. Match on the template too.
+    private const val TEMPLATE_CALL_STYLE = "android.app.Notification\$CallStyle"
+
     /**
      * Stable 32-bit id for a notification. The cluster uses ids to scope
      * DISMISS events to a specific notif; we need the post→cancel pair
@@ -54,11 +61,17 @@ internal object NotifMapper {
      */
     fun stableId(key: String): UInt = key.hashCode().toUInt()
 
-    /** Map a notification category to the cluster's enum. */
-    fun kindFor(category: String?): Protocol.NotifKind = when (category) {
-        CAT_CALL, CAT_MISSED_CALL -> Protocol.NotifKind.CALL
-        CAT_MESSAGE               -> Protocol.NotifKind.SMS
-        else                      -> Protocol.NotifKind.APP
+    /**
+     * Map a (category, template) pair to the cluster's enum. Template wins
+     * over category — CallStyle dialers post notifications without setting
+     * category, so a template match has to take precedence so the call
+     * doesn't get classified as a generic APP.
+     */
+    fun kindFor(category: String?, template: String? = null): Protocol.NotifKind = when {
+        template == TEMPLATE_CALL_STYLE                  -> Protocol.NotifKind.CALL
+        category == CAT_CALL || category == CAT_MISSED_CALL -> Protocol.NotifKind.CALL
+        category == CAT_MESSAGE                          -> Protocol.NotifKind.SMS
+        else                                             -> Protocol.NotifKind.APP
     }
 
     /**
@@ -87,13 +100,16 @@ internal object NotifMapper {
         // notification as a foreground service. The "drop long-running
         // state" filters below would silently swallow the incoming call,
         // which is the one notification we most want to surface — let
-        // calls through both gates.
-        val isCall = category == CAT_CALL || category == CAT_MISSED_CALL
+        // calls through both gates. Recognise both the legacy category
+        // marker and the CallStyle template (API 31+ dialers).
+        val isCall = category == CAT_CALL ||
+                     category == CAT_MISSED_CALL ||
+                     template == TEMPLATE_CALL_STYLE
         if (!isCall && isOngoing) return null
         if (!isCall && (flags and FLAG_FOREGROUND_SERVICE) != 0) return null
         if (flags and FLAG_GROUP_SUMMARY      != 0) return null
         if (category == CAT_TRANSPORT)          return null
         if (template == TEMPLATE_MEDIA_STYLE)   return null
-        return Protocol.encodeNotif(stableId(key), kindFor(category), title, text)
+        return Protocol.encodeNotif(stableId(key), kindFor(category, template), title, text)
     }
 }

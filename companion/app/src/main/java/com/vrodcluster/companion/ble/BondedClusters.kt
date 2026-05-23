@@ -27,22 +27,54 @@ import android.util.Log
  */
 object BondedClusters {
 
-    private const val TAG          = "BondedClusters"
-    private const val CLUSTER_NAME = "V-Rod Cluster"
+    private const val TAG = "BondedClusters"
 
     /**
-     * Bonded BluetoothDevices that look like V-Rod clusters. Matched by
-     * the cached device name the OS stored at pairing time. Not perfect
-     * — a hostile or malformed peripheral could spoof the name — but
-     * good enough for the companion UI's "forget" affordance, where
-     * the worst case is the user unpairs a device they didn't expect.
+     * Bonded BluetoothDevices that *might* be a V-Rod cluster. The
+     * earlier exact-name filter (== "V-Rod Cluster") missed real
+     * bonds on Samsung phones, which sometimes cache an alias or
+     * truncated name at pairing time; the user-facing symptom was
+     * "the Forget button never shows up". The current filter is
+     * deliberately permissive:
+     *
+     *   - device type is LE or DUAL (no classic-only BR/EDR speakers),
+     *   - cached name OR alias contains "v-rod" (case-insensitive), OR
+     *     the entry has no name at all (some BLE bonds keep only the
+     *     MAC, and we'd rather list it than silently hide it).
+     *
+     * The trade-off: a user with another BLE peripheral whose name
+     * happens to share the "v-rod" substring would see it here. Worst
+     * case the user unpairs an unrelated device — recoverable by
+     * re-pairing it through their phone's normal flow.
      */
     @SuppressLint("MissingPermission")
     fun list(context: Context): List<BluetoothDevice> {
         val adapter = context.getSystemService(BluetoothManager::class.java).adapter
             ?: return emptyList()
         val bonded = adapter.bondedDevices ?: return emptyList()
-        return bonded.filter { it.name == CLUSTER_NAME }
+        // Diagnostic: log every bonded device so a user reporting "no
+        // Forget button" can attach a logcat that shows what the OS
+        // actually has on hand, including names and types. Cheap; runs
+        // once on screen show + lifecycle resume.
+        for (d in bonded) {
+            Log.i(TAG, "bonded: addr=${d.address} name='${d.name}' " +
+                       "alias='${runCatching { d.alias }.getOrNull()}' type=${d.type}")
+        }
+        return bonded.filter { dev ->
+            val isLe = dev.type == BluetoothDevice.DEVICE_TYPE_LE ||
+                       dev.type == BluetoothDevice.DEVICE_TYPE_DUAL ||
+                       dev.type == BluetoothDevice.DEVICE_TYPE_UNKNOWN
+            if (!isLe) return@filter false
+            val name  = dev.name?.lowercase().orEmpty()
+            val alias = runCatching { dev.alias?.lowercase().orEmpty() }.getOrDefault("")
+            // Empty name + LE/DUAL: probably a fresh bond before the
+            // remote name resolved. Worth surfacing so the user can
+            // forget it if it's actually the cluster's MAC.
+            val hasNoName = dev.name.isNullOrBlank() && alias.isBlank()
+            "v-rod" in name || "vrod" in name ||
+                "v-rod" in alias || "vrod" in alias ||
+                hasNoName
+        }
     }
 
     /**

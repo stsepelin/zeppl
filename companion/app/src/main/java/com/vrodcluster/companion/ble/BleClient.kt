@@ -105,6 +105,21 @@ class BleClient(
             }
             writeChar = rxChr
 
+            // Force SMP pairing if the link isn't authenticated yet. The
+            // cluster's RX characteristic is gated with WRITE_AUTHEN; our
+            // writes are WRITE_TYPE_NO_RESPONSE which would silently fail
+            // against an unbonded link (no Write Response to carry the
+            // insufficient-authentication error back to us), so we'd
+            // appear connected but every notification gets dropped at the
+            // peripheral. Explicit createBond() triggers numeric-
+            // comparison pairing with the cluster's screen_pairing UI.
+            val device = g.device
+            if (device.bondState != BluetoothDevice.BOND_BONDED) {
+                Log.i(TAG, "no bond yet; createBond() to trigger SMP pairing")
+                val ok = device.createBond()
+                Log.i(TAG, "createBond() returned $ok")
+            }
+
             // Subscribe to the TX (cluster → phone) notify channel. Two
             // steps: tell Android to deliver notifications for this
             // characteristic locally, then write the CCCD on the peer
@@ -168,6 +183,26 @@ class BleClient(
         BleState.conn = BleConnState.SCANNING
         scanner.startScan(listOf(filter), settings, scanCallback)
         Log.i(TAG, "scanning for cluster")
+    }
+
+    /**
+     * Connect directly to a specific BLE peripheral by MAC, skipping
+     * the scan-and-pick path. Used by the in-app device picker so the
+     * user has explicit control over which cluster they're connecting
+     * to (and the connect path works even when the radio's adv mode
+     * makes the cluster invisible to a generic scan filter).
+     */
+    @SuppressLint("MissingPermission")
+    fun startWithAddress(address: String) {
+        if (BleState.conn != BleConnState.IDLE && BleState.conn != BleConnState.DISCONNECTED) return
+        val adp = adapter ?: run {
+            Log.w(TAG, "no adapter — bluetooth probably off")
+            BleState.conn = BleConnState.IDLE
+            return
+        }
+        val device = adp.getRemoteDevice(address)
+        Log.i(TAG, "direct connect to $address")
+        connectTo(device)
     }
 
     @SuppressLint("MissingPermission")

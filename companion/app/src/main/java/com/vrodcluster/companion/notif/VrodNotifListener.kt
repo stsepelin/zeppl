@@ -4,6 +4,7 @@ import android.app.Notification
 import android.content.ComponentName
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
+import android.util.Log
 import com.vrodcluster.companion.ble.OutboundSink
 import com.vrodcluster.companion.ble.Protocol
 import com.vrodcluster.companion.media.MediaWatcher
@@ -39,21 +40,38 @@ class VrodNotifListener : NotificationListenerService() {
 
 
     override fun onNotificationPosted(sbn: StatusBarNotification) {
-        if (!AllowList.isAllowed(this, sbn.packageName)) return
-        val extras = sbn.notification.extras
-        val title  = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
-        val text   = extras.getCharSequence(Notification.EXTRA_TEXT) ?.toString() ?: ""
+        val extras   = sbn.notification.extras
+        val title    = extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() ?: ""
+        val text     = extras.getCharSequence(Notification.EXTRA_TEXT) ?.toString() ?: ""
+        val category = sbn.notification.category
+        val template = extras.getString(Notification.EXTRA_TEMPLATE)
+        // Diagnostic: log every SBN we see so a user reporting "calls
+        // don't show up" can attach a logcat that pinpoints which gate
+        // dropped the dialer's notification. Field set kept minimal so
+        // the line stays grep-able. Drop reasons logged separately
+        // below.
+        Log.i(TAG, "post pkg=${sbn.packageName} cat=$category tmpl=$template " +
+                   "ongoing=${sbn.isOngoing} flags=0x${"%x".format(sbn.notification.flags)} " +
+                   "title='${title.take(40)}' text='${text.take(40)}'")
+        if (!AllowList.isAllowed(this, sbn.packageName)) {
+            Log.i(TAG, "  drop: muted via allowlist")
+            return
+        }
         val bytes  = NotifMapper.encodePost(
             ownPackage  = packageName,
             packageName = sbn.packageName,
             isOngoing   = sbn.isOngoing,
             flags       = sbn.notification.flags,
             key         = sbn.key,
-            category    = sbn.notification.category,
-            template    = extras.getString(Notification.EXTRA_TEMPLATE),
+            category    = category,
+            template    = template,
             title       = title,
             text        = text,
-        ) ?: return
+        )
+        if (bytes == null) {
+            Log.i(TAG, "  drop: mapper filter")
+            return
+        }
         val id = NotifMapper.stableId(sbn.key)
         // Drop identical reposts. Messaging apps repost the same
         // notification on read receipts / typing indicators / "X is
@@ -62,8 +80,12 @@ class VrodNotifListener : NotificationListenerService() {
         // → skip the BLE write and the LRU bump. Saves a GATT write per
         // status-change ping (Telegram can fire one a second).
         val prev = lastBytesById[id]
-        if (prev != null && prev.contentEquals(bytes)) return
+        if (prev != null && prev.contentEquals(bytes)) {
+            Log.i(TAG, "  drop: identical repost (id=${id.toString(16)})")
+            return
+        }
         lastBytesById[id] = bytes
+        Log.i(TAG, "  forward to cluster (id=${id.toString(16)}, ${bytes.size}B)")
         // Track id → key so a cluster-side dismiss (swipe on the ride
         // screen → CMD_NOTIF_DISMISS over BLE) can find the SBN to
         // cancel. Only one entry per id is kept; if the upstream poster
@@ -86,6 +108,8 @@ class VrodNotifListener : NotificationListenerService() {
     }
 
     companion object {
+        private const val TAG = "VrodNotifListener"
+
         // The active listener instance, set in onListenerConnected. The
         // BLE command handler reads this to dismiss a notification when
         // the cluster fires CMD_NOTIF_DISMISS. Null when the listener

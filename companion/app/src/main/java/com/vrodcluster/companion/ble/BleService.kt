@@ -65,7 +65,16 @@ class BleService : Service() {
             // working in logcat mode after the service stops.
             previousSinkSend = OutboundSink.send
             OutboundSink.send = { bytes -> c.write(bytes) }
-            c.start()
+            // If the caller picked a specific cluster via the in-app
+            // device picker, the chosen MAC arrived as EXTRA_TARGET_ADDRESS.
+            // Otherwise fall back to scan-and-take-first-match.
+            val target = pendingAddress
+            pendingAddress = null
+            if (target != null) {
+                c.startWithAddress(target)
+            } else {
+                c.start()
+            }
         }
         Log.i(TAG, "service started; scanning for cluster")
     }
@@ -145,7 +154,16 @@ class BleService : Service() {
         // permission we declared in the manifest is the gate.
         private const val FG_TYPE    = ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
 
-        fun start(context: Context) {
+        /**
+         * Address the in-app picker chose for the next service start.
+         * Set just before [start]; cleared by onCreate after consumption.
+         * Volatile because the picker thread and the service main thread
+         * touch it back-to-back.
+         */
+        @Volatile private var pendingAddress: String? = null
+
+        fun start(context: Context, address: String? = null) {
+            pendingAddress = address
             val intent = Intent(context, BleService::class.java)
             context.startForegroundService(intent)
         }

@@ -37,7 +37,14 @@ static lv_obj_t *make_button(lv_obj_t *parent, const char *text,
                              lv_event_cb_t on_tap)
 {
     lv_obj_t *btn = lv_button_create(parent);
-    lv_obj_set_size(btn, 260, 80);
+    // 220×70 instead of the prior 260×80 — at the y=720 row used by
+    // the pairing-screen action buttons, the outer corners of a 260-
+    // wide button anchored 60 px in from the bezel sit at ~453 px from
+    // centre, outside the 400 px visible radius of the round panel.
+    // Trimming width to 220 + anchoring with BOTTOM_MID ±120 keeps
+    // every corner under ~388 px from centre, comfortably inside the
+    // visible area.
+    lv_obj_set_size(btn, 220, 70);
     lv_obj_align(btn, align, x, y);
     lv_obj_set_style_bg_color(btn, lv_color_hex(bg_color), 0);
     lv_obj_set_style_radius(btn, 12, 0);
@@ -75,14 +82,16 @@ static void build_screen(void)
     lv_obj_align(s_passkey_label, LV_ALIGN_CENTER, 0, 0);
 
     // Accept (green) and cancel (red) sit side by side near the bottom
-    // of the round display. 130 px in from the centre line keeps them
-    // well inside the bezel at y ≈ 640.
-    make_button(s_screen, "CANCEL",
-                VROD_RED_BRIGHT, 0xFFFFFF,
-                LV_ALIGN_BOTTOM_LEFT,  60, -100, cancel_cb);
-    make_button(s_screen, "ACCEPT",
-                VROD_GREEN_SIGNAL, 0x000000,
-                LV_ALIGN_BOTTOM_RIGHT, -60, -100, accept_cb);
+    // of the round display. Anchored to BOTTOM_MID with ±120 px x-
+    // offsets — that puts each button's centre 120 px to the side of
+    // the vertical midline at y=720, so the inner edges meet around
+    // x=400 and the outer corners stay ~388 px from the centre of the
+    // bezel (visible radius 400). BOTTOM_LEFT / BOTTOM_RIGHT anchors
+    // were the previous layout and clipped the outer corners.
+    make_button(s_screen, "CANCEL", VROD_RED_BRIGHT, 0xFFFFFF, LV_ALIGN_BOTTOM_MID, -120, -80,
+                cancel_cb);
+    make_button(s_screen, "ACCEPT", VROD_GREEN_SIGNAL, 0x000000, LV_ALIGN_BOTTOM_MID, 120, -80,
+                accept_cb);
 }
 
 void screen_pairing_show(uint32_t passkey)

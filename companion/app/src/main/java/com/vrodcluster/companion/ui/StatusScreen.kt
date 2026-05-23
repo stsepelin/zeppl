@@ -36,7 +36,7 @@ import com.vrodcluster.companion.notif.AllowList
 import com.vrodcluster.companion.notif.NotifAccess
 
 @Composable
-fun StatusScreen(onConfigureApps: () -> Unit) {
+fun StatusScreen(onConfigureApps: () -> Unit, onPickCluster: () -> Unit) {
     val context = LocalContext.current
     val owner   = LocalLifecycleOwner.current
 
@@ -123,7 +123,7 @@ fun StatusScreen(onConfigureApps: () -> Unit) {
                 } else {
                     when (BleState.conn) {
                         BleConnState.IDLE,
-                        BleConnState.DISCONNECTED -> Button(onClick = { BleService.start(context) }) {
+                        BleConnState.DISCONNECTED -> Button(onClick = onPickCluster) {
                             Text(stringResource(R.string.connect_cluster))
                         }
                         else -> Button(onClick = { BleService.stop(context) }) {

@@ -122,6 +122,24 @@ static int access_rx_cb(uint16_t conn_handle, uint16_t attr_handle,
     phone_event_t evt;
     phone_parse_result_t pr = phone_protocol_parse(buf, len, &consumed, &evt);
     if (pr == PHONE_PARSE_OK) {
+        // One-line success log so monitor can confirm every TLV reaches
+        // phone_data — the silent path makes "the cluster never showed
+        // the call" indistinguishable from "the cluster never received
+        // the bytes" without it. Cheap: a few notifs per minute at
+        // most.
+        switch (evt.type) {
+        case PHONE_EVT_NOTIF:
+            ESP_LOGI(TAG, "rx NOTIF id=%08lx kind=%d sender='%s' msg='%.40s'",
+                     (unsigned long)evt.notif.id, (int)evt.notif.kind, evt.notif.sender,
+                     evt.notif.message);
+            break;
+        case PHONE_EVT_NOTIF_DISMISS:
+            ESP_LOGI(TAG, "rx DISMISS id=%08lx", (unsigned long)evt.dismiss_id);
+            break;
+        case PHONE_EVT_MEDIA:
+            ESP_LOGI(TAG, "rx MEDIA state=%d", (int)evt.media.state);
+            break;
+        }
         phone_data_apply(&evt);
     } else {
         ESP_LOGW(TAG, "phone_protocol_parse pr=%d consumed=%u len=%u",
@@ -425,19 +443,26 @@ void ble_peripheral_init(void)
     ble_hs_cfg.sync_cb  = on_host_sync;
 
 #if !CONFIG_VROD_BLE_INSECURE
-    // LE Secure Connections + numeric comparison. DISPLAY_ONLY tells the
-    // peer we can show a passkey but can't accept keyboard input, which
-    // routes the rider's confirmation through the cluster's settings
-    // screen (six digits shown on cluster + phone; rider taps ACCEPT if
-    // they match). store_status_cb defaults to ble_store_util_status_rr
-    // — if NVS fills up, oldest bond gets evicted. Persisting bonds in
-    // NVS comes from CONFIG_BT_NIMBLE_NVS_PERSIST=y in sdkconfig.
-    ble_hs_cfg.sm_io_cap          = BLE_HS_IO_DISPLAY_ONLY;
+    // LE Secure Connections + numeric comparison. Picking the right IO
+    // cap is the whole game here:
+    //   - DISPLAY_ONLY × KEYBOARD_DISPLAY (Android) under LE SC selects
+    //     Passkey Entry (cluster displays, phone types). Our gap event
+    //     handler only services BLE_SM_IOACT_NUMCMP, so that path used
+    //     to reject and tear down the link.
+    //   - DISPLAY_YES_NO × KEYBOARD_DISPLAY under LE SC selects Numeric
+    //     Comparison: both sides show the same 6-digit number, each
+    //     user confirms "yes, they match". This is what screen_pairing
+    //     is built for, and it matches the cluster's hardware (we
+    //     have a touchscreen for the yes/no, no keypad for entry).
+    ble_hs_cfg.sm_io_cap          = BLE_HS_IO_DISPLAY_YESNO;
     ble_hs_cfg.sm_bonding         = 1;
     ble_hs_cfg.sm_mitm            = 1;
     ble_hs_cfg.sm_sc              = 1;
     ble_hs_cfg.sm_our_key_dist    = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
     ble_hs_cfg.sm_their_key_dist  = BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID;
+    // store_status_cb defaults to ble_store_util_status_rr — if NVS
+    // fills up, oldest bond gets evicted. Persisting bonds in NVS comes
+    // from CONFIG_BT_NIMBLE_NVS_PERSIST=y in sdkconfig.
     ble_hs_cfg.store_status_cb    = ble_store_util_status_rr;
 #endif
 
