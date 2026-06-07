@@ -2,7 +2,7 @@
 #include "tach_arc.h"
 #include "speed_display.h"
 #include "gear_indicator.h"
-#include "fuel_bar.h"
+#include "fuel_arc.h"
 #include "turn_signals.h"
 #include "temp_display.h"
 #include "warning_lights.h"
@@ -18,11 +18,11 @@
 #include "theme.h"
 #include "ui_manager.h"
 
-// Upshift warning threshold: above this RPM the gear digit blinks red.
+// Upshift warning: above the tach's redline the gear digit blinks red.
 // Lives on the small gear widget so the per-blink invalidation is a tiny
 // ~80×110 region rather than the full 800×800 tach area — that's what
-// made the previous tach-arc-based warnings feel laggy.
-#define WARNING_RPM     9000
+// made the previous tach-arc-based warnings feel laggy. The threshold is
+// TACH_REDLINE_RPM (tach_arc.h) so warning and scale can never disagree.
 
 static lv_obj_t *s_screen;
 static lv_obj_t *s_tach;
@@ -76,13 +76,15 @@ lv_obj_t *screen_ride_create(void)
     s_tach = tach_arc_create(s_screen);
     lv_obj_center(s_tach);
     s_speed = speed_display_create(s_screen);
-    lv_obj_center(s_speed);
+    lv_obj_align(s_speed, LV_ALIGN_CENTER, 0,
+                 -108);  // digit row (container -15) lands on the arrow line
 
-    // Gear + turn signals at the same Y, with the arrows flanking the gear.
+    // Gear sits in the bottom-centre pocket above the fuel arc (where the fuel
+    // pump icon used to be); the turn arrows stay flanking the top-centre slot.
     s_gear = gear_indicator_create(s_screen);
-    lv_obj_align(s_gear, LV_ALIGN_CENTER, 0, -150);
+    lv_obj_align(s_gear, LV_ALIGN_BOTTOM_MID, 0, -70);
     s_turn = turn_signals_create(s_screen);
-    lv_obj_align(s_turn, LV_ALIGN_CENTER, 0, -150);
+    lv_obj_align(s_turn, LV_ALIGN_CENTER, 0, -123);
 
     // Warning lamps flank the speed digits as two chevrons (2 lamps top + 1
     // bottom-centre — a V shape). Left = drivetrain warnings; right = lights
@@ -90,29 +92,30 @@ lv_obj_t *screen_ride_create(void)
     static const lamp_id_t LAMPS_LEFT[]  = { LAMP_OIL, LAMP_ENGINE, LAMP_BATTERY };
     static const lamp_id_t LAMPS_RIGHT[] = { LAMP_ABS, LAMP_BEAM,   LAMP_IMMOBILISER };
     s_warn_l = warning_lights_create(s_screen, LAMPS_LEFT,  3, WARN_LAYOUT_CHEVRON);
-    lv_obj_align(s_warn_l, LV_ALIGN_LEFT_MID, 125, 0);
+    lv_obj_align(s_warn_l, LV_ALIGN_LEFT_MID, 156, 83);
     s_warn_r = warning_lights_create(s_screen, LAMPS_RIGHT, 3, WARN_LAYOUT_CHEVRON);
-    lv_obj_align(s_warn_r, LV_ALIGN_RIGHT_MID, -125, 0);
+    lv_obj_align(s_warn_r, LV_ALIGN_RIGHT_MID, -156, 83);
 
     // Clock, odometer, and the two trip counters share one slot above the
     // fuel bar — they cycle every few seconds (see screen_ride_update). All
     // four widgets share the same alignment; three are always hidden.
     s_clock = clock_display_create(s_screen);
-    lv_obj_align(s_clock, LV_ALIGN_BOTTOM_MID, 0, -203);
+    lv_obj_align(s_clock, LV_ALIGN_BOTTOM_MID, 0, -265);
     s_odo   = odometer_display_create(s_screen);
-    lv_obj_align(s_odo, LV_ALIGN_BOTTOM_MID, 0, -203);
+    lv_obj_align(s_odo, LV_ALIGN_BOTTOM_MID, 0, -265);
     lv_obj_add_flag(s_odo, LV_OBJ_FLAG_HIDDEN);
     s_trip1 = trip_display_create(s_screen, "TRIP1");
-    lv_obj_align(s_trip1, LV_ALIGN_BOTTOM_MID, 0, -203);
+    lv_obj_align(s_trip1, LV_ALIGN_BOTTOM_MID, 0, -265);
     lv_obj_add_flag(s_trip1, LV_OBJ_FLAG_HIDDEN);
     s_trip2 = trip_display_create(s_screen, "TRIP2");
-    lv_obj_align(s_trip2, LV_ALIGN_BOTTOM_MID, 0, -203);
+    lv_obj_align(s_trip2, LV_ALIGN_BOTTOM_MID, 0, -265);
     lv_obj_add_flag(s_trip2, LV_OBJ_FLAG_HIDDEN);
 
-    s_fuel = fuel_bar_create(s_screen);
-    lv_obj_align(s_fuel, LV_ALIGN_BOTTOM_MID, 0, -95);
+    // Fuel arc hugs the bottom bezel; temp sits above it.
+    s_fuel = fuel_arc_create(s_screen);
+    lv_obj_align(s_fuel, LV_ALIGN_BOTTOM_MID, 0, -8);
     s_temp = temp_display_create(s_screen);
-    lv_obj_align(s_temp, LV_ALIGN_BOTTOM_MID, 0, -25);
+    lv_obj_align(s_temp, LV_ALIGN_BOTTOM_MID, 0, -165);
 
     // Bottom-anchored overlays. The notification banner is shown
     // automatically when a notification arrives (resizes between
@@ -145,9 +148,9 @@ lv_obj_t *screen_ride_create(void)
     lv_obj_add_flag(s_media_hint, LV_OBJ_FLAG_HIDDEN);
 
     // BLE connection dot: small blue pip at the top of the round face,
-    // shown only while a central is connected. y=60 sits clear of the
-    // gear digit (LV_ALIGN_CENTER -150 → centred around y=250) and well
-    // inside the visible circle (half-chord at y=60 is ~213 px).
+    // shown only while a central is connected. y=60 sits between the tach
+    // labels and the turn arrows and well inside the visible circle
+    // (half-chord at y=60 is ~213 px).
     s_ble_dot = lv_obj_create(s_screen);
     lv_obj_set_size(s_ble_dot, 16, 16);
     lv_obj_align(s_ble_dot, LV_ALIGN_TOP_MID, 0, 60);
@@ -158,10 +161,10 @@ lv_obj_t *screen_ride_create(void)
     lv_obj_remove_flag(s_ble_dot, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_add_flag(s_ble_dot, LV_OBJ_FLAG_HIDDEN);
 
-    // POI alert popup. Top-anchored just below the BLE dot — sits well
-    // clear of the gear digit at y≈250 from top and stays inside the
-    // round bezel (a 400-wide bar at y=85 has plenty of margin: the
-    // half-chord at y=85 is ~300 px from centre).
+    // POI alert popup. Top-anchored just below the BLE dot — above the
+    // turn arrows / speed block and inside the round bezel (a 400-wide
+    // bar at y=85 has plenty of margin: the half-chord at y=85 is
+    // ~300 px from centre).
     s_poi_popup = poi_alert_popup_create(s_screen);
     lv_obj_align(s_poi_popup, LV_ALIGN_TOP_MID, 0, 85);
 
@@ -177,8 +180,8 @@ void screen_ride_update(const vehicle_data_t *data, const settings_t *settings)
     tach_arc_set_value(s_tach, data->rpm);
     speed_display_set_value(s_speed, data->speed_kmh, units);
     gear_indicator_set(s_gear, data->gear);
-    gear_indicator_set_warning(s_gear, data->rpm > WARNING_RPM);
-    fuel_bar_set_level(s_fuel, data->fuel_level);
+    gear_indicator_set_warning(s_gear, data->rpm > TACH_REDLINE_RPM);
+    fuel_arc_set_level(s_fuel, data->fuel_level);
     turn_signals_set(s_turn, data->turn_left, data->turn_right);
     temp_display_set_value(s_temp, data->engine_temp_c);
     warning_lights_update(s_warn_l, data);

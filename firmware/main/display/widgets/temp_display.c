@@ -52,15 +52,19 @@ void temp_display_set_value(lv_obj_t *cont, int8_t celsius)
     temp_data_t *td = lv_obj_get_user_data(cont);
     if (!td) return;
     bool hot = (celsius >= TEMP_HOT_C);
-    bool text_dirty  = !td->has_value || td->last_c   != celsius;
+    // hot derives from celsius, so the colour can only change when the text
+    // does -- one value check covers both dirty conditions.
+    if (td->has_value && td->last_c == celsius)
+        return;
     bool color_dirty = !td->has_value || td->last_hot != hot;
-    if (!text_dirty && !color_dirty) return;
 
-    if (text_dirty) {
-        char buf[16];
-        snprintf(buf, sizeof(buf), "%d\xC2\xB0""C", (int)celsius);
-        lv_label_set_text(td->value, buf);
-    }
+    char buf[16];
+    snprintf(buf, sizeof(buf),
+             "%d\xC2\xB0"
+             "C",
+             (int)celsius);
+    lv_label_set_text(td->value, buf);
+
     if (color_dirty) {
         // Style writes invalidate the label area even when the color
         // value is unchanged. Skipping these saves an LVGL redraw per

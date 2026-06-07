@@ -40,11 +40,28 @@ jobs:
                '*/firmware/main/display/gesture.c' \
                '*/firmware/main/display/units.c' \
                '*/firmware/main/display/widgets/smooth.c' \
+               '*/firmware/main/display/widgets/fuel_scale.c' \
                '*/firmware/main/phone/phone_data.c' \
                '*/firmware/main/phone/phone_protocol.c' \
                '*/firmware/main/settings/settings.c' \
                '*/firmware/main/vehicle/vehicle_data.c' \
                '*/firmware/main/ble/ble_visibility.c' \
+               '*/firmware/main/display/widgets/sprite_raster.h' \
+               '*/firmware/main/display/widgets/fuel_arc.c' \
+               '*/firmware/main/display/widgets/gear_indicator.c' \
+               '*/firmware/main/display/widgets/speed_display.c' \
+               '*/firmware/main/display/widgets/notification_banner.c' \
+               '*/firmware/main/display/widgets/media_banner.c' \
+               '*/firmware/main/display/widgets/now_playing_display.c' \
+               '*/firmware/main/display/widget_util.c' \
+               '*/firmware/main/display/widgets/temp_display.c' \
+               '*/firmware/main/display/widgets/turn_signals.c' \
+               '*/firmware/main/display/widgets/clock_display.c' \
+               '*/firmware/main/display/widgets/odometer_display.c' \
+               '*/firmware/main/display/widgets/trip_display.c' \
+               '*/firmware/main/display/widgets/warning_lights.c' \
+               '*/firmware/main/display/widgets/poi_alert_popup.c' \
+               '*/firmware/main/display/widgets/tach_arc.c' \
                --output-file coverage.tested.info \
                --rc branch_coverage=1
           lcov --list coverage.tested.info --rc branch_coverage=1

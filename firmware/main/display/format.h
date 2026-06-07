@@ -12,3 +12,9 @@
 //   1234567  -> "1,234,567"
 // `out_size` must be >= 15 (enough for any uint32_t).
 void format_km_grouped(uint32_t value, char *out, size_t out_size);
+
+// Copies `in` into `out`, truncated to at most `max_cp` UTF-8 codepoints
+// (counted per character, not per byte, so multi-byte text isn't cut in
+// half) and appends "..." when truncation happened. Never writes more
+// than out_size bytes including the NUL.
+void format_truncate_utf8(char *out, size_t out_size, const char *in, size_t max_cp);

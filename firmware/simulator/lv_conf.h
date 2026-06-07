@@ -35,6 +35,13 @@
 // --- Image / GIF -----------------------------------------------------------
 #define LV_USE_GIF          1
 
+// --- Screenshot dump (sim-only) -------------------------------------------
+// lv_snapshot renders the active screen to an ARGB buffer; lodepng (encoder
+// on by default) writes it to PNG. Triggered by the VROD_SHOT env var in
+// main.c — lets us eyeball the layout without a physical panel.
+#define LV_USE_SNAPSHOT 1
+#define LV_USE_LODEPNG  1
+
 // --- Fonts that boot_screen falls back on ---------------------------------
 #define LV_FONT_MONTSERRAT_22   1
 #define LV_FONT_MONTSERRAT_48   1

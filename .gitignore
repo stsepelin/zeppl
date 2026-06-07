@@ -16,3 +16,6 @@
 **/coverage.info
 **/coverage.tested.info
 **/coverage_html
+
+# simulator screenshot output (VROD_SHOT)
+firmware/simulator/*.png

@@ -8,7 +8,7 @@ LV_FONT_DECLARE(mdi_96);
 #define ICON_ARROW_LEFT_BOLD   "\xF3\xB0\x9C\xB1"   // U+F0731
 #define ICON_ARROW_RIGHT_BOLD  "\xF3\xB0\x9C\xB4"   // U+F0734
 
-#define CONT_W                 430        // narrower so arrows hug the gear
+#define CONT_W 510  // arrows sit at the edges; wide enough to clear the speed digits
 #define CONT_H                 110
 
 typedef struct {

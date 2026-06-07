@@ -44,9 +44,12 @@ typedef struct {
 
 static void on_btn_clicked(lv_event_t *e)
 {
+    // The buttons get their user_data at create, before any event can fire,
+    // so bd is always valid here.
     mb_data_t      *bd     = lv_obj_get_user_data(lv_event_get_target(e));
     media_action_t  action = (media_action_t)(intptr_t)lv_event_get_user_data(e);
-    if (bd && bd->on_action) bd->on_action(action);
+    if (bd->on_action)
+        bd->on_action(action);
 }
 
 static lv_obj_t *make_btn(lv_obj_t *parent, const char *label_text, mb_data_t *bd, media_action_t action)

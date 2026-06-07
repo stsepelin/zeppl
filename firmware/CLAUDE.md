@@ -13,6 +13,10 @@ Background:
 - Firmware-internal docs (here in `firmware/docs/`):
   - `docs/01-PHASE2-DISPLAY-PLAN.md` — Phase 2 plan (complete)
   - `docs/ARCHITECTURE.md` — threading, render pipeline, decision history
+  - `docs/DISPLAY-PERF-AND-MEMORY.md` — **read before touching anything that
+    draws.** Render/RAM constraints, the bake-don't-transform rules, the
+    internal-RAM budget, the debug playbook (sim+ASan first), and a
+    feature-development checklist.
   - `docs/ble-bringup-bisect.md` — BLE link-trap resolution notes
 
 This file is for *how to work in the firmware code*, not what we're

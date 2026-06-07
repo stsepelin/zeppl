@@ -1,4 +1,5 @@
 #include "notification_banner.h"
+#include "format.h"
 #include "lvgl.h"
 #include "theme.h"
 #include "widget_util.h"
@@ -57,42 +58,14 @@ typedef struct {
     char                   last_message[NOTIF_MSG_MAX];
 } banner_data_t;
 
-// Truncate to MSG_MAX_CHARS codepoints (not bytes — Cyrillic and other
-// multi-byte UTF-8 needs to be counted per character so a 60-char
-// Russian message isn't cut to 30 by a naive byte count). Appends "..."
-// when truncation actually happens. out_sz must comfortably hold
-// MSG_MAX_CHARS × 4 bytes + 4 for the ellipsis + NUL.
-static void truncate_message(char *out, size_t out_sz, const char *in)
-{
-    size_t cp = 0;       // codepoints emitted
-    size_t op = 0;       // output write cursor (bytes)
-    const char *p = in;
-    while (*p && cp < MSG_MAX_CHARS) {
-        unsigned char c = (unsigned char)*p;
-        size_t seq = 1;
-        if      ((c & 0xE0) == 0xC0) seq = 2;
-        else if ((c & 0xF0) == 0xE0) seq = 3;
-        else if ((c & 0xF8) == 0xF0) seq = 4;
-        if (op + seq >= out_sz) break;
-        for (size_t i = 0; i < seq && *p; i++) out[op++] = *p++;
-        cp++;
-    }
-    if (*p && op + 4 < out_sz) {
-        out[op++] = '.';
-        out[op++] = '.';
-        out[op++] = '.';
-    }
-    out[op] = '\0';
-}
-
 static const char *kind_text(banner_mode_t mode, notif_kind_t k)
 {
     if (mode == BANNER_MODE_ACTIVE_CALL) return "IN CALL";
     switch (k) {
     case NOTIF_KIND_CALL: return "CALL";
     case NOTIF_KIND_SMS:  return "SMS";
-    case NOTIF_KIND_APP:
-    default:              return "MSG";
+    default:
+        return "MSG";  // NOTIF_KIND_APP and anything unmapped
     }
 }
 
@@ -102,19 +75,21 @@ static uint32_t kind_color(banner_mode_t mode, notif_kind_t k)
     switch (k) {
     case NOTIF_KIND_CALL: return VROD_GREEN_SIGNAL;
     case NOTIF_KIND_SMS:  return VROD_ORANGE;
-    case NOTIF_KIND_APP:
-    default:              return VROD_TEXT_DIM;
+    default:
+        return VROD_TEXT_DIM;  // NOTIF_KIND_APP and anything unmapped
     }
 }
 
 static void on_btn_clicked(lv_event_t *e)
 {
-    // Banner is stashed as the button's user-data; the action enum is
-    // on the event's user-data slot.
+    // Banner is stashed as the button's user-data (set at create, before any
+    // event can fire, so it is always valid); the action enum is on the
+    // event's user-data slot.
     lv_obj_t      *btn    = lv_event_get_target(e);
     banner_data_t *bd     = lv_obj_get_user_data(btn);
     call_action_t  action = (call_action_t)(intptr_t)lv_event_get_user_data(e);
-    if (bd && bd->on_call_action) bd->on_call_action(action);
+    if (bd->on_call_action)
+        bd->on_call_action(action);
 }
 
 lv_obj_t *notification_banner_create(lv_obj_t *parent, notif_call_action_cb_t on_call_action)
@@ -249,8 +224,7 @@ static void apply_mode(lv_obj_t *cont, banner_data_t *bd, banner_mode_t mode)
         lv_obj_add_flag   (bd->btn_reject, LV_OBJ_FLAG_HIDDEN);
         lv_obj_remove_flag(bd->btn_end_call, LV_OBJ_FLAG_HIDDEN);
         break;
-    case BANNER_MODE_INFO:
-    default:
+    default:  // BANNER_MODE_INFO (NONE never reaches here: caller checks active)
         lv_obj_set_height(cont, BANNER_H_INFO_MIN);
         lv_obj_add_flag   (bd->btn_accept,   LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag   (bd->btn_reject,   LV_OBJ_FLAG_HIDDEN);
@@ -333,13 +307,15 @@ void notification_banner_update(lv_obj_t *cont, const notification_t *notif)
             bd->last_call_sec = elapsed_sec;
         }
     } else if (strcmp(notif->message, bd->last_message) != 0) {
-        // Truncate to MSG_MAX_CHARS so the rendered text never exceeds
-        // 3 lines and overflows the container. Cache the raw input (not
-        // the truncated form) so two raw messages that happen to share
-        // the same prefix still each invalidate when one replaces the
-        // other — the truncation is purely a display concern.
+        // Truncate to MSG_MAX_CHARS codepoints (multi-byte aware — a 60-char
+        // Russian message must not be cut to 30 by a byte count) so the
+        // rendered text never exceeds 3 lines and overflows the container.
+        // Cache the raw input (not the truncated form) so two raw messages
+        // that happen to share the same prefix still each invalidate when
+        // one replaces the other — the truncation is purely a display
+        // concern.
         char shown[NOTIF_MSG_MAX + 4];
-        truncate_message(shown, sizeof(shown), notif->message);
+        format_truncate_utf8(shown, sizeof(shown), notif->message, MSG_MAX_CHARS);
         lv_label_set_text(bd->message_label, shown);
         memcpy(bd->last_message, notif->message, sizeof(bd->last_message));
         if (mode == BANNER_MODE_INFO) fit_info_height(cont, bd);

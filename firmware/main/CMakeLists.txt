@@ -28,7 +28,8 @@ idf_component_register(
         display/widgets/smooth.c
         display/widgets/speed_display.c
         display/widgets/gear_indicator.c
-        display/widgets/fuel_bar.c
+        display/widgets/fuel_arc.c
+        display/widgets/fuel_scale.c
         display/widgets/turn_signals.c
         display/widgets/temp_display.c
         display/widgets/warning_lights.c
