@@ -34,6 +34,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/display/gesture.c
     ${MAIN_DIR}/display/units.c
     ${MAIN_DIR}/display/widgets/smooth.c
+    ${MAIN_DIR}/display/widgets/fuel_scale.c
     ${MAIN_DIR}/phone/phone_data.c
     ${MAIN_DIR}/phone/phone_protocol.c
     ${MAIN_DIR}/settings/settings.c
@@ -62,20 +63,25 @@ target_include_directories(vrod_pure PUBLIC
 target_link_libraries(vrod_pure PUBLIC m)
 
 # --- Widget library --------------------------------------------------------
-# Label-based widgets + the LVGL stub. tach_arc is intentionally excluded —
-# its surface (arc/scale/image) needs a much bigger stub and its caches are
-# small enough that a regression would show up immediately on the device.
+# Every display widget + the LVGL stub. The stub fakes the full surface the
+# widgets touch (labels, images, canvas + a deterministic block-glyph
+# rasterizer, timers, events, heap_caps) so even the baked-sprite widgets
+# run their real bake/update code on host.
 add_library(vrod_widgets STATIC
+    ${MAIN_DIR}/display/widgets/tach_arc.c
     ${MAIN_DIR}/display/widgets/speed_display.c
     ${MAIN_DIR}/display/widgets/gear_indicator.c
+    ${MAIN_DIR}/display/widgets/fuel_arc.c
     ${MAIN_DIR}/display/widgets/temp_display.c
     ${MAIN_DIR}/display/widgets/turn_signals.c
-    ${MAIN_DIR}/display/widgets/fuel_bar.c
     ${MAIN_DIR}/display/widgets/clock_display.c
     ${MAIN_DIR}/display/widgets/odometer_display.c
     ${MAIN_DIR}/display/widgets/trip_display.c
     ${MAIN_DIR}/display/widgets/warning_lights.c
     ${MAIN_DIR}/display/widgets/poi_alert_popup.c
+    ${MAIN_DIR}/display/widgets/notification_banner.c
+    ${MAIN_DIR}/display/widgets/media_banner.c
+    ${MAIN_DIR}/display/widgets/now_playing_display.c
     ${MAIN_DIR}/display/widget_util.c
     external/lvgl_stub/lvgl_stub.c
 )
@@ -84,6 +90,7 @@ target_include_directories(vrod_widgets PUBLIC
     ${MAIN_DIR}/display/widgets
     ${MAIN_DIR}/vehicle
     external/lvgl_stub
+    external/esp_compat
 )
 target_link_libraries(vrod_widgets PUBLIC vrod_pure)  # format helpers
 
@@ -100,6 +107,7 @@ add_unit_test(test_gear_table)
 add_unit_test(test_sim_math)
 add_unit_test(test_format)
 add_unit_test(test_smooth)
+add_unit_test(test_fuel_scale)
 add_unit_test(test_vehicle_data)
 add_unit_test(test_units)
 add_unit_test(test_settings)
@@ -119,3 +127,5 @@ function(add_widget_test name)
 endfunction()
 
 add_widget_test(test_widget_caches)
+add_widget_test(test_sprite_raster)
+add_widget_test(test_tach_arc)

@@ -48,31 +48,41 @@ stay locked to the visual.
 
 ## Render pipeline (the tach is the interesting case)
 
-Everything that's static is pre-baked into ARGB8888 sprites in PSRAM
-once at boot. Per-frame work is reduced to memcpy-with-alpha blits.
+> The hard rules and the full reasoning live in
+> [`DISPLAY-PERF-AND-MEMORY.md`](DISPLAY-PERF-AND-MEMORY.md). Read it before
+> changing anything that draws. Short version below.
+
+Everything dynamic is reduced to **swapping a pre-baked ARGB8888 sprite** (a
+blit), never a per-frame transform or vector rasterization. Only the
+ARGB→RGB565 blender is in fast SRAM; everything else draws from PSRAM XIP, so a
+blit is fast and a transform/rasterize is ~5–20× slower.
 
 | Sprite              | Size    | What it is                                          |
 |---------------------|---------|-----------------------------------------------------|
-| Tail glow ring      | 800×800 | Gaussian halo, orange in the normal sweep + red in  |
-|                     |         | the redline sweep                                   |
-| Cursor (normal)     | 32×72   | Pill-shaped bar with perpendicular Gaussian glow    |
-| Cursor (redline)    | 32×72   | Tighter sigma + red palette, swapped past redline   |
-| Tach track ring     | 800×800 | 5-pixel gray rail at the bezel (was an `lv_arc`)    |
-| Tach scale ticks    | 800×800 | 21 ticks at correct angles + redline coloring (was  |
-|                     |         | an `lv_scale` with section styles)                  |
+| Tach track/glow     | 800×800 | gray rail + Gaussian glow + redline band (was an    |
+|                     |         | `lv_arc`), baked once                               |
+| Tach scale ticks    | 800×800 | 21 ticks at angle + redline colour (was `lv_scale`) |
+| Tach cursor         | 84×84   | **91 pre-rotated + pre-coloured** buckets (3° steps);|
+|                     |         | swap `src` per frame, no runtime rotation           |
+| Tach zoom labels    | per lvl | 6 labels × **16 pre-scaled** sprites; swap `src` by |
+|                     |         | zoom level, no runtime scale                        |
+| Fuel arc ticks      | 280×52  | **one** strip image, redrawn into its buffer only   |
+|                     |         | on a fuel-level change (not 21 `lv_obj`s)           |
 
-Total PSRAM at runtime: ~14 MB / 31 MB (45%).
+**Why bake the track + ticks.** The original `lv_arc`/`lv_scale` re-walked the
+arc path and 21 tick segments in every cursor-movement dirty rect. Baking makes
+the per-frame cost a blit.
 
-**Why bake the track + ticks.** The original `lv_arc` track and
-`lv_scale` widget composed pixels per dirty area. Every cursor-movement
-frame had to re-walk the arc path and re-draw 21 tick line segments in
-the dirty rect. Replacing both with ARGB sprites makes the per-frame
-cost a memory blit; cursor frames dropped noticeably on the device.
+**Why the cursor and labels are baked per-state, not transformed.**
+`lv_image_set_rotation` / `set_scale` run the PSRAM-resident transform
+rasterizer every frame (~100–155 ms during a sweep → ~7 FPS). Baking each
+discrete angle/zoom and swapping `src` makes per-frame cost a blit. Per-element
+caches mean only the changed sprite swaps.
 
-**Why labels are still `lv_label` widgets.** The labels need
-transform-scale animation as the cursor sweeps past them. Per-label
-scale is cached so labels whose scale didn't change skip their style
-set (during a hard RPM transient that's 4 of 6 labels saved per frame).
+**Why the fuel arc is one image, not 21 tick objects.** Recolouring +
+invalidating ~21 scattered `lv_obj`s in one frame crashed the device's
+triple-partial DSI render path (an instruction-access fault that never
+reproduced in the simulator). One image = one invalidation = safe.
 
 ## Upshift warning — the long story
 

@@ -66,7 +66,8 @@ add_executable(vrod_sim
     ${MAIN_DIR}/display/widgets/tach_arc.c
     ${MAIN_DIR}/display/widgets/speed_display.c
     ${MAIN_DIR}/display/widgets/gear_indicator.c
-    ${MAIN_DIR}/display/widgets/fuel_bar.c
+    ${MAIN_DIR}/display/widgets/fuel_arc.c
+    ${MAIN_DIR}/display/widgets/fuel_scale.c
     ${MAIN_DIR}/display/widgets/turn_signals.c
     ${MAIN_DIR}/display/widgets/temp_display.c
     ${MAIN_DIR}/display/widgets/warning_lights.c

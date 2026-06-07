@@ -116,9 +116,9 @@ static bool lamp_state(lamp_id_t id, const vehicle_data_t *d, bool beam_show_hig
         case LAMP_IMMOBILISER: return d->immobiliser_warning;
         case LAMP_LOW_BEAM:    return d->low_beam;
         case LAMP_HIGH_BEAM:   return d->high_beam;
-        case LAMP_BEAM:        return beam_show_high ? d->high_beam : d->low_beam;
-        default:               return false;
-    }
+        default:  // LAMP_BEAM: follow whichever variant is shown
+            return beam_show_high ? d->high_beam : d->low_beam;
+        }
 }
 
 void warning_lights_update(lv_obj_t *cont, const vehicle_data_t *data)

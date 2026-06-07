@@ -70,6 +70,13 @@ void ui_manager_show_settings(void)
     lv_screen_load(s_settings);
 }
 
+// The dedicated BLE device-picker sub-screen isn't built into the sim; route
+// the button to the main settings screen so screen_settings.c links.
+void ui_manager_show_settings_bluetooth(void)
+{
+    ui_manager_show_settings();
+}
+
 void ui_manager_init(void)
 {
     settings_store_init();
