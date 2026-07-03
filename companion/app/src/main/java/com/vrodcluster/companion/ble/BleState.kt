@@ -4,7 +4,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
-enum class BleConnState { IDLE, SCANNING, CONNECTING, CONNECTED, DISCONNECTED }
+enum class BleConnState {
+    IDLE, SCANNING, CONNECTING, CONNECTED, DISCONNECTED,
+    /** Link lost (power cycle / out of range); background reconnect armed. */
+    WAITING,
+}
 
 /**
  * Observable connection state, shared between the foreground service

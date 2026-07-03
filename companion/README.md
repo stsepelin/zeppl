@@ -9,10 +9,22 @@ and this app is the central that pairs with it.
 
 ## Status
 
-**Stage A — scaffolding.** Builds, the Jetpack Compose status screen
-renders, and the wire-format encoder is unit-tested against the
-firmware's C parser fixtures. Platform integration (NotificationListener,
-BLE central, foreground service) still to land — see [Roadmap](#roadmap).
+**Feature-complete for Phase 2.5.** BLE central with scan + device
+picker, LE Secure Connections bonding (numeric comparison), a
+foreground service (`FOREGROUND_SERVICE_CONNECTED_DEVICE`) hosting the
+GATT link, `NotificationListenerService` relay with a per-app
+allow-list, `MediaSessionManager` watcher for now-playing metadata,
+and a `CommandHandler` that dispatches cluster-issued commands (call
+accept/reject/end, media prev/play/pause/next, notification dismiss)
+into `TelecomManager` / `MediaController`. The wire-format encoder is
+unit-tested against the firmware's C parser fixtures.
+
+Auto-reconnect: on link loss (`ReconnectPolicy` — supervision timeout,
+i.e. cluster power cycle or out-of-range) the client re-arms a
+background `connectGatt(autoConnect=true)` to the bonded address, so
+the link heals on every ignition cycle without touching the phone.
+Deliberate disconnects (either side's disconnect button) stay
+disconnected.
 
 ## Why a custom companion app
 
@@ -73,17 +85,20 @@ companion/
 
 ## Roadmap
 
-- [ ] BLE central: scan for `V-Rod Cluster`, bond, open the GATT
+- [x] BLE central: scan for `V-Rod Cluster`, bond, open the GATT
       service, hold the write characteristic, subscribe to the command
       notify characteristic.
-- [ ] Foreground service hosting the BLE link
+- [x] Foreground service hosting the BLE link
       (`FOREGROUND_SERVICE_CONNECTED_DEVICE`).
-- [ ] `NotificationListenerService` → `Protocol.encodeNotif`.
-- [ ] `MediaSessionManager` listener → `Protocol.encodeMedia`.
-- [ ] Inbound command path → Telecom
+- [x] `NotificationListenerService` → `Protocol.encodeNotif`.
+- [x] `MediaSessionManager` listener → `Protocol.encodeMedia`.
+- [x] Inbound command path → Telecom
       (`TelecomManager.acceptRingingCall`, `endCall`) and
-      `MediaController.transportControls` for prev/play/next.
-- [ ] Status / pairing UI on top of `StatusScreen`.
+      media key dispatch for prev/play/next.
+- [x] Status / pairing UI (`StatusScreen`, `ScanScreen`, device picker).
+- [x] Auto-reconnect when the bonded cluster reappears after a power
+      cycle (background `connectGatt(autoConnect=true)` armed on link
+      loss — works under directed advertising, unlike a rescan).
 
 ## License
 

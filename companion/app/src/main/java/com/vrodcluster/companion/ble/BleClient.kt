@@ -43,9 +43,10 @@ class BleClient(
     private val onCommand: (ClientCommand) -> Unit = {},
 ) {
 
-    private val adapter   = appContext.getSystemService(BluetoothManager::class.java).adapter
-    private var gatt:      BluetoothGatt?               = null
-    private var writeChar: BluetoothGattCharacteristic? = null
+    private val adapter    = appContext.getSystemService(BluetoothManager::class.java).adapter
+    private var gatt:       BluetoothGatt?               = null
+    private var writeChar:  BluetoothGattCharacteristic? = null
+    private var lastDevice: BluetoothDevice?             = null
 
     private val scanCallback = object : ScanCallback() {
         @SuppressLint("MissingPermission")
@@ -64,7 +65,10 @@ class BleClient(
         }
     }
 
-    private val gattCallback = object : BluetoothGattCallback() {
+    // Explicit type: the reconnect arm inside onConnectionStateChange
+    // references gattCallback from its own initializer, which Kotlin's
+    // inference can't resolve without the annotation.
+    private val gattCallback: BluetoothGattCallback = object : BluetoothGattCallback() {
 
         @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(g: BluetoothGatt, status: Int, newState: Int) {
@@ -82,7 +86,20 @@ class BleClient(
                     writeChar = null
                     g.close()
                     if (gatt === g) gatt = null
-                    BleState.conn = BleConnState.DISCONNECTED
+                    val dev = lastDevice
+                    if (dev != null && ReconnectPolicy.shouldReconnect(status)) {
+                        // The cluster reboots on every ignition cycle;
+                        // autoConnect=true parks its address on the
+                        // controller accept list so the link re-forms as
+                        // soon as it advertises again — including Stage 8
+                        // directed advertising, which never matches a
+                        // scan filter.
+                        Log.i(TAG, "link lost; arming background reconnect to ${dev.address}")
+                        BleState.conn = BleConnState.WAITING
+                        gatt = dev.connectGatt(appContext, /*autoConnect=*/true, gattCallback)
+                    } else {
+                        BleState.conn = BleConnState.DISCONNECTED
+                    }
                 }
             }
         }
@@ -207,6 +224,9 @@ class BleClient(
 
     @SuppressLint("MissingPermission")
     fun stop() {
+        // User-initiated teardown: clear lastDevice FIRST so the
+        // disconnect callback that follows can't re-arm a reconnect.
+        lastDevice = null
         adapter?.bluetoothLeScanner?.stopScan(scanCallback)
         gatt?.disconnect()
         gatt?.close()
@@ -237,6 +257,7 @@ class BleClient(
 
     @SuppressLint("MissingPermission")
     private fun connectTo(device: BluetoothDevice) {
+        lastDevice = device
         BleState.deviceName = device.name ?: device.address
         BleState.conn = BleConnState.CONNECTING
         gatt = device.connectGatt(appContext, /*autoConnect=*/false, gattCallback)

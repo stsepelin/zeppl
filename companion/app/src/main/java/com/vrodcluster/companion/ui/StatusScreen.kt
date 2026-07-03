@@ -178,4 +178,5 @@ private fun bleStatusText(): String = when (BleState.conn) {
     BleConnState.CONNECTING   -> stringResource(R.string.ble_state_connecting, BleState.deviceName ?: "…")
     BleConnState.CONNECTED    -> stringResource(R.string.ble_state_connected,  BleState.deviceName ?: "?")
     BleConnState.DISCONNECTED -> stringResource(R.string.ble_state_disconnected)
+    BleConnState.WAITING      -> stringResource(R.string.ble_state_waiting,    BleState.deviceName ?: "cluster")
 }

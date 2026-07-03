@@ -19,6 +19,7 @@
     <string name="ble_state_connecting">Connecting to %1$s…</string>
     <string name="ble_state_connected">Connected to %1$s</string>
     <string name="ble_state_disconnected">Disconnected</string>
+    <string name="ble_state_waiting">Waiting for %1$s to reappear…</string>
     <string name="ble_perms_missing">Bluetooth + notification permissions needed</string>
     <string name="grant_ble_perms">Grant Bluetooth permissions</string>
     <string name="pick_cluster_title">Pick a cluster</string>

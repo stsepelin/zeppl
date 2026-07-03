@@ -136,6 +136,7 @@ class BleService : Service() {
         BleConnState.CONNECTING   -> getString(R.string.ble_state_connecting, BleState.deviceName ?: "…")
         BleConnState.CONNECTED    -> getString(R.string.ble_state_connected,  BleState.deviceName ?: "?")
         BleConnState.DISCONNECTED -> getString(R.string.ble_state_disconnected)
+        BleConnState.WAITING      -> getString(R.string.ble_state_waiting,    BleState.deviceName ?: "cluster")
     }
 
     // NotificationManagerCompat handles the POST_NOTIFICATIONS gate
