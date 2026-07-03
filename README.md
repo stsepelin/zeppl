@@ -47,10 +47,13 @@ command line if defaults don't match your setup.
 
 ## Status
 
-Phase 2 (gauge UI) is complete — a synthetic driving cycle drives the
-full widget set at 60 FPS on the round display. Phase 2.5 (off-bike
-work: touch + settings + BLE + camera framework) is in progress.
-Phases 3+ unlock when J1850 and GPS hardware arrives.
+Phase 2 (gauge UI) and Phase 2.5 (off-bike work: touch + settings +
+BLE phone integration + speed-camera framework) are complete — a
+synthetic driving cycle drives the full widget set at 30 FPS on the
+round display. Phase 3 (J1850 bus + IM simulation + GPS) is active:
+the NMEA/GPS software half is in; the transceiver + sniffing work is
+next on the bench. See
+[`docs/03-PHASE3-J1850-GPS-PLAN.md`](docs/03-PHASE3-J1850-GPS-PLAN.md).
 
 See [`docs/00-MASTER-PROJECT-PLAN.md`](docs/00-MASTER-PROJECT-PLAN.md)
 for the full roadmap and [`docs/02-PHASE2.5-OFFBIKE-PLAN.md`](docs/02-PHASE2.5-OFFBIKE-PLAN.md)
@@ -61,7 +64,7 @@ for the active stage breakdown.
 - **Board**: Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C — [vendor page](https://www.waveshare.com/esp32-p4-wifi6-touch-lcd-3.4c.htm)
 - **Bike**: 2009 Harley-Davidson VRSCF Muscle (VRSC family, J1850 VPW bus,
   12-pin instrument harness)
-- **Companion**: any Android 14+ device (API 34+); the companion app is
+- **Companion**: Android 16+ device (minSdk 36); the companion app is
   side-loadable in dev builds
 
 The firmware *should* compile on any ESP32-P4 board with a 16 MB flash

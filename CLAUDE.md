@@ -14,12 +14,16 @@ Two top-level components, one git tree:
 Cross-system docs live at the repo root in `docs/`:
 - `PROJECT-BRIEF.md` — what this project is, current status.
 - `00-MASTER-PROJECT-PLAN.md` — full build plan + phases + budget.
-- `02-PHASE2.5-OFFBIKE-PLAN.md` — the active phase (touch / settings /
-  BLE / camera framework — work that needs only the board we already have).
+- `02-PHASE2.5-OFFBIKE-PLAN.md` — completed phase (touch / settings /
+  BLE / camera framework).
+- `03-PHASE3-J1850-GPS-PLAN.md` — the active phase (J1850 bus + IM
+  simulation + GPS bring-up).
 
 Firmware-internal docs are under `firmware/docs/`:
 - `01-PHASE2-DISPLAY-PLAN.md` — the (complete) gauge-UI phase.
 - `ARCHITECTURE.md` — threading, render pipeline, boot sequence.
+- `DISPLAY-PERF-AND-MEMORY.md` — render/RAM constraints; read before
+  touching anything that draws.
 - `ble-bringup-bisect.md` — resolution notes for the binutils 2.45 /
   IDF P4-rev<3 link trap that blocked BLE bring-up for a while.
 - `waveshare-reference/` — vendor examples kept for reference.
@@ -45,9 +49,10 @@ cd companion
 ./gradlew assembleDebug
 ```
 
-CI: `.github/workflows/firmware-build.yml` (`idf.py build` inside `firmware/`)
-and `.github/workflows/host-tests.yml` (Unity + 100 % line/branch gate on the
-policy scope, inside `firmware/test_apps/host/`).
+CI: `.github/workflows/firmware-build.yml` (`idf.py build` inside `firmware/`),
+`.github/workflows/host-tests.yml` (Unity + 100 % line/branch gate on the
+policy scope, inside `firmware/test_apps/host/`), and
+`.github/workflows/lint.yml` (clang-format + hygiene hooks via pre-commit).
 
 ## Code style (applies to both components)
 

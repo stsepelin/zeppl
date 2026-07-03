@@ -24,7 +24,7 @@ usable on the bench:
 ## What we have already
 
 - Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C: 800×800 round IPS panel,
-  ESP32-P4 dual-core RISC-V @ 360 MHz, 32 MB PSRAM, 32 MB flash,
+  ESP32-P4 dual-core RISC-V @ 360 MHz, 32 MB PSRAM, 16 MB flash,
   microSD slot, **ESP32-C6 co-processor on board** wired via
   ESP-HOSTED for BLE5/WiFi6.
 - GT911 touch controller initialised by the BSP — already shows up as
@@ -496,14 +496,23 @@ shippable without waiting on parts.
 
 Small items left open when the phase closed; none block Phase 3.
 
-- **Cluster → phone media TX** — the media banner's prev/play/next
-  buttons encode nothing yet (`access_tx_cb` is flagged pending and
-  the companion has no command handler). Cluster-side TLV encode +
-  a `MediaSessionManager` dispatch in the companion.
-- **Companion auto-reconnect-on-advert** — after a cluster power
-  cycle the rider must tap "Connect cluster". On the bike that's
-  every ignition cycle; wire `BleService` to rescan/reconnect when
-  the bonded peer's directed advertising reappears.
+- ~~**Cluster → phone media TX**~~ — **done since this list was
+  written**: the banner buttons now encode `PHONE_CMD_MEDIA_*` TLVs
+  (`phone_data.c` → `ble_peripheral_notify`) and the companion's
+  `CommandHandler` dispatches them into `MediaController` /
+  `TelecomManager`.
+- ~~**poi modules not in the coverage gate**~~ — **closed at Phase 3
+  kickoff**: branch gaps filled (degenerate-argument paths, full-bucket
+  drop, directional-camera negative delta, active-alert re-latch, the
+  360° float-rounding bearing wrap) and the three files added to the
+  lcov filters + policy table.
+- ~~**Companion auto-reconnect-on-advert**~~ — **closed at Phase 3
+  kickoff**: on link loss the client arms `connectGatt(autoConnect=
+  true)` to the last device (`ReconnectPolicy` gates on GATT status,
+  so deliberate disconnects don't re-arm). Uses the controller accept
+  list rather than a rescan, which also works under Stage 8 directed
+  advertising. Needs its on-hardware run-through together with the
+  Stage 8 E2E record below.
 - **Stage 8 end-to-end verification record** — the 4-step
   directed-advertising checklist (fresh pair → power-cycle
   invisibility → visibility toggle for a second phone → forget-all)

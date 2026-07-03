@@ -8,7 +8,7 @@
 > at the bottom of this file for the delta between the original plan and
 > what actually got built — mostly the plan got *more* than it called for
 > (richer widget set, full host-test harness, desktop SDL2 simulator,
-> shift-light, hardware-accelerated boot animation). This document is
+> shift-light, embedded GIF boot animation). This document is
 > retained as the historical Phase 2 record; for current architecture see
 > the repo's `CLAUDE.md` and `docs/PROJECT-BRIEF.md`.
 
@@ -957,9 +957,13 @@ Brief delta — for the full file map see `docs/PROJECT-BRIEF.md`.
 - **Widgets**: speedometer, tach, gear, fuel, turn signals, plus the
   ones in the polish list (custom large font, tach redline, turn
   arrows, round-screen mask, V-Rod colour theme).
-- **Performance tuning**: PSRAM framebuffer, double-buffered display,
-  PPA hardware-accelerator path for image blit, RGB565 framebuffer.
-- **Shift light** at >9000 RPM (red bezel ring flashing ~5 Hz).
+- **Performance tuning**: PSRAM framebuffers (triple-partial), RGB565,
+  baked-sprite render path. (PPA hardware accel was tried and later
+  dropped — it caused banding on this BSP; see `ARCHITECTURE.md`.)
+- **Shift light** at >9000 RPM. (Shipped first as a red bezel ring
+  flashing ~5 Hz; that and four other approaches were abandoned for
+  performance — the final form blinks the gear digit. The full
+  iteration story is in `ARCHITECTURE.md`.)
 - **Round-screen mask**: all elements live within the inscribed circle.
 
 ### Beyond the plan
@@ -977,10 +981,11 @@ Brief delta — for the full file map see `docs/PROJECT-BRIEF.md`.
   the existing widgets.
 - **Rotating info slot** above the fuel bar: clock → odometer → trip A
   → trip B, cycled every 5 s. Updates only the visible widget.
-- **Boot animation**: an embedded 800×800 GIF rendered through the PPA
-  accelerator, handed off to the ride screen on `LV_EVENT_READY`.
-  (Lottie/ThorVG was tried first — vector rasterisation at that size
-  isn't real-time on the P4.)
+- **Boot animation**: an embedded GIF (600×600 native — 800×800 was
+  tried but wasn't smooth once PPA was dropped), software-blitted and
+  handed off to the ride screen on `LV_EVENT_READY`. (Lottie/ThorVG
+  was tried first — vector rasterisation at that size isn't real-time
+  on the P4.)
 - **Host unit-test harness** under `test_apps/host/` — Unity + FreeRTOS
   stub + LVGL stub, 6 suites covering pure-logic modules (`gear_table`,
   `sim_math`, `format`, `smooth`, `vehicle_data`) at 100 % line + branch

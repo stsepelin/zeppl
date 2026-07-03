@@ -18,7 +18,7 @@ Custom digital instrument cluster replacement for a **2009 Harley-Davidson VRSCF
 
 - **OS**: macOS (MacBook Pro)
 - **Editor**: Zed
-- **Framework**: ESP-IDF v6.0.1 (with patched Waveshare BSP — `esp_lvgl_adapter ^0.4`)
+- **Framework**: ESP-IDF v6.0.1 (with patched Waveshare BSP — `esp_lvgl_adapter >=0.4.0,<0.4.3`; 0.4.3 needs a post-v6.0.1 IDF)
 - **Target chip**: esp32p4
 - **Project root**: `/Users/stsepelin/Workspace/My Projects/harley` (firmware in `firmware/`, Android app in `companion/`)
 
@@ -30,12 +30,14 @@ harley/
 ├── docs/                              # Cross-system docs
 │   ├── PROJECT-BRIEF.md               # This file
 │   ├── 00-MASTER-PROJECT-PLAN.md      # Full v5 project plan + budget
-│   └── 02-PHASE2.5-OFFBIKE-PLAN.md    # Phase 2.5 (touch / settings / BLE / cameras)
+│   ├── 02-PHASE2.5-OFFBIKE-PLAN.md    # Phase 2.5 (✅ touch / settings / BLE / cameras)
+│   └── 03-PHASE3-J1850-GPS-PLAN.md    # Phase 3 (active: J1850 + IM sim + GPS)
 ├── firmware/                          # ESP-IDF cluster firmware
 │   ├── CLAUDE.md                      # Firmware-specific working notes
 │   ├── docs/                          # Firmware-internal docs
 │   │   ├── 01-PHASE2-DISPLAY-PLAN.md  # Phase 2 plan (✅ complete)
 │   │   ├── ARCHITECTURE.md            # Threading, render pipeline, boot
+│   │   ├── DISPLAY-PERF-AND-MEMORY.md # Render/RAM rules — read before drawing
 │   │   ├── ble-bringup-bisect.md      # Resolution notes for the link trap
 │   │   └── waveshare-reference/       # Vendor examples kept for reference
 │   ├── CMakeLists.txt                 # ESP-IDF project root
@@ -47,6 +49,8 @@ harley/
 │   │   ├── ble/                       # NimBLE peripheral over esp_hosted VHCI
 │   │   ├── phone/                     # Phone-payload protocol parser
 │   │   ├── vehicle/                   # Shared mutex-guarded state
+│   │   ├── gps/                       # gps_source_t store + fake-GPS producer
+│   │   ├── poi/                       # Speed-camera DB + alert engine (Stage 7)
 │   │   ├── simulator/                 # Sim engine + math + gear table
 │   │   ├── settings/                  # NVS-backed user settings
 │   │   ├── sound/                     # ES8311 audio + click samples
@@ -60,7 +64,7 @@ harley/
 │   ├── app/                           # Kotlin sources (ble/, media/, notif/, ui/)
 │   ├── build.gradle.kts
 │   └── gradlew
-├── .github/workflows/                 # firmware-build.yml + host-tests.yml
+├── .github/workflows/                 # firmware-build.yml + host-tests.yml + lint.yml
 └── LICENSE
 ```
 
@@ -72,11 +76,14 @@ harley/
   units toggle, Android BLE phone integration with SC bonding +
   directed advertising, host notification emulator, speed-camera
   framework, no-sim build flag — plus the BMW-style gauge redesign
-  and the 100% host-test coverage gate. Loose ends (media TX buttons,
-  companion auto-reconnect, Stage 8 E2E record, iOS decision) are
-  listed at the bottom of the phase plan.
-- ⏳ **Phase 3 — J1850 bus + IM simulation + GPS** is next: the parts
-  arrived (June 2026).
+  and the 100% host-test coverage gate. Loose ends are listed at the
+  bottom of the phase plan; media TX, companion auto-reconnect, and
+  the poi coverage-gate gap have since been closed. Still open: the
+  Stage 8 + reconnect on-hardware E2E record, and the iOS decision.
+- ⏳ **Phase 3 — J1850 bus + IM simulation + GPS** is active (see
+  `03-PHASE3-J1850-GPS-PLAN.md`). Parts arrived June 2026; the GPS
+  software half (NMEA parser + UART producer, `CONFIG_VROD_GPS_UART`)
+  landed at kickoff — Stage 5 is wiring + validation only.
 
 Phase 2 deliverable summary (as redesigned at the end of Phase 2.5,
 BMW-EfficientDynamics styling): working 800×800 round gauge running
@@ -98,15 +105,15 @@ iteration without flashing.
 
 ### Immediate next step: Phase 3 — J1850 + GPS bring-up
 
-Parts are in hand. Order of attack per the master plan: build the
-IRLZ44N/2N2222 transceiver on a breadboard → passive J1850 sniff
+Full staged plan in `03-PHASE3-J1850-GPS-PLAN.md`. Short version:
+build the transceiver RX-only on a breadboard → passive J1850 sniff
 through the proxy-box T-taps (bike keeps its stock cluster) → decode
-against the HarleyDroid table → IM message replay (verify no U1255 /
-TSSM lockout) → wire the NEO-6M to a P4 UART and parse NMEA into
-`gps_source_t`. The consumer side is already built and host-tested:
-`vehicle_data_t` means the sim → bus swap won't touch the UI, and the
-speed-camera alert engine from Phase 2.5 Stage 7 is waiting on real
-GPS fixes.
+against the HarleyDroid table → IM message replay via TX (verify no
+U1255 / TSSM lockout) → wire the NEO-6M and validate. The software
+consumer side is built and host-tested: `vehicle_data_t` means the
+sim → bus swap won't touch the UI, the NMEA parser + UART producer
+are already in (`CONFIG_VROD_GPS_UART`), and the speed-camera alert
+engine from Phase 2.5 Stage 7 just needs real fixes.
 
 ## Design Decisions Already Made
 

@@ -138,11 +138,6 @@ void phone_data_get(phone_state_t *out)
 }
 
 // --- User actions --------------------------------------------------------
-//
-// For v1 these only update local state; eventually they should also send a
-// command back to the companion app over BLE (ACCEPT_CALL, REJECT_CALL,
-// MEDIA_NEXT etc.). Wiring that goes through a separate phone_bridge
-// module once the on-device BLE path exists.
 
 static void dismiss_active_locked(void)
 {

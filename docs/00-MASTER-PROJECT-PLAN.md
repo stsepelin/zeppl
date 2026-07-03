@@ -21,7 +21,7 @@
 
 | Item | Link | Price | Notes |
 |---|---|---|---|
-| **Waveshare ESP32-P4 3.4" WIFI6 IPS Round Touch LCD** | [AliExpress](https://www.aliexpress.com/item/1005009157965757.html) | ~€86 | The brain. ESP32-P4 360MHz RISC-V dual-core + ESP32-C6 for WiFi6/BLE5. 800×800 round display, optically bonded toughened glass, 32MB PSRAM, 32MB Flash, dual mics, microSD slot. |
+| **Waveshare ESP32-P4 3.4" WIFI6 IPS Round Touch LCD** | [AliExpress](https://www.aliexpress.com/item/1005009157965757.html) | ~€86 | The brain. ESP32-P4 360MHz RISC-V dual-core + ESP32-C6 for WiFi6/BLE5. 800×800 round display, optically bonded toughened glass, 32MB PSRAM, 16MB flash (the listing says 32MB; the module on our board is 16MB — see `firmware/sdkconfig.defaults`), dual mics, microSD slot. |
 | **GPS Module GY-NEO6MV2 (or M8N if available)** | [AliExpress](https://www.aliexpress.com/item/1005006740935763.html) | ~€7 | Position, speed, heading, time. **Pick NEO-M8N variant if available** — multi-constellation is much better in urban areas. |
 
 ### J1850 Bus Interface Components
@@ -125,12 +125,17 @@ Bike 12-pin                                                  │
 GPS (NEO-6M/M8N) ──► UART ──► P4 GPIO                       │
                                                              │
 microSD (32GB) ◄── SDIO ── P4 ◄─────────────────────────────┘
-  ├── OSM vector map data        ESP32-C6 co-processor:
-  ├── Speed camera database        WiFi 6 + BLE 5
-  └── Ride data logs               Phone notifications
-                                   AVRCP media control
-                                   IM bus simulation (TX)
+  ├── OSM vector map data        ESP32-C6 co-processor (BLE radio only —
+  ├── Speed camera database        no Bluetooth Classic):
+  └── Ride data logs               WiFi 6 + BLE 5
+                                   Phone notifications + media metadata
+                                   + transport commands via the companion
+                                   app's GATT link (Android) or ANCS/AMS
+                                   (iOS, Phase 4)
 ```
+
+(IM bus simulation TX happens on the P4 itself, through the IRLZ44N
+transceiver on a GPIO — the C6 is only the phone radio.)
 
 ---
 
@@ -155,46 +160,62 @@ microSD (32GB) ◄── SDIO ── P4 ◄────────────�
 
 ## J1850 BIDIRECTIONAL TRANSCEIVER CIRCUIT
 
+> J1850 VPW is an **active-high** single-wire bus: recessive = 0V,
+> dominant = ~7V *sourced by the transmitting node*. The TX stage must
+> therefore be a switched high-side source — connected to the bus only
+> while transmitting a dominant symbol. (An earlier revision of this
+> schematic had the 12V pull permanently on the bus with a low-side
+> MOSFET shorting it to ground — that polarity is inverted and would
+> jam the bus dominant whenever idle. Do not build that version.)
+
 ```
-                        +12V (from bike)
+                       +12V (from bike)
                          │
-                        ┌┴┐
-                        │ │ 100Ω (current limiting)
-                        └┬┘
-                         │
-                         ├──── Drain (IRLZ44N MOSFET)
-                         │       │
-                         │     Gate ◄──── 1kΩ ──── ESP32-P4 TX GPIO
-                         │       │
-                         │     Source ──── GND
-                         │
-J1850 BUS (7V) ──────────┤
-                         │
-                         ├──── 7.5V Zener ──── GND (clamp)
-                         │
-                         ├──── 10kΩ ────┬──── ESP32-P4 RX GPIO
-                         │              │
-                         │            4.7kΩ
-                         │              │
-                         └──────────────┴──── GND
+                       emitter
+              ┌────── Q2: PNP (2N2907/S8550 from the
+      10kΩ ───┤ base      transistor assortment)
+        │     └────── collector ── 100Ω ──► J1850 BUS
+      drain                                    │
+   Q1: IRLZ44N                                 ├── 7.5V Zener ── GND
+  gate ◄─ 1kΩ ─ ESP32-P4 TX GPIO               │   (sets ~7V dominant level
+      source                                   │    + clamps spikes)
+        │                                      │
+       GND                                     ├── 10kΩ ──┬── ESP32-P4 RX GPIO
+                                               │        4.7kΩ
+                                               │          │
+                                               └──────────┴── GND
 ```
 
-- **Reading**: 10kΩ/4.7kΩ steps 7V → ~2.2V (safe for ESP32 3.3V GPIO)
-- **Writing**: IRLZ44N drives bus to ~7V via 100Ω resistor when TX HIGH
-- **Protection**: 7.5V zener clamps voltage spikes
+- **Writing**: TX GPIO high → Q1 conducts → pulls Q2's base low through
+  the 10kΩ → Q2 sources +12V through the 100Ω onto the bus; the 7.5V
+  zener clamps the driven level to ~7V (the VPW dominant level). TX GPIO
+  low → both transistors off → bus released to recessive 0V. Never hold
+  TX high outside a VPW symbol — a stuck-high TX jams the whole bus.
+- **Reading**: 10kΩ/4.7kΩ steps 7V → ~2.2V (safe for the P4's 3.3V GPIO).
+- **Protection**: the same 7.5V zener clamps transients on the bus wire.
 - **Software**: Port `J1850-VPW-Arduino-Transceiver-Library` to ESP-IDF
+  (its schematic image in `img/schematics.jpg` is the reference for the
+  analog front end — cross-check on the breadboard before the bike).
+- **Bench-validate first**: sniff-only (RX path, no Q1/Q2 populated)
+  against the live bus before ever enabling TX.
 
 ### 12V Discrete Signal Voltage Divider (×6 — for turn L/R, high beam, neutral, oil pressure, ignition)
 
 ```
 12V signal ──── 10kΩ ────┬──── ESP32-P4 GPIO input
                          │
-                       4.7kΩ
+                       2.7kΩ
                          │
                         GND
 ```
 
-12V → 3.8V (safe for 3.3V tolerant GPIO with internal protection diodes)
+Sized for the real electrical system, not the nameplate 12V: with the
+engine running the "12V" rails sit at ~14.4V charging voltage. The
+earlier 10kΩ/4.7kΩ divider gave 3.8V at 12V and **4.6V at 14.4V — both
+above the ESP32-P4's ~3.6V absolute maximum** (P4 GPIOs are not 5V
+tolerant; do not rely on protection diodes). 10kΩ/2.7kΩ gives 2.55V at
+12V and 3.06V at 14.4V — a clean logic high with margin. Belt-and-braces
+option: add a 3.3V zener (from the zener kit) across the lower resistor.
 
 ---
 
@@ -216,7 +237,7 @@ J1850 BUS (7V) ──────────┤
 │  │  │  resistors) ──► Pin 7 (J1850 data)         │  │       │
 │  │  └────────────────────────────────────────────┘  │       │
 │  │                                                   │       │
-│  │  6× voltage dividers (10kΩ + 4.7kΩ each)         │       │
+│  │  6× voltage dividers (10kΩ + 2.7kΩ each)         │       │
 │  │  for pins: 2,3,4,6,9,10                          │       │
 │  │                                                   │       │
 │  │  Pins routed through screw terminals              │       │
@@ -295,11 +316,15 @@ J1850 VPW uses CRC-8 with polynomial 0x1D. Implement in firmware or use existing
 - **AMS** (Apple Media Service): track + artist + play/pause/skip control
 - No companion app required — pair via iOS Settings, done
 
-### Android — Companion app required
-- App with `NotificationListenerService` permission
-- Reads notifications → sends over BLE GATT → P4
-- ~150 lines of Kotlin
-- AVRCP for media works without app (Classic Bluetooth)
+### Android — Companion app required (✅ built in Phase 2.5)
+- Kotlin/Compose app in `companion/` with `NotificationListenerService`
+  + `MediaSessionManager` listeners, a foreground BLE service, LE Secure
+  Connections bonding, and a device-picker UI
+- Notifications + media metadata → custom TLV over BLE GATT → P4;
+  transport commands (call accept/reject, media prev/play/next) come
+  back over the notify characteristic
+- AVRCP is **not** an option: the C6 radio is BLE-only, no Bluetooth
+  Classic — that's exactly why the companion app exists
 
 ### Display priority (highest to lowest)
 1. Incoming call overlay (auto-dismiss after call)
@@ -348,26 +373,32 @@ code. Loose ends carried forward are listed at the bottom of
 - NVS persistence (settings survive reboot)
 - Settings screen with kph/mph toggle, trip reset, brightness
 - Units conversion threaded through every speed/distance widget
-- BLE phone integration (iOS ANCS/AMS via the onboard C6; Android
-  companion app deferred)
+- BLE phone integration (Android companion app + SC bonding +
+  directed advertising; iOS ANCS/AMS deferred to Phase 4)
 - Speed-camera alert framework — data format + alert engine + fake
   GPS test harness; end-to-end validation when GPS arrives
 
 See `02-PHASE2.5-OFFBIKE-PLAN.md` for the full plan + ordering.
 
-### Phase 3: IM Simulation + GPS (Weekends 5-6) — ⏳ next (parts arrived June 2026)
+### Phase 3: IM Simulation + GPS (Weekends 5-6) — ⏳ active (see `03-PHASE3-J1850-GPS-PLAN.md`)
 - Program IM message replay via IRLZ44N TX
 - Test: disconnect stock cluster, verify no U1255
 - Wire NEO-6M/M8N to P4 UART
-- Parse NMEA sentences → position/speed/heading
+- ~~Parse NMEA sentences → position/speed/heading~~ ✅ landed at kickoff
+  (`nmea.c` host-tested at 100%, `gps_uart.c` producer behind
+  `CONFIG_VROD_GPS_UART`)
 - GPS speed as backup + position for alerts
 
-### Phase 4: BLE Phone Integration (Weekends 7-9)
-- iOS: ANCS + AMS via ESP32-C6 co-processor
-- Android: build companion app + BLE relay
-- Navigation banner + music ticker on gauge
-- Incoming call overlay
-- Media play/pause/skip via AMS/AVRCP
+### Phase 4: BLE Phone Integration (Weekends 7-9) — Android half done in 2.5
+- iOS: ANCS + AMS via the C6 (cluster becomes a GATT client of the
+  iPhone — needs peer GATT discovery + two new parsers; see the iOS
+  scope decision in the Phase 2.5 plan)
+- ~~Android: build companion app + BLE relay~~ ✅ landed in Phase 2.5,
+  including call overlay, media banner + working prev/play/next
+- ~~Remaining Android polish: companion auto-reconnect after a cluster
+  power cycle~~ ✅ landed at Phase 3 kickoff (background autoConnect on
+  link loss)
+- Navigation banner (needs turn-by-turn intent from a phone app)
 
 ### Phase 5: Speed Camera Database — on-bike validation (Weekend 10)
 - Download SCDB.info / OSM camera data for Estonia/Baltics
@@ -432,7 +463,9 @@ HEADER             DATA          MEANING
 68 88 10 03         —            Check Engine OFF
 68 88 10 83         —            Check Engine ON
 A8 3B 10 03 XX      XX           Gear: 1,3,7,15,31,63 → gears 1-6
-A8 49 10 10 XX      XX           Engine temp °F → (XX-32)*5/9 for °C
+A8 49 10 10 XX      XX           Engine temp — HarleyDroid decodes the raw
+                                 byte as °C directly (no offset); verify
+                                 against the stock gauge during the sniff
 A8 69 10 06 HH LL  HH LL        Odometer: 1 tick = 0.4 meters
 A8 83 10 0A HH LL  HH LL        Fuel consumption: 1 tick = 0.000040 L
 A8 83 61 12 DX      DX           Fuel gauge 0-6 (0=empty, 6=full)
@@ -489,12 +522,15 @@ A functioning speedometer is required for road use. GPS speed as backup adds red
 
 ## DEVELOPMENT ENVIRONMENT
 
-- **OS**: macOS (your Cursor setup) or Linux
-- **IDE**: VS Code + ESP-IDF extension
-- **Framework**: ESP-IDF v5.x (native C/C++)
+(As actually set up — see `PROJECT-BRIEF.md` for the live version.)
+
+- **OS**: macOS (MacBook Pro)
+- **Editor**: Zed + clangd via `compile_commands.json`
+- **Framework**: ESP-IDF v6.0.1 (native C/C++)
 - **Target chip**: esp32p4
-- **Display**: LVGL v9.x via ESP-IDF component manager
-- **BLE**: ESP-IDF Bluetooth stack on ESP32-C6 co-processor
+- **Display**: LVGL 9.x via ESP-IDF component manager
+- **BLE**: NimBLE host on the P4, controller on the ESP32-C6
+  co-processor via esp_hosted VHCI over SDIO
 - **Programming**: USB-C cable to P4 board (no separate programmer needed)
 
 ---

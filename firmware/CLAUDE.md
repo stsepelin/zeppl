@@ -9,7 +9,7 @@ Background:
 - Cross-system docs at the monorepo root:
   - `../docs/PROJECT-BRIEF.md` — what we're building
   - `../docs/00-MASTER-PROJECT-PLAN.md` — phases / roadmap
-  - `../docs/02-PHASE2.5-OFFBIKE-PLAN.md` — current phase
+  - `../docs/03-PHASE3-J1850-GPS-PLAN.md` — current phase
 - Firmware-internal docs (here in `firmware/docs/`):
   - `docs/01-PHASE2-DISPLAY-PLAN.md` — Phase 2 plan (complete)
   - `docs/ARCHITECTURE.md` — threading, render pipeline, decision history
@@ -154,13 +154,16 @@ One-liners — see `docs/ARCHITECTURE.md` for the why.
 
 Full policy in `test_apps/host/README.md`. Short version:
 
-- **In scope (100 % line + branch required):** pure-logic modules —
-  `gear_table.c`, `sim_math.c`, `format.c`, `units.c`, `smooth.c`,
-  `settings.c`, `vehicle_data.c`.
-- **Behaviour-checked, not coverage-measured:** every label-based widget
-  has cache-regression tests via the LVGL stub.
+- **In scope (100 % line + branch required):** the pure-logic modules —
+  `gear_table.c`, `sim_math.c`, `format.c`, `gesture.c`, `units.c`,
+  `smooth.c`, `fuel_scale.c`, `phone_data.c`, `phone_protocol.c`,
+  `settings.c`, `vehicle_data.c`, `ble_visibility.c`, `poi_math.c`,
+  `poi_db.c`, `poi_alert.c`, `nmea.c` — **plus all the widgets**
+  (including `tach_arc.c`), which run against the LVGL stub and sit
+  inside the same gate.
 - **Out of scope:** fonts (generated), boot/screen wiring (BSP glue),
-  `tach_arc.c` (LVGL stub would double in size for marginal value).
+  `sim_engine.c`'s task body, `gps_source.c` / `gps_sim.c` /
+  `gps_uart.c` producers.
 
 When you add code:
 

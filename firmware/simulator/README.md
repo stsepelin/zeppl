@@ -55,14 +55,22 @@ Quit by closing the SDL window or hitting Ctrl-C.
 
 ```
 simulator/
-├── CMakeLists.txt        # finds SDL2 + LVGL, links the firmware widgets
-├── main.c                # SDL2 window, LVGL init, render loop
-├── lv_conf.h             # LVGL build config (SDL driver + pthread OS)
+├── CMakeLists.txt          # finds SDL2 + LVGL, links the firmware widgets
+├── main.c                  # SDL2 window, LVGL init, render loop
+├── lv_conf.h               # LVGL build config (SDL driver + pthread OS)
+├── test_bridge.c/.h        # TCP listener (localhost:7700) → phone protocol,
+│                           #   driven by tools/notify.py at the repo root
+├── ble_peripheral_shim.c   # stubs the cluster's BLE surface on desktop
+├── ui_manager_shim.c       # desktop stand-in for screen switching
 ├── external/
-│   ├── esp_compat/       # esp_heap_caps.h, esp_log.h shims
-│   └── freertos_shim/    # pthread-backed FreeRTOS surface
+│   ├── esp_compat/         # esp_heap_caps.h, esp_log.h shims
+│   └── freertos_shim/      # pthread-backed FreeRTOS surface
 └── README.md
 ```
+
+To poke phone notifications without hardware: run the sim, then e.g.
+`python3 ../../tools/notify.py --sms "Mom" "running late"` — same TLV
+pipeline the cluster's BLE RX uses (Phase 2.5 Stage 4).
 
 If you add a widget to `main/display/widgets/`, add it to the source
 list in `CMakeLists.txt` here too.

@@ -148,7 +148,8 @@ white flash.
 - **UI tick**: 30 Hz (33 ms). Reads `vehicle_data`, runs the widget
   setter sweep under `bsp_display_lock`.
 - **Event watcher tick**: 100 Hz (10 ms). Independent of LVGL load.
-- **LVGL refresh**: `CONFIG_LV_DEF_REFR_PERIOD=15` (~66 Hz).
+- **LVGL refresh**: `CONFIG_LV_DEF_REFR_PERIOD=33` (~30 Hz, matching
+  the UI tick — see `DISPLAY-PERF-AND-MEMORY.md`).
 - **Boot GIF**: native 600×600, software blit. Native 800×800 was
   attempted but smoothness suffered when PPA was disabled (see
   CLAUDE.md gotchas).
