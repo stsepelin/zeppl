@@ -26,11 +26,26 @@ engine runs on live NMEA fixes.
 Each stage is independently verifiable and the bike stays rideable
 throughout (stock cluster keeps working until Stage 4 testing).
 
-### Stage 1 — Bench transceiver build (hardware)
+### Stage 1 — Bench transceiver build (hardware) — ✅ RX half complete (July 2026)
 
-Breadboard the corrected transceiver from the master plan (see
-"J1850 BIDIRECTIONAL TRANSCEIVER CIRCUIT" — note the schematic was
-fixed at Phase 3 kickoff; the old drawing would jam the bus):
+> Built on breadboard per `schematics/j1850_rx.svg`: R1=10k, R2=4.7k,
+> D1=1N4737A (7.5V 1W), cathode to the bus node. No Q1/Q2 populated.
+> Bench-verified (KUAIQU PSU in CV @ 50 mA limit, UNI-T UT125C DMM,
+> common ground): 7.00V in → **2.285V** at the GPIO node (expect ~2.2V,
+> PASS); 12V through a 330Ω series protection resistor → **7.63V** at
+> the bus node (expect ~7.5V, PASS).
+>
+> TX half (Stage 4) waits on the 2N2907A on order — the kit's 2N2222
+> is NPN and cannot serve as Q2. RX stays on the breadboard until the
+> full transceiver is validated; permanent perfboard build is deferred
+> to Phase 6.
+
+Breadboard the corrected transceiver — rendered schematics in
+[`schematics/`](schematics/): [RX front end](schematics/j1850_rx.svg)
+(this stage) and [TX stage](schematics/j1850_tx.svg) (Stage 4). The
+master plan's "J1850 BIDIRECTIONAL TRANSCEIVER CIRCUIT" section has
+the same drawings plus the design notes; the schematic was fixed at
+Phase 3 kickoff — the old drawing would jam the bus:
 
 - **Populate RX only first**: 10kΩ/4.7kΩ divider + 7.5V zener. No Q1/Q2
   — physically impossible to disturb the bus while sniffing.
@@ -41,18 +56,50 @@ fixed at Phase 3 kickoff; the old drawing would jam the bus):
 
 ### Stage 2 — Passive sniff (bike + proxy box, stock cluster in place)
 
+> **Bench portion ✅ (July 2026).** Two-wire link verified end to end:
+> divider node → GPIO 20, common ground, ESP on its own USB. BENCH
+> screen showed LINE reacting to input toggling (pin identity proven,
+> 5218 edges from manual toggling), FRAMES 0 / bad 0 / ovr 0 in
+> silence — the decoder correctly refuses noise. What remains in this
+> stage is the bike half below.
+
 - T-tap pin 7 (LGN/V, J1850 data) through the proxy box; RX-only
   transceiver → P4 GPIO.
-- **VPW symbol decoder**: J1850 VPW encodes bits in pulse *widths*
-  (~64µs vs ~128µs, alternating bus level). Plan: RMT peripheral in RX
-  mode captures edge timings in hardware; a pure-logic decoder
-  (`j1850_vpw.c` — host-testable from canned timing arrays) turns
-  duration sequences into message bytes + validates CRC-8 (poly 0x1D).
-- Sniffer build logs every frame (header + payload + CRC ok/fail) over
-  USB serial. Log 5+ minutes of ignition-on, engine-running, and riding.
+- **VPW symbol codec — ✅ landed** (`firmware/main/j1850/j1850_vpw.c`):
+  pure-logic pulse-width decoder (SOF/bit/EOD/EOF classification, IFR
+  sections, CRC-8/SAE-J1850) plus the matching encoder for Stage 4 TX;
+  encode → decode round-trip tested at 100% line/branch.
+- **Sniffer build — ✅ landed** (`CONFIG_VROD_J1850_SNIFFER` +
+  `CONFIG_VROD_J1850_RX_GPIO`, default 20): GPIO edge ISR times pulses
+  into a queue; a task decodes and logs one line per frame (hex bytes,
+  CRC verdict, IFR if present) plus 10 s stats (frames / bad CRC /
+  overruns). Read-only build — no TX path compiled in at all.
+- **Bench screen — ✅ landed**: sniffer builds add a BENCH sub-page in
+  settings (long-press → SETTINGS → BENCH) showing the calibrated RX
+  pin voltage + back-calculated bus voltage, live line level, edge
+  count, frame/CRC/overrun counters, and the last decoded frame — the
+  Stage 1/2 checks without a laptop or DMM attached. (The ADC readout
+  briefly crash-looped the board; root cause was pre-scheduler heap
+  margin, fixed in `sdkconfig.defaults` — see the addendum in
+  `firmware/docs/ble-bringup-bisect.md`. Phase 6's fuel ADC is
+  unblocked by the same fix.)
+- **Pin choice resolved**: GPIO 20 (J1850) and GPIO 21 (GPS) are
+  confirmed broken out on the 40-pin header and unclaimed — full pin
+  budget, header silkscreen map, and the GPIO 22 = fuel-ADC
+  reservation live in `firmware/docs/PINS.md`. For physical
+  confirmation, set `VROD_PIN_WIGGLE_GPIO` in menuconfig and DMM-probe
+  the header (0V↔3.3V every 2.5 s).
+- Remaining in this stage: two-wire link (divider node → GPIO 20, GND
+  → GND), repeat the 7V→~2.2V check measured *at the ESP pin*, then
+  T-tap and capture 5+ minutes each of ignition-on / idle / riding
+  into `firmware/docs/captures/` (procedure + naming in its README).
 - Deliverables: a capture corpus checked into `firmware/docs/captures/`
   (small text files), and the IM-originated message set identified —
-  what the ECM expects to keep hearing.
+  what the ECM expects to keep hearing. Specifically confirm whether
+  the fuel-gauge broadcast (`A8 83 61 12`) is IM-originated: the 2009
+  fuel sender is ultrasonic and wired to the IM, so that message
+  likely dies with the stock cluster (see the master plan's Phase 6
+  fuel-sender caveat for the fallback strategies).
 
 ### Stage 3 — Decode → vehicle_data producer
 

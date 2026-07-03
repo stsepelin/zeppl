@@ -153,7 +153,7 @@ transceiver on a GPIO — the C6 is only the phone radio.)
 | 8 | (3-pin sub-connector) | Vehicle Speed Sensor | Pulse | Red | → GPIO input (pulse counter) |
 | 9 | GN/Y (Green/Yellow) | Oil Pressure warning | 12V discrete | Red | → Voltage divider → GPIO input |
 | 10 | TN (Tan) | Neutral indicator | 12V discrete | Red | → Voltage divider → GPIO input |
-| 11 | Y/W (Yellow/White) | Fuel Level sender | Analog resistance | Red | → ADC pin |
+| 11 | Y/W (Yellow/White) | Fuel Level sender | Analog resistance (see note) | Red | → ADC pin (GPIO 22 reserved) |
 | 12 | O/W (Orange/White) | Accessories | 12V accessory | Red | → Optional |
 
 ---
@@ -168,29 +168,41 @@ transceiver on a GPIO — the C6 is only the phone radio.)
 > MOSFET shorting it to ground — that polarity is inverted and would
 > jam the bus dominant whenever idle. Do not build that version.)
 
+**Rendered schematics (canonical, print these for the bench):**
+[RX front end](schematics/j1850_rx.svg) — build first, sniff-only ·
+[TX stage](schematics/j1850_tx.svg) — Stage 4 only.
+Sources + regenerate instructions in [`schematics/`](schematics/).
+
+![J1850 RX front end](schematics/j1850_rx.svg)
+
+![J1850 TX stage](schematics/j1850_tx.svg)
+
+Text fallback:
+
 ```
                        +12V (from bike)
-                         │
-                       emitter
-              ┌────── Q2: PNP (2N2907/S8550 from the
-      10kΩ ───┤ base      transistor assortment)
-        │     └────── collector ── 100Ω ──► J1850 BUS
-      drain                                    │
-   Q1: IRLZ44N                                 ├── 7.5V Zener ── GND
-  gate ◄─ 1kΩ ─ ESP32-P4 TX GPIO               │   (sets ~7V dominant level
-      source                                   │    + clamps spikes)
+                         ├──────────────┐
+                       emitter         ┌┴┐
+              ┌────── Q2: PNP          │ │ R6 10kΩ (base pull-up:
+      10kΩ ───┤ base   (2N2907/S8550)  └┬┘  Q2 hard off when idle)
+        │  R4 └────── collector ── 100Ω ─┴─► J1850 BUS
+      drain              R5                    │
+   Q1: IRLZ44N                                 ├── D1 7.5V Zener ── GND
+  gate ◄─ R3 1kΩ ─ ESP32-P4 TX GPIO            │   (cathode to bus; sets ~7V
+      source                                   │    dominant level + clamps)
         │                                      │
-       GND                                     ├── 10kΩ ──┬── ESP32-P4 RX GPIO
-                                               │        4.7kΩ
-                                               │          │
-                                               └──────────┴── GND
+       GND                                     ├── R1 10kΩ ──┬── ESP32-P4 RX GPIO
+                                               │          R2 4.7kΩ
+                                               │             │
+                                               └─────────────┴── GND
 ```
 
 - **Writing**: TX GPIO high → Q1 conducts → pulls Q2's base low through
-  the 10kΩ → Q2 sources +12V through the 100Ω onto the bus; the 7.5V
-  zener clamps the driven level to ~7V (the VPW dominant level). TX GPIO
-  low → both transistors off → bus released to recessive 0V. Never hold
-  TX high outside a VPW symbol — a stuck-high TX jams the whole bus.
+  R4 → Q2 sources +12V through R5 onto the bus; the 7.5V zener clamps
+  the driven level to ~7V (the VPW dominant level). TX GPIO low → Q1
+  off, R6 holds Q2's base at the emitter rail → Q2 hard off → bus
+  released to recessive 0V. Never hold TX high outside a VPW symbol —
+  a stuck-high TX jams the whole bus.
 - **Reading**: 10kΩ/4.7kΩ steps 7V → ~2.2V (safe for the P4's 3.3V GPIO).
 - **Protection**: the same 7.5V zener clamps transients on the bus wire.
 - **Software**: Port `J1850-VPW-Arduino-Transceiver-Library` to ESP-IDF
@@ -201,11 +213,15 @@ transceiver on a GPIO — the C6 is only the phone radio.)
 
 ### 12V Discrete Signal Voltage Divider (×6 — for turn L/R, high beam, neutral, oil pressure, ignition)
 
+![12V discrete divider](schematics/discrete_divider.svg)
+
+Text fallback:
+
 ```
 12V signal ──── 10kΩ ────┬──── ESP32-P4 GPIO input
                          │
-                       2.7kΩ
-                         │
+                       2.7kΩ   (optional: 3.3V zener in parallel,
+                         │      cathode up — belt-and-braces clamp)
                         GND
 ```
 
@@ -415,6 +431,22 @@ See `02-PHASE2.5-OFFBIKE-PLAN.md` for the full plan + ordering.
 
 ### Phase 6: Full Cluster Replacement (Weekends 11-12)
 - Read all 12-pin discrete signals (turns, beam, oil, neutral, fuel)
+  - **Fuel sender caveat (verified July 2026):** the 2009 VRSC uses an
+    **ultrasonic** fuel level sensor (P/N 75210-09, mandatory for MY2009
+    — HD service bulletin M-1249), not a plain float. It is powered
+    (+12V/GND) and presents an ohmic output to the gauge line, so the
+    ADC-read plan stands electrically — but the level calibration,
+    temperature compensation, and only-update-while-moving gating all
+    lived in the stock IM's reflashable firmware and must be
+    re-implemented by us (we have speed and temp data). Plan for a
+    bench characterization session (sender + PSU, measured fills →
+    ohms curve). Fallback/complement that needs no sender at all:
+    integrate the ECM's J1850 fuel-consumption ticks (A8 83 10 0A,
+    0.000040 L each) from a full-tank reset — the classic fuel-computer
+    approach, and likely *more* stable than the notoriously erratic
+    ultrasonic sender. The J1850 fuel-gauge broadcast (A8 83 61 12) is
+    almost certainly IM-originated (the sender wires to the IM), so it
+    disappears when the stock IM does — Stage 2 captures will confirm.
 - Display all indicator icons on gauge
 - 3D print mounting bracket for 86mm display in 95mm bezel
 - Conformal coat PCB
