@@ -31,7 +31,8 @@ harley/
 │   ├── PROJECT-BRIEF.md               # This file
 │   ├── 00-MASTER-PROJECT-PLAN.md      # Full v5 project plan + budget
 │   ├── 02-PHASE2.5-OFFBIKE-PLAN.md    # Phase 2.5 (✅ touch / settings / BLE / cameras)
-│   └── 03-PHASE3-J1850-GPS-PLAN.md    # Phase 3 (active: J1850 + IM sim + GPS)
+│   ├── 03-PHASE3-J1850-GPS-PLAN.md    # Phase 3 (active: J1850 + IM sim + GPS)
+│   └── schematics/                    # schemdraw sources + rendered SVGs
 ├── firmware/                          # ESP-IDF cluster firmware
 │   ├── CLAUDE.md                      # Firmware-specific working notes
 │   ├── docs/                          # Firmware-internal docs
