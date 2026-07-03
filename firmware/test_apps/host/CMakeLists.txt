@@ -42,6 +42,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/poi/poi_math.c
     ${MAIN_DIR}/poi/poi_db.c
     ${MAIN_DIR}/poi/poi_alert.c
+    ${MAIN_DIR}/gps/nmea.c
     ${MAIN_DIR}/ble/ble_visibility.c
     external/freertos_stub/freertos_stub.c
     external/lvgl_tick_stub/lv_tick_stub.c
@@ -115,6 +116,7 @@ add_unit_test(test_phone_protocol)
 add_unit_test(test_phone_data)
 add_unit_test(test_gesture)
 add_unit_test(test_gps_format)
+add_unit_test(test_nmea)
 add_unit_test(test_poi_index)
 add_unit_test(test_alert_engine)
 add_unit_test(test_ble_visibility)

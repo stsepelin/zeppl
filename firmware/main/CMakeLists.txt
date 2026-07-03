@@ -67,7 +67,7 @@ idf_component_register(
         assets/boot.gif
         assets/emoji.ttf
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl nvs_flash
-             espressif__esp_codec_dev bt spi_flash
+             espressif__esp_codec_dev bt spi_flash esp_driver_uart
     LDFRAGMENTS linker.lf
 )
 
@@ -81,6 +81,15 @@ if(CONFIG_VROD_INCLUDE_SIM_ENGINE)
         simulator/sim_engine.c
         simulator/sim_math.c
         gps/gps_sim.c
+    )
+endif()
+
+# Real GPS producer (Phase 3). nmea.c is pure logic shared with the host
+# tests; gps_uart.c is the ESP-IDF glue that feeds it UART bytes.
+if(CONFIG_VROD_GPS_UART)
+    target_sources(${COMPONENT_LIB} PRIVATE
+        gps/nmea.c
+        gps/gps_uart.c
     )
 endif()
 

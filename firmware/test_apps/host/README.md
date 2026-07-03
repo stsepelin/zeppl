@@ -68,6 +68,13 @@ Today that's:
 | `main/settings/settings.c` | Defaults + validate for the persisted prefs struct |
 | `main/vehicle/vehicle_data.c` | Mutex-guarded latest-value store. Tested with a FreeRTOS stub. |
 | `main/ble/ble_visibility.c` | Pure decision: `(has_bond, override) → adv_mode`. Stage 8. |
+| `main/poi/poi_math.c` | Equirectangular distance + bearing + heading-delta (float-only, P4 has no double FPU) |
+| `main/poi/poi_db.c` | Binary camera-DB wrap + cone query + distance-sorted insert |
+| `main/poi/poi_alert.c` | Single-alert state machine with pass-by hysteresis |
+| `main/gps/nmea.c` | NMEA 0183 framer + RMC parser (checksum, ddmm.mmmm → 1e-7 deg, knots → km/h) |
+
+The `main/gps/` producers (`gps_source.c`, `gps_sim.c`, `gps_uart.c`)
+are FreeRTOS/UART glue and stay out of the gate.
 
 ### Widgets — also gated at 100 %
 
@@ -100,8 +107,10 @@ Files **deliberately excluded** from the metric:
   OUTPUT is still verified visually in the simulator + on device, since a
   block glyph can't prove the real font rendering looks right.)
 - `display/boot_screen.c`, `display/ui_manager.c`, `display/screen_ride.c`,
-  `main.c`, `simulator/sim_engine.c` (the task body), `vehicle/vehicle_data.c`
+  `main.c`, `simulator/sim_engine.c` (the task body)
   — BSP / FreeRTOS / LVGL glue. Validated on hardware, not here.
+  (`vehicle/vehicle_data.c` used to sit in this list but has been in
+  scope since it gained the FreeRTOS-stub test — see the table above.)
 - `assets/boot.gif`, `managed_components/**` — not source code we own.
 
 This list is on purpose. Adding a widget creation path to it would be a

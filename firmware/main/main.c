@@ -20,6 +20,9 @@
 #include "gps_sim.h"
 #include "sim_engine.h"
 #endif
+#if CONFIG_VROD_GPS_UART
+#include "gps_uart.h"
+#endif
 #include "settings_store.h"
 #include "sound.h"
 
@@ -72,7 +75,14 @@ void app_main(void)
     gps_source_init();
 #if CONFIG_VROD_INCLUDE_SIM_ENGINE
     sim_engine_start();
+#if !CONFIG_VROD_GPS_UART
+    // The canned orbit and the real module would fight over gps_source;
+    // the UART producer wins whenever it's compiled in.
     gps_sim_start();
+#endif
+#endif
+#if CONFIG_VROD_GPS_UART
+    gps_uart_start();
 #endif
 #if CONFIG_VROD_DEMO_POI
     poi_db_open(&s_demo_db, (const uint8_t *)s_demo_poi, sizeof(s_demo_poi));
