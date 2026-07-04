@@ -53,6 +53,7 @@ SCOPED=(
     '*/main/j1850/j1850_vpw.c'
     '*/main/j1850/j1850_tx_logic.c'
     '*/main/j1850/j1850_parse.c'
+    '*/main/j1850/j1850_driver.c'
     '*/main/display/widgets/sprite_raster.h'
     '*/main/display/widgets/fuel_arc.c'
     '*/main/display/widgets/gear_indicator.c'

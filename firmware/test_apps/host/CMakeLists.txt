@@ -46,6 +46,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/j1850/j1850_vpw.c
     ${MAIN_DIR}/j1850/j1850_tx_logic.c
     ${MAIN_DIR}/j1850/j1850_parse.c
+    ${MAIN_DIR}/j1850/j1850_driver.c
     ${MAIN_DIR}/ble/ble_visibility.c
     external/freertos_stub/freertos_stub.c
     external/lvgl_tick_stub/lv_tick_stub.c
@@ -124,6 +125,7 @@ add_unit_test(test_nmea)
 add_unit_test(test_j1850_vpw)
 add_unit_test(test_j1850_tx_logic)
 add_unit_test(test_j1850_parse)
+add_unit_test(test_j1850_driver)
 add_unit_test(test_poi_index)
 add_unit_test(test_alert_engine)
 add_unit_test(test_ble_visibility)

@@ -9,6 +9,9 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include <string.h>
+#if CONFIG_VROD_J1850
+#include "j1850_driver.h"
+#endif
 
 static const char *TAG = "j1850";
 
@@ -192,6 +195,9 @@ static void sniffer_task(void *arg)
                     crc_bad++;
                 log_frame(&frame);
                 publish_frame(&frame, frames, crc_bad);
+#if CONFIG_VROD_J1850
+                j1850_driver_feed(&frame);
+#endif
             }
         } else {
             // Queue idle. If the bus has sat passive past EOF since the
@@ -212,6 +218,9 @@ static void sniffer_task(void *arg)
                         crc_bad++;
                     log_frame(&frame);
                     publish_frame(&frame, frames, crc_bad);
+#if CONFIG_VROD_J1850
+                    j1850_driver_feed(&frame);
+#endif
                 }
             }
         }

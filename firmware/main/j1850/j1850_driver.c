@@ -1,0 +1,20 @@
+#include "j1850_driver.h"
+#include "j1850_parse.h"
+#include "vehicle_data.h"
+
+// Running aggregate: each J1850 broadcast updates one field, so we hold
+// the last-known full picture and re-publish it on every recognised
+// frame. RPM alone arrives ~15/s, well within what vehicle_data + the UI
+// absorb, so no extra rate-limiting is needed here.
+static vehicle_data_t s_vd;
+
+void j1850_driver_init(void)
+{
+    vehicle_data_get(&s_vd);  // seed from whatever the boot state left
+}
+
+void j1850_driver_feed(const j1850_frame_t *f)
+{
+    if (j1850_parse(f, &s_vd))
+        vehicle_data_set(&s_vd);
+}

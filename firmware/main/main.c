@@ -26,6 +26,9 @@
 #if CONFIG_VROD_J1850_SNIFFER
 #include "j1850_sniffer.h"
 #endif
+#if CONFIG_VROD_J1850
+#include "j1850_driver.h"
+#endif
 #if defined(CONFIG_VROD_J1850_ADC_GPIO) && CONFIG_VROD_J1850_ADC_GPIO >= 0
 #include "j1850_adc_probe.h"
 #endif
@@ -89,7 +92,12 @@ void app_main(void)
     phone_data_init();
     gps_source_init();
 #if CONFIG_VROD_INCLUDE_SIM_ENGINE
+#if !CONFIG_VROD_J1850
+    // The J1850 producer and the sim both write vehicle_data; the real
+    // bus wins whenever it's compiled in. gps_sim (below) writes
+    // gps_source instead, so it isn't affected.
     sim_engine_start();
+#endif
 #if !CONFIG_VROD_GPS_UART
     // The canned orbit and the real module would fight over gps_source;
     // the UART producer wins whenever it's compiled in.
@@ -99,8 +107,13 @@ void app_main(void)
 #if CONFIG_VROD_GPS_UART
     gps_uart_start();
 #endif
+#if CONFIG_VROD_J1850
+    // Producer: the sniffer's decode feeds vehicle_data via the driver.
+    // Init before the sniffer task so it can consume frames immediately.
+    j1850_driver_init();
+#endif
 #if CONFIG_VROD_J1850_SNIFFER
-    // Log-only: coexists with the sim — it never writes vehicle_data.
+    // Read-only capture; also feeds the producer when CONFIG_VROD_J1850.
     j1850_sniffer_start();
 #endif
 #if defined(CONFIG_VROD_J1850_ADC_GPIO) && CONFIG_VROD_J1850_ADC_GPIO >= 0
