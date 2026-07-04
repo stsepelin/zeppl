@@ -26,6 +26,9 @@
 #if CONFIG_VROD_J1850_SNIFFER
 #include "j1850_sniffer.h"
 #endif
+#if CONFIG_VROD_RIDE_LOG
+#include "ride_log.h"
+#endif
 #if CONFIG_VROD_J1850
 #include "j1850_driver.h"
 #endif
@@ -111,6 +114,11 @@ void app_main(void)
     // Producer: the sniffer's decode feeds vehicle_data via the driver.
     // Init before the sniffer task so it can consume frames immediately.
     j1850_driver_init();
+#endif
+#if CONFIG_VROD_RIDE_LOG
+    // Mount the SD sink + start its flush task before frames arrive; a missing
+    // card is non-fatal (state NO_CARD, start retries the mount).
+    ride_log_init();
 #endif
 #if CONFIG_VROD_J1850_SNIFFER
     // Read-only capture; also feeds the producer when CONFIG_VROD_J1850.

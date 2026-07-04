@@ -147,6 +147,40 @@ Phase 3 kickoff — the old drawing would jam the bus:
 - UI, tests, simulator all unchanged — that's what `vehicle_data_t`
   was for.
 
+### Stage 3.5 — On-board ride log (laptop-free capture)
+
+Speed DIV, the temperature formula, and gears 3-6 can only be resolved
+while moving / warming up — where a laptop can't ride along. The ride log
+persists every decoded frame to the board's microSD card so those captures
+run headless.
+
+- **Enable:** `CONFIG_VROD_RIDE_LOG=y` (depends on the sniffer). Off by
+  default; it's part of the capture build alongside `VROD_J1850_SNIFFER`.
+- **Storage:** microSD via 4-bit SDMMC (GPIO 39-44 + LDO power, see
+  `firmware/docs/PINS.md`), FAT filesystem, mounted at `/sdcard`. A 7 MB
+  `storage` SPIFFS partition also exists in `partitions.csv` as a card-free
+  fallback, not currently wired.
+- **Control:** a REC/STOP toggle on the BENCH screen with a live indicator
+  (state, frame count, dropped count, MB used/total). No laptop needed.
+- **Format:** one line per frame, `<sec.ms> j1850: HH .. | CRC OK | <decoded>`
+  — the same shape `tools/j1850_capture.py` / `j1850_report.py` parse, so
+  the pulled file runs through the report tool unchanged. The decoded suffix
+  carries the three capture fields: **native speed** (mph, for GPS compare),
+  **raw temp byte** (units still provisional), and **gear raw+ladder**.
+- **Fault-tolerant:** writes are buffered and flushed in a low-priority task
+  (off the decode path, off the LVGL core). No card / card full / write
+  error stop logging cleanly and show on the indicator; the gauge is never
+  affected. A whole line is dropped (counted) rather than half-written when
+  the buffer backs up.
+- **Retrieval:** power off, pull the card, `tools/j1850_report.py
+  /sdcard/ride_NNN.log` (or grep `speed=` / `temp=` / `gear=` directly).
+
+> **Prerequisite for the ride (hardware, out of scope here):** laptop-free
+> capture needs the ESP powered from the mini560 buck off switched +12V,
+> sharing ground with the J1850 transceiver — NOT USB. The ride-log firmware
+> is useless without bike power. Wiring is a Phase 6 / bench-harness step;
+> flagged here so it isn't forgotten before a capture ride.
+
 ### Stage 4 — IM simulation + TX
 
 > **TX firmware landed (2026-07): driver + watchdog + self-sniff loop.**

@@ -9,9 +9,13 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 #include <string.h>
-#include "j1850_parse.h"  // J1850_SPEED_DIVISOR for the capture hint line
+#include "j1850_parse.h"      // J1850_SPEED_DIVISOR for the capture hint line
+#include "ride_log_format.h"  // ride_log_gear_label for the gear hint
 #if CONFIG_VROD_J1850
 #include "j1850_driver.h"
+#endif
+#if CONFIG_VROD_RIDE_LOG
+#include "ride_log.h"
 #endif
 
 static const char *TAG = "j1850";
@@ -128,15 +132,18 @@ static void log_frame(const j1850_frame_t *f)
     ESP_LOGI(TAG, "%s", line);
 }
 
-// Capture-prep hints for the two fields still blocked on the bike. Speed:
+// Capture-prep hints for the three fields still blocked on the bike. Speed:
 // emit the NATIVE decoded value (raw / DIV, mph-native) so it compares
 // DIRECTLY to GPS mph on a ride — DIV magnitude is provisional. Temp: emit
 // the RAW byte plus the three candidate scalings so a two-point capture
-// (cold ~ambient + fully warm) can solve the formula. See j1850_parse.h.
+// (cold ~ambient + fully warm) can solve the formula. Gear: emit the raw byte
+// + decoded ladder position so a shift through 1-6 confirms the table (only
+// N/1st/2nd seen so far). See j1850_parse.h and ride_log_format.h.
 static void log_hint(const j1850_frame_t *f)
 {
     static const uint8_t SPEED[] = {0x48, 0x29, 0x10, 0x02};
     static const uint8_t TEMP[]  = {0xA8, 0x49, 0x10, 0x10};
+    static const uint8_t GEAR[]  = {0xA8, 0x3B, 0x10, 0x03};
     if (f->len >= 7 && memcmp(f->data, SPEED, 4) == 0) {
         unsigned raw = ((unsigned)f->data[4] << 8) | f->data[5];
         ESP_LOGI(TAG, "speed: raw=%u native=%u (raw/%d, mph-native; DIV provisional) vs GPS mph",
@@ -145,6 +152,9 @@ static void log_hint(const j1850_frame_t *f)
         unsigned r = f->data[4];
         ESP_LOGI(TAG, "temp: raw=0x%02X (%u) PROVISIONAL — C?=%u  F->C?=%d  (raw-40)C?=%d", r, r, r,
                  (int)(((int)r - 32) * 5 / 9), (int)r - 40);
+    } else if (f->len >= 6 && memcmp(f->data, GEAR, 4) == 0) {
+        ESP_LOGI(TAG, "gear: raw=0x%02X -> %s (ladder; shift 1-6 to confirm)", f->data[4],
+                 ride_log_gear_label(f->data[4]));
     }
 }
 
@@ -217,6 +227,9 @@ static void sniffer_task(void *arg)
                 log_frame(&frame);
                 log_hint(&frame);
                 publish_frame(&frame, frames, crc_bad);
+#if CONFIG_VROD_RIDE_LOG
+                ride_log_frame(&frame);
+#endif
 #if CONFIG_VROD_J1850
                 j1850_driver_feed(&frame);
 #endif
@@ -241,6 +254,9 @@ static void sniffer_task(void *arg)
                     log_frame(&frame);
                     log_hint(&frame);
                     publish_frame(&frame, frames, crc_bad);
+#if CONFIG_VROD_RIDE_LOG
+                    ride_log_frame(&frame);
+#endif
 #if CONFIG_VROD_J1850
                     j1850_driver_feed(&frame);
 #endif
