@@ -123,6 +123,15 @@ if(CONFIG_VROD_J1850_SNIFFER)
     )
 endif()
 
+# Vehicle-data producer (Stage 3): pure decode table + the driver glue
+# that feeds the sniffer's decoded frames into vehicle_data.
+if(CONFIG_VROD_J1850)
+    target_sources(${COMPONENT_LIB} PRIVATE
+        j1850/j1850_parse.c
+        j1850/j1850_driver.c
+    )
+endif()
+
 # TX driver (Stage 4): RMT-timed symbols + the watchdog. j1850_tx_logic.c
 # is the host-tested pure part (CRC frame build + dominant-time guard).
 if(CONFIG_VROD_J1850_TX)

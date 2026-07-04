@@ -121,6 +121,20 @@ menu "V-Rod cluster"
             Capture with:  script -q capture.log idf.py -p PORT monitor
             Off by default; only the bench capture build sets it.
 
+    config VROD_J1850
+        bool "J1850 vehicle-data producer (Phase 3 Stage 3)"
+        depends on VROD_J1850_SNIFFER
+        default n
+        help
+            Turns the sniffer's decode path into the vehicle_data producer:
+            each recognised frame (RPM / temp / gear / speed / turns / CEL)
+            is parsed and pushed to the gauge via vehicle_data_set. Built on
+            the sniffer (which supplies the RX decode), so enable that too.
+
+            Mutually exclusive with the synthetic sim: when this is on,
+            sim_engine is not started (both write vehicle_data). Off by
+            default; this is the real-bike data source.
+
     config VROD_J1850_RX_GPIO
         int "GPIO wired to the J1850 RX divider"
         depends on VROD_J1850_SNIFFER
