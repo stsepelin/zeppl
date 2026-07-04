@@ -117,6 +117,12 @@ if(CONFIG_VROD_J1850_SNIFFER)
     )
 endif()
 
+# Bus-amplitude ADC probe (Stage 4 TX prep) — dedicated ADC pin, see
+# main/j1850/j1850_adc_probe.c.
+if(NOT CONFIG_VROD_J1850_ADC_GPIO EQUAL -1)
+    target_sources(${COMPONENT_LIB} PRIVATE j1850/j1850_adc_probe.c)
+endif()
+
 # Generated font files (from lv_font_conv) use `#ifdef LV_LVGL_H_INCLUDE_SIMPLE`
 # to pick between `#include "lvgl.h"` and `#include "lvgl/lvgl.h"`. We want the
 # simple form so the font .c files compile inside the main component.
