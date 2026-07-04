@@ -1,12 +1,22 @@
-# J1850 RX: toggling-ISR candidate (design note — NOT implemented)
+# J1850 RX: toggling-ISR candidate (core landed; on-hardware trial pending)
 
-> **Status: design + acceptance criteria only.** No code has changed for
-> this. The shipping RX path is unchanged: standard VPW, hardware glitch
-> filter OFF (`CONFIG_VROD_J1850_GLITCH_NS=0`), `RX_INVERT` removed, and
-> the sniffer ISR still reads the pin. Do NOT implement from this note
-> without landing the host tests in the acceptance gate first, one
-> variable at a time. `j1850_vpw.c` (the pure codec) is out of scope and
-> must not change.
+> **Status: pure tracker implemented + acceptance gate PASSING; the
+> sniffer ISR is NOT wired to it yet.** `main/j1850/j1850_edge.c` is the
+> toggle + idle-anchor level reconstructor, host-tested in
+> `test_j1850_edge.c` (clean-stream reconstruction through the decoder,
+> startup drop, idle-gap boundary, and injected missed/spurious-edge
+> re-sync) at 100% line+branch. The shipping RX path is UNCHANGED: the
+> sniffer ISR still reads the pin, the glitch filter is still OFF
+> (`CONFIG_VROD_J1850_GLITCH_NS=0`), `RX_INVERT` is gone, and
+> `j1850_vpw.c` is untouched.
+>
+> **Next (opt-in, deliberate):** wire `j1850_edge` into the sniffer behind
+> a `CONFIG_VROD_J1850_TOGGLE_ISR` flag — the ISR stops reading the pin and
+> only timestamps edges; the task reconstructs the level via
+> `j1850_edge_level()`; the idle-flush keeps an honest pin read (allowed —
+> the line is static there). Then a bench trial (toggle ISR + a
+> conservative filter) against the current filter-off baseline (546
+> frames / 0 bad CRC), one variable at a time.
 
 ## Why this exists
 
