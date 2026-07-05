@@ -22,6 +22,9 @@ Background:
     implemented) for a future RX ISR that infers the pulse level by
     toggling instead of reading the pin, so a glitch filter could
     coexist. Read before touching the sniffer edge capture.
+  - `docs/live-gauge-bench-test.md` — build config (`CONFIG_VROD_J1850=y`)
+    + stationary checklist to show real bus data on the gauge, laptop USB
+    powered, before a ride.
 
 This file is for *how to work in the firmware code*, not what we're
 working toward or why each decision is the way it is. Path references
