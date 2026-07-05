@@ -9,6 +9,9 @@
 #if CONFIG_VROD_J1850_ADC_GPIO >= 0
 #include "j1850_adc_probe.h"
 #endif
+#if CONFIG_VROD_RIDE_LOG
+#include "ride_log.h"
+#endif
 
 LV_FONT_DECLARE(jbm_bold_45);
 LV_FONT_DECLARE(jbm_bold_33);
@@ -32,6 +35,13 @@ static lv_obj_t *s_frames_value;
 static lv_obj_t *s_last_value;
 #if CONFIG_VROD_J1850_GLITCH_SWEEP
 static lv_obj_t *s_sweep_value;
+#endif
+#if CONFIG_VROD_RIDE_LOG
+static lv_obj_t        *s_ridelog_value;
+static lv_obj_t        *s_rec_lbl;
+static ride_log_state_t s_shown_rl_state  = -1;
+static uint32_t         s_shown_rl_frames = UINT32_MAX;
+static uint32_t         s_shown_rl_drop   = UINT32_MAX;
 #endif
 
 // Skip-if-unchanged caches (house rule: setters never re-render for
@@ -137,6 +147,51 @@ static void refresh_cb(lv_timer_t *t)
         }
         s_shown_frames = st.frames;
     }
+
+#if CONFIG_VROD_RIDE_LOG
+    ride_log_stats_t rl;
+    ride_log_get_stats(&rl);
+    if (rl.state != s_shown_rl_state || rl.frames != s_shown_rl_frames ||
+        rl.dropped != s_shown_rl_drop) {
+        s_shown_rl_state  = rl.state;
+        s_shown_rl_frames = rl.frames;
+        s_shown_rl_drop   = rl.dropped;
+        const char *name;
+        uint32_t    col;
+        switch (rl.state) {
+        case RIDE_LOG_RECORDING:
+            name = "REC";
+            col  = VROD_RED;
+            break;
+        case RIDE_LOG_IDLE:
+            name = "IDLE";
+            col  = VROD_TEXT;
+            break;
+        case RIDE_LOG_NO_CARD:
+            name = "NO CARD";
+            col  = VROD_TEXT_DIM;
+            break;
+        case RIDE_LOG_ERROR:
+            name = "ERROR";
+            col  = VROD_RED;
+            break;
+        default:
+            name = "--";
+            col  = VROD_TEXT_DIM;
+            break;
+        }
+        if (rl.state == RIDE_LOG_RECORDING || rl.state == RIDE_LOG_IDLE) {
+            snprintf(buf, sizeof(buf), "%s  %luf d%lu  %lu/%luMB", name, (unsigned long)rl.frames,
+                     (unsigned long)rl.dropped, (unsigned long)rl.mb_used,
+                     (unsigned long)rl.mb_total);
+        } else {
+            snprintf(buf, sizeof(buf), "%s", name);
+        }
+        lv_label_set_text(s_ridelog_value, buf);
+        lv_obj_set_style_text_color(s_ridelog_value, lv_color_hex(col), 0);
+        lv_label_set_text(s_rec_lbl, rl.state == RIDE_LOG_RECORDING ? "STOP" : "REC");
+    }
+#endif
 }
 
 static void back_cb(lv_event_t *e)
@@ -144,6 +199,14 @@ static void back_cb(lv_event_t *e)
     (void)e;
     ui_manager_show_settings();
 }
+
+#if CONFIG_VROD_RIDE_LOG
+static void rec_cb(lv_event_t *e)
+{
+    (void)e;
+    ride_log_toggle();
+}
+#endif
 
 lv_obj_t *screen_bench_create(void)
 {
@@ -204,9 +267,35 @@ lv_obj_t *screen_bench_create(void)
     lv_obj_set_style_text_font(s_last_value, &jbm_bold_26, 0);
     lv_obj_align(s_last_value, LV_ALIGN_BOTTOM_LEFT, 0, 0);
 
+#if CONFIG_VROD_RIDE_LOG
+    // Ride-log status + REC/STOP toggle for laptop-free capture. The status
+    // line sits in the gap above the buttons; the toggle sits beside BACK.
+    s_ridelog_value = lv_label_create(s_scr);
+    lv_label_set_text(s_ridelog_value, "--");
+    lv_obj_set_style_text_color(s_ridelog_value, lv_color_hex(VROD_TEXT_DIM), 0);
+    lv_obj_set_style_text_font(s_ridelog_value, &jbm_bold_26, 0);
+    lv_obj_align(s_ridelog_value, LV_ALIGN_TOP_MID, 0, 590);
+
+    lv_obj_t *rec = lv_button_create(s_scr);
+    lv_obj_set_size(rec, 230, 80);
+    lv_obj_align(rec, LV_ALIGN_BOTTOM_MID, -135, -80);
+    lv_obj_set_style_bg_color(rec, lv_color_hex(VROD_RED), 0);
+    lv_obj_set_style_radius(rec, 12, 0);
+    lv_obj_add_event_cb(rec, rec_cb, LV_EVENT_CLICKED, NULL);
+    s_rec_lbl = lv_label_create(rec);
+    lv_label_set_text(s_rec_lbl, "REC");
+    lv_obj_set_style_text_color(s_rec_lbl, lv_color_black(), 0);
+    lv_obj_set_style_text_font(s_rec_lbl, &jbm_bold_45, 0);
+    lv_obj_center(s_rec_lbl);
+
+    lv_obj_t *back = lv_button_create(s_scr);
+    lv_obj_set_size(back, 230, 80);
+    lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 135, -80);
+#else
     lv_obj_t *back = lv_button_create(s_scr);
     lv_obj_set_size(back, 260, 80);
     lv_obj_align(back, LV_ALIGN_BOTTOM_MID, 0, -80);
+#endif
     lv_obj_set_style_bg_color(back, lv_color_hex(VROD_ORANGE), 0);
     lv_obj_set_style_radius(back, 12, 0);
     lv_obj_add_event_cb(back, back_cb, LV_EVENT_CLICKED, NULL);

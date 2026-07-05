@@ -135,6 +135,24 @@ menu "V-Rod cluster"
             sim_engine is not started (both write vehicle_data). Off by
             default; this is the real-bike data source.
 
+    config VROD_RIDE_LOG
+        bool "On-board ride log to microSD (laptop-free capture)"
+        depends on VROD_J1850_SNIFFER
+        default n
+        help
+            Persists every decoded J1850 frame to /sdcard/ride_NNN.log so a
+            speed / temperature / gear capture can run with NO laptop
+            attached. Start and stop from the bench screen; power off, pull
+            the microSD card, and run tools/j1850_report.py on the file (the
+            line format is capture.py-compatible).
+
+            Writes are buffered and flushed in a low-priority task, off the
+            decode path and off the LVGL core. Storage faults (no card, card
+            full, write error) stop logging cleanly and surface on the bench
+            indicator without disturbing the gauge. Uses the board's microSD
+            slot (GPIO 39-45); needs bike power to ride (see the Phase 3
+            plan's ride-log prerequisite). Off by default.
+
     config VROD_J1850_RX_GPIO
         int "GPIO wired to the J1850 RX divider"
         depends on VROD_J1850_SNIFFER

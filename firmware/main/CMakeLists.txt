@@ -73,6 +73,7 @@ idf_component_register(
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl nvs_flash
              espressif__esp_codec_dev bt spi_flash esp_driver_uart esp_adc
              esp_driver_rmt esp_driver_gptimer
+             fatfs esp_driver_sdmmc sdmmc  # ride-log SD sink (CONFIG_VROD_RIDE_LOG)
     LDFRAGMENTS linker.lf
 )
 
@@ -119,8 +120,15 @@ endif()
 if(CONFIG_VROD_J1850_SNIFFER)
     target_sources(${COMPONENT_LIB} PRIVATE
         j1850/j1850_sniffer.c
+        j1850/ride_log_format.c   # frame->line formatter; also the shared gear label
         display/screen_bench.c
     )
+endif()
+
+# On-board ride log (laptop-free capture): SD/FATFS sink + flush task. Pure
+# formatting lives in ride_log_format.c (compiled with the sniffer above).
+if(CONFIG_VROD_RIDE_LOG)
+    target_sources(${COMPONENT_LIB} PRIVATE j1850/ride_log.c)
 endif()
 
 # Toggling edge->level tracker (Phase 6 RX experiment prep). Gate (a):

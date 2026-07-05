@@ -21,8 +21,8 @@ Update this table whenever a pin gets claimed.
 | 33 | LCD TE (display block) | |
 | 35 | BOOT strap + auto-download circuit | Header-exposed; leave alone |
 | 37, 38 | UART0 console via CH343P (TXD/RXD) | The header's "RXD/TXD" holes |
-| 39–44 | microSD slot | |
-| 45 | microSD power switch | |
+| 39–44 | microSD slot | 4-bit SDMMC (CLK 43, CMD 44, D0-3 39-42). Used by the ride log (`CONFIG_VROD_RIDE_LOG`). |
+| 45 | microSD power switch | SD IO power is via the P4 on-chip LDO (channel 4), per the vendor 05_sdmmc example. |
 | 53 | Audio PA enable | |
 | 54 | ESP32-C6 reset (esp_hosted) | |
 

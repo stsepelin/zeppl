@@ -77,10 +77,12 @@ Today that's:
 | `main/j1850/j1850_driver.c` | J1850 producer glue: decoded frame -> j1850_parse -> vehicle_data_set (running aggregate). |
 | `main/j1850/j1850_edge.c` | Toggling edge->level tracker (no pin read): toggle + recessive-idle re-sync anchor; a missed/spurious edge self-limits to one frame. |
 | `main/j1850/j1850_tx_logic.c` | J1850 TX pure logic: CRC frame build (round-tripped through encode→decode) + the watchdog dominant-length guard + on-air duration. |
+| `main/j1850/ride_log_format.c` | Ride-log line/header formatting: frame -> one plain-text line (sec.ms, hex, CRC, IFR, decoded speed/temp/gear suffix), capture.py-compatible. |
 
 The `main/gps/` producers (`gps_source.c`, `gps_sim.c`, `gps_uart.c`),
-`main/j1850/j1850_sniffer.c` (GPIO-ISR capture glue), and
-`main/j1850/j1850_tx.c` (RMT/gptimer TX driver + watchdog) are
+`main/j1850/j1850_sniffer.c` (GPIO-ISR capture glue),
+`main/j1850/j1850_tx.c` (RMT/gptimer TX driver + watchdog), and
+`main/j1850/ride_log.c` (SD/FATFS mount + flush-task glue) are
 FreeRTOS/driver glue and stay out of the gate.
 
 ### Widgets — also gated at 100 %
