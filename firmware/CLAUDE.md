@@ -22,6 +22,10 @@ Background:
     implemented) for a future RX ISR that infers the pulse level by
     toggling instead of reading the pin, so a glitch filter could
     coexist. Read before touching the sniffer edge capture.
+  - `docs/bike-power-injection.md` — protected 12V→5V power chain
+    (fuse / reverse-polarity / load-dump TVS / mini560 / output
+    reverse-block) into the header 5V; parts list + bench test.
+    Prerequisite for powering the cluster on the bike.
   - `docs/live-gauge-bench-test.md` — build config (`CONFIG_VROD_J1850=y`)
     + stationary checklist to show real bus data on the gauge, laptop USB
     powered, before a ride.
