@@ -89,7 +89,57 @@ static void test_fuel_ticks_accumulate_from_bus(void)
 
     vehicle_data_t vd;
     vehicle_data_get(&vd);
-    TEST_ASSERT_EQUAL_UINT32(20, vd.fuel_ticks);
+    TEST_ASSERT_EQUAL_UINT32(20, vd.trip1_fuel_ticks);
+    TEST_ASSERT_EQUAL_UINT32(20, vd.trip2_fuel_ticks);
+}
+
+static void test_seed_restores_totals(void)
+{
+    vehicle_data_init();
+    j1850_driver_init();
+
+    odo_meter_t saved = {.odometer_m = 12345, .trip_m = {40, 60}, .trip_fuel = {2, 3}};
+    j1850_driver_seed(&saved);
+
+    vehicle_data_t vd;
+    vehicle_data_get(&vd);
+    TEST_ASSERT_EQUAL_UINT32(12345, vd.odometer_m);
+    TEST_ASSERT_EQUAL_UINT32(40, vd.trip1_m);
+    TEST_ASSERT_EQUAL_UINT32(60, vd.trip2_m);
+    TEST_ASSERT_EQUAL_UINT32(2, vd.trip1_fuel_ticks);
+
+    // A snapshot round-trips the same totals for persistence.
+    odo_meter_t snap;
+    j1850_driver_snapshot(&snap);
+    TEST_ASSERT_EQUAL_UINT32(12345, snap.odometer_m);
+    TEST_ASSERT_EQUAL_UINT32(60, snap.trip_m[1]);
+}
+
+static void test_reset_trip_via_driver(void)
+{
+    vehicle_data_init();
+    j1850_driver_init();
+    odo_meter_t saved = {.odometer_m = 500, .trip_m = {500, 500}, .trip_fuel = {10, 10}};
+    j1850_driver_seed(&saved);
+
+    j1850_driver_reset_trip(0);
+
+    vehicle_data_t vd;
+    vehicle_data_get(&vd);
+    TEST_ASSERT_EQUAL_UINT32(0, vd.trip1_m);       // reset
+    TEST_ASSERT_EQUAL_UINT32(500, vd.trip2_m);     // other trip kept
+    TEST_ASSERT_EQUAL_UINT32(500, vd.odometer_m);  // odometer kept
+}
+
+static void test_set_odometer_via_driver(void)
+{
+    vehicle_data_init();
+    j1850_driver_init();
+    j1850_driver_set_odometer(80000000u);  // 80 000 km
+
+    vehicle_data_t vd;
+    vehicle_data_get(&vd);
+    TEST_ASSERT_EQUAL_UINT32(80000000u, vd.odometer_m);
 }
 
 static void test_bad_crc_counter_is_ignored(void)
@@ -117,5 +167,8 @@ void RunTests(void)
     RUN_TEST(test_unrecognised_frame_leaves_vehicle_data);
     RUN_TEST(test_odometer_accumulates_from_bus);
     RUN_TEST(test_fuel_ticks_accumulate_from_bus);
+    RUN_TEST(test_seed_restores_totals);
+    RUN_TEST(test_reset_trip_via_driver);
+    RUN_TEST(test_set_odometer_via_driver);
     RUN_TEST(test_bad_crc_counter_is_ignored);
 }
