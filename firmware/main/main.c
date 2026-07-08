@@ -24,6 +24,7 @@
 #endif
 #if CONFIG_VROD_J1850
 #include "j1850_driver.h"
+#include "odo_store.h"
 #endif
 #if defined(CONFIG_VROD_J1850_ADC_GPIO) && CONFIG_VROD_J1850_ADC_GPIO >= 0
 #include "j1850_adc_probe.h"
@@ -84,6 +85,9 @@ void app_main(void)
     // Producer: the sniffer's decode feeds vehicle_data via the driver.
     // Init before the sniffer task so it can consume frames immediately.
     j1850_driver_init();
+    // Restore the persisted odometer/trips into the driver, then keep them
+    // saved (periodic + on user reset). Must follow driver_init (it seeds it).
+    odo_store_init();
 #endif
 #if CONFIG_VROD_RIDE_LOG
     // Mount the SD sink + start its flush task before frames arrive; a missing

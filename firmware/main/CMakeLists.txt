@@ -11,6 +11,7 @@ idf_component_register(
         vehicle/vehicle_data.c
         vehicle/gear_calc.c
         vehicle/trip_meter.c
+        vehicle/odo_meter.c
         simulator/gear_table.c
         display/boot_screen.c
         display/screen_ride.c
@@ -130,6 +131,7 @@ if(CONFIG_VROD_J1850)
     target_sources(${COMPONENT_LIB} PRIVATE
         j1850/j1850_parse.c
         j1850/j1850_driver.c
+        vehicle/odo_store.c   # NVS persistence for the driver's odometer/trips
     )
 endif()
 
