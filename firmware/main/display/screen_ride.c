@@ -173,7 +173,7 @@ void screen_ride_update(const vehicle_data_t *data, const settings_t *settings)
     gear_indicator_set_warning(s_gear, data->rpm > TACH_REDLINE_RPM);
     fuel_arc_set_level(s_fuel, data->fuel_level);
     turn_signals_set(s_turn, data->turn_left, data->turn_right);
-    temp_display_set_value(s_temp, data->engine_temp_c);
+    temp_display_set_value(s_temp, data->engine_temp_c, settings->temp_units);
     warning_lights_update(s_warn_l, data);
     warning_lights_update(s_warn_r, data);
 

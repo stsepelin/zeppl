@@ -9,6 +9,13 @@ typedef enum {
     UNITS_MPH = 1,
 } display_units_t;
 
+// Temperature display unit. Persisted to NVS as a uint8_t (see settings_store),
+// so the enumerator values are part of the on-flash format — don't reorder.
+typedef enum {
+    UNITS_CELSIUS    = 0,
+    UNITS_FAHRENHEIT = 1,
+} temp_units_t;
+
 // Vehicle data is published in mph (speed) and metres (distance). These
 // helpers convert at the very last step, in the widget, so the producer
 // side and the cache logic stay unit-agnostic.
@@ -25,7 +32,12 @@ uint32_t units_distance_whole(uint32_t meters, display_units_t units);
 // Used by the trip counters to drive "12.3" formatting.
 uint32_t units_distance_tenths(uint32_t meters, display_units_t units);
 
+// Engine temp in °C → displayed value (°C, or °F when imperial), rounded.
+int units_temp_display(int celsius, temp_units_t units);
+
 // Static suffix labels. The returned pointer has program lifetime, so
 // it's safe to hand directly to lv_label_set_text.
 const char *units_speed_label(display_units_t units);
 const char *units_distance_label(display_units_t units);
+// Temp scale letter, "C" or "F" (the degree glyph is drawn by the widget).
+const char *units_temp_label(temp_units_t units);

@@ -106,7 +106,7 @@ static void test_setters_guard_null_user_data(void)
     gear_indicator_set(bare, GEAR_1);
     gear_indicator_set_warning(bare, true);
     fuel_arc_set_level(bare, 3);
-    temp_display_set_value(bare, 90);
+    temp_display_set_value(bare, 90, UNITS_CELSIUS);
     turn_signals_set(bare, true, true);
     clock_display_set(bare, 8, 24);
     odometer_display_set(bare, 1000, UNITS_KPH);
@@ -234,9 +234,10 @@ static void test_gear_warning_fires_on_edge(void)
 static void test_temp_cache_skips_unchanged(void)
 {
     lv_obj_t *w = temp_display_create(NULL);
-    temp_display_set_value(w, 92);
+    temp_display_set_value(w, 92, UNITS_CELSIUS);
     lv_stub_reset();
-    for (int i = 0; i < REPEAT; i++) temp_display_set_value(w, 92);
+    for (int i = 0; i < REPEAT; i++)
+        temp_display_set_value(w, 92, UNITS_CELSIUS);
     TEST_ASSERT_EQUAL_INT(0, g_lv_label_set_text_calls);
     TEST_ASSERT_EQUAL_INT(0, g_lv_obj_set_style_text_color_calls);
 }
@@ -245,9 +246,21 @@ static void test_temp_cache_value_change_no_color(void)
 {
     // Below threshold, ticking up by 1 °C: text re-renders, colour stays.
     lv_obj_t *w = temp_display_create(NULL);
-    temp_display_set_value(w, 92);
+    temp_display_set_value(w, 92, UNITS_CELSIUS);
     lv_stub_reset();
-    temp_display_set_value(w, 93);
+    temp_display_set_value(w, 93, UNITS_CELSIUS);
+    TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
+    TEST_ASSERT_EQUAL_INT(0, g_lv_obj_set_style_text_color_calls);
+}
+
+static void test_temp_cache_units_change(void)
+{
+    // Same celsius, unit toggled C->F: text re-renders (value + label change),
+    // colour stays (hot threshold is physical, not display-unit-dependent).
+    lv_obj_t *w = temp_display_create(NULL);
+    temp_display_set_value(w, 92, UNITS_CELSIUS);
+    lv_stub_reset();
+    temp_display_set_value(w, 92, UNITS_FAHRENHEIT);
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
     TEST_ASSERT_EQUAL_INT(0, g_lv_obj_set_style_text_color_calls);
 }
@@ -257,13 +270,13 @@ static void test_temp_cache_hot_transition(void)
     // Crossing the 110 °C threshold flips both labels' colours plus
     // re-renders the text. Going back down flips colours again.
     lv_obj_t *w = temp_display_create(NULL);
-    temp_display_set_value(w, 109);
+    temp_display_set_value(w, 109, UNITS_CELSIUS);
     lv_stub_reset();
-    temp_display_set_value(w, 110);
+    temp_display_set_value(w, 110, UNITS_CELSIUS);
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
     TEST_ASSERT_EQUAL_INT(2, g_lv_obj_set_style_text_color_calls);  // icon + value
     lv_stub_reset();
-    temp_display_set_value(w, 109);
+    temp_display_set_value(w, 109, UNITS_CELSIUS);
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
     TEST_ASSERT_EQUAL_INT(2, g_lv_obj_set_style_text_color_calls);
 }
@@ -895,6 +908,7 @@ void RunTests(void)
     RUN_TEST(test_gear_warning_fires_on_edge);
     RUN_TEST(test_temp_cache_skips_unchanged);
     RUN_TEST(test_temp_cache_value_change_no_color);
+    RUN_TEST(test_temp_cache_units_change);
     RUN_TEST(test_temp_cache_hot_transition);
     RUN_TEST(test_turn_signals_cache_skips_unchanged);
     RUN_TEST(test_turn_signals_only_changed_side_repaints);

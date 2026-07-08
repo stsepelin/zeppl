@@ -3,6 +3,7 @@
 void settings_default(settings_t *out)
 {
     out->units                = UNITS_KPH;
+    out->temp_units           = UNITS_CELSIUS;
     out->brightness           = 60;
     out->sound_enabled        = true;
     out->volume               = 70;
@@ -13,6 +14,9 @@ void settings_validate(settings_t *out)
 {
     if (out->units != UNITS_KPH && out->units != UNITS_MPH) {
         out->units = UNITS_KPH;
+    }
+    if (out->temp_units != UNITS_CELSIUS && out->temp_units != UNITS_FAHRENHEIT) {
+        out->temp_units = UNITS_CELSIUS;
     }
     if (out->brightness < SETTINGS_BRIGHTNESS_MIN) {
         out->brightness = SETTINGS_BRIGHTNESS_MIN;

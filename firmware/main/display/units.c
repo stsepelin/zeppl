@@ -29,6 +29,15 @@ uint32_t units_distance_tenths(uint32_t meters, display_units_t units)
     return (uint32_t)(((uint64_t)meters * 10000u) / UM_PER_MILE);
 }
 
+int units_temp_display(int celsius, temp_units_t units)
+{
+    if (units != UNITS_FAHRENHEIT)
+        return celsius;
+    // F = C*9/5 + 32, integer round-to-nearest (half the /5 divisor, signed).
+    int nine = celsius * 9;
+    return (nine >= 0 ? (nine + 2) / 5 : (nine - 2) / 5) + 32;
+}
+
 const char *units_speed_label(display_units_t units)
 {
     return (units == UNITS_MPH) ? "mph" : "km/h";
@@ -37,4 +46,9 @@ const char *units_speed_label(display_units_t units)
 const char *units_distance_label(display_units_t units)
 {
     return (units == UNITS_MPH) ? "mi" : "km";
+}
+
+const char *units_temp_label(temp_units_t units)
+{
+    return (units == UNITS_FAHRENHEIT) ? "F" : "C";
 }

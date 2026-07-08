@@ -6,7 +6,8 @@ static void test_defaults_known_values(void)
     settings_t s;
     settings_default(&s);
     TEST_ASSERT_EQUAL_UINT8(UNITS_KPH, s.units);
-    TEST_ASSERT_EQUAL_UINT8(60,        s.brightness);
+    TEST_ASSERT_EQUAL_UINT8(UNITS_CELSIUS, s.temp_units);
+    TEST_ASSERT_EQUAL_UINT8(60, s.brightness);
     TEST_ASSERT_TRUE       (           s.sound_enabled);
     TEST_ASSERT_EQUAL_UINT8(70,        s.volume);
     // Default is "invisible to strangers once bonded" — directed
@@ -62,6 +63,17 @@ static void test_validate_repairs_bad_units_enum(void)
     TEST_ASSERT_EQUAL_UINT8(UNITS_KPH, s.units);
 }
 
+static void test_validate_repairs_bad_temp_units_enum(void)
+{
+    settings_t s = {.units = UNITS_KPH, .temp_units = (temp_units_t)9, .brightness = 50};
+    settings_validate(&s);
+    TEST_ASSERT_EQUAL_UINT8(UNITS_CELSIUS, s.temp_units);
+    // A valid non-default value must be preserved.
+    s.temp_units = UNITS_FAHRENHEIT;
+    settings_validate(&s);
+    TEST_ASSERT_EQUAL_UINT8(UNITS_FAHRENHEIT, s.temp_units);
+}
+
 static void test_validate_is_idempotent(void)
 {
     settings_t s;
@@ -80,5 +92,6 @@ void RunTests(void)
     RUN_TEST(test_validate_clamps_brightness_below_min);
     RUN_TEST(test_validate_clamps_volume_over_max);
     RUN_TEST(test_validate_repairs_bad_units_enum);
+    RUN_TEST(test_validate_repairs_bad_temp_units_enum);
     RUN_TEST(test_validate_is_idempotent);
 }

@@ -22,6 +22,7 @@ LV_FONT_DECLARE(jbm_bold_33);
 static settings_t s_pending;
 
 static lv_obj_t *s_units_value;
+static lv_obj_t *s_temp_units_value;
 static lv_obj_t *s_sound_badge;
 static lv_obj_t *s_brightness_value;
 static lv_obj_t *s_volume_value;
@@ -33,6 +34,21 @@ static lv_obj_t *make_row(lv_obj_t *parent, int32_t height, int32_t y)
     lv_obj_t *row = lv_obj_create(parent);
     lv_obj_set_size(row, ROW_W, height);
     lv_obj_align(row, LV_ALIGN_TOP_MID, 0, y);
+    lv_obj_set_style_bg_color(row, lv_color_hex(0x1A1A1A), 0);
+    lv_obj_set_style_border_color(row, lv_color_hex(VROD_TEXT_DIM), 0);
+    lv_obj_set_style_border_width(row, 1, 0);
+    lv_obj_set_style_radius(row, 12, 0);
+    lv_obj_set_style_pad_all(row, 14, 0);
+    lv_obj_remove_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+    return row;
+}
+
+// A half-width card at horizontal offset x_off, for two controls on one line.
+static lv_obj_t *make_half_row(lv_obj_t *parent, int32_t x_off, int32_t y, int32_t height)
+{
+    lv_obj_t *row = lv_obj_create(parent);
+    lv_obj_set_size(row, (ROW_W - 20) / 2, height);
+    lv_obj_align(row, LV_ALIGN_TOP_MID, x_off, y);
     lv_obj_set_style_bg_color(row, lv_color_hex(0x1A1A1A), 0);
     lv_obj_set_style_border_color(row, lv_color_hex(VROD_TEXT_DIM), 0);
     lv_obj_set_style_border_width(row, 1, 0);
@@ -104,6 +120,15 @@ static void units_row_clicked_cb(lv_event_t *e)
     (void)e;
     s_pending.units = (s_pending.units == UNITS_KPH) ? UNITS_MPH : UNITS_KPH;
     lv_label_set_text(s_units_value, units_distance_label(s_pending.units));
+    settings_store_apply(&s_pending);
+}
+
+static void temp_units_row_clicked_cb(lv_event_t *e)
+{
+    (void)e;
+    s_pending.temp_units =
+        (s_pending.temp_units == UNITS_CELSIUS) ? UNITS_FAHRENHEIT : UNITS_CELSIUS;
+    lv_label_set_text(s_temp_units_value, units_temp_label(s_pending.temp_units));
     settings_store_apply(&s_pending);
 }
 
@@ -196,13 +221,21 @@ lv_obj_t *screen_settings_create(void)
     lv_obj_set_style_text_font(title, &jbm_bold_45, 0);
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 50);
 
-    // UNITS — tap row to toggle km/mi.
-    lv_obj_t *units_row = make_row(scr, 80, 130);
+    // UNITS + TEMP — two half-width cards on one line. Left: tap to toggle
+    // km/mi. Right: tap to toggle temperature C/F.
+    lv_obj_t *units_row = make_half_row(scr, -(ROW_W / 4 + 5), 130, 80);
     lv_obj_add_flag(units_row, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(units_row, units_row_clicked_cb, LV_EVENT_CLICKED, NULL);
     make_caption(units_row, "UNITS", LV_ALIGN_LEFT_MID, VROD_TEXT);
     s_units_value = make_caption(units_row,
         units_distance_label(s_pending.units), LV_ALIGN_RIGHT_MID, VROD_ORANGE);
+
+    lv_obj_t *temp_row = make_half_row(scr, ROW_W / 4 + 5, 130, 80);
+    lv_obj_add_flag(temp_row, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_event_cb(temp_row, temp_units_row_clicked_cb, LV_EVENT_CLICKED, NULL);
+    make_caption(temp_row, "TEMP", LV_ALIGN_LEFT_MID, VROD_TEXT);
+    s_temp_units_value = make_caption(temp_row, units_temp_label(s_pending.temp_units),
+                                      LV_ALIGN_RIGHT_MID, VROD_ORANGE);
 
     // SOUND — single card: caption + ON/OFF badge at top, volume slider
     // along the bottom. The badge itself is the toggle target so the
