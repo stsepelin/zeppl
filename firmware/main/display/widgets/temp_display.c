@@ -11,11 +11,12 @@ LV_FONT_DECLARE(mdi_36);
 #define TEMP_HOT_C        110                  // value + icon turn red at/above
 
 typedef struct {
-    lv_obj_t *icon;
-    lv_obj_t *value;
-    int8_t    last_c;
-    bool      last_hot;
-    bool      has_value;
+    lv_obj_t    *icon;
+    lv_obj_t    *value;
+    int8_t       last_c;
+    temp_units_t last_units;
+    bool         last_hot;
+    bool         has_value;
 } temp_data_t;
 
 lv_obj_t *temp_display_create(lv_obj_t *parent)
@@ -41,28 +42,27 @@ lv_obj_t *temp_display_create(lv_obj_t *parent)
     td->icon  = icon;
     td->value = value;
     td->last_c = 0;
+    td->last_units  = UNITS_CELSIUS;
     td->last_hot = false;
     td->has_value = false;
     lv_obj_set_user_data(cont, td);
     return cont;
 }
 
-void temp_display_set_value(lv_obj_t *cont, int8_t celsius)
+void temp_display_set_value(lv_obj_t *cont, int8_t celsius, temp_units_t units)
 {
     temp_data_t *td = lv_obj_get_user_data(cont);
     if (!td) return;
+    // "hot" is a physical threshold, so it tracks celsius regardless of the
+    // display unit.
     bool hot = (celsius >= TEMP_HOT_C);
-    // hot derives from celsius, so the colour can only change when the text
-    // does -- one value check covers both dirty conditions.
-    if (td->has_value && td->last_c == celsius)
+    if (td->has_value && td->last_c == celsius && td->last_units == units)
         return;
     bool color_dirty = !td->has_value || td->last_hot != hot;
 
     char buf[16];
-    snprintf(buf, sizeof(buf),
-             "%d\xC2\xB0"
-             "C",
-             (int)celsius);
+    snprintf(buf, sizeof(buf), "%d\xC2\xB0%s", units_temp_display(celsius, units),
+             units_temp_label(units));
     lv_label_set_text(td->value, buf);
 
     if (color_dirty) {
@@ -74,7 +74,8 @@ void temp_display_set_value(lv_obj_t *cont, int8_t celsius)
         lv_obj_set_style_text_color(td->value, value_c, 0);
         lv_obj_set_style_text_color(td->icon,  icon_c,  0);
     }
-    td->last_c    = celsius;
-    td->last_hot  = hot;
-    td->has_value = true;
+    td->last_c     = celsius;
+    td->last_units = units;
+    td->last_hot   = hot;
+    td->has_value  = true;
 }

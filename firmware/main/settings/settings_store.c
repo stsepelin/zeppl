@@ -7,6 +7,7 @@ static const char *TAG = "settings";
 
 #define NS          "vrod"
 #define KEY_UNITS   "units"
+#define KEY_TUNITS  "temp_units"
 #define KEY_BRIGHT  "brightness"
 #define KEY_SND_EN  "sound_en"
 #define KEY_VOLUME  "volume"
@@ -27,6 +28,8 @@ static void load_into(settings_t *out)
     uint8_t v;
     if (nvs_get_u8(h, KEY_UNITS, &v) == ESP_OK)
         out->units = (display_units_t)v;
+    if (nvs_get_u8(h, KEY_TUNITS, &v) == ESP_OK)
+        out->temp_units = (temp_units_t)v;
     if (nvs_get_u8(h, KEY_BRIGHT, &v) == ESP_OK)
         out->brightness = v;
     if (nvs_get_u8(h, KEY_SND_EN, &v) == ESP_OK)
@@ -50,6 +53,7 @@ static bool save_from(const settings_t *s)
     }
 
     bool ok = nvs_set_u8(h, KEY_UNITS, (uint8_t)s->units) == ESP_OK &&
+              nvs_set_u8(h, KEY_TUNITS, (uint8_t)s->temp_units) == ESP_OK &&
               nvs_set_u8(h, KEY_BRIGHT, s->brightness) == ESP_OK &&
               nvs_set_u8(h, KEY_SND_EN, s->sound_enabled ? 1u : 0u) == ESP_OK &&
               nvs_set_u8(h, KEY_VOLUME, s->volume) == ESP_OK &&

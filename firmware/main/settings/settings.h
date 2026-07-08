@@ -13,6 +13,7 @@
 // bytes per field should probably be its own NVS namespace.
 typedef struct {
     display_units_t units;                 // kph or mph
+    temp_units_t    temp_units;            // celsius or fahrenheit
     uint8_t         brightness;            // 30..100 (mapped to the BSP duty cycle)
     bool            sound_enabled;         // master mute / unmute
     uint8_t         volume;                // 0..100 (codec out_vol)

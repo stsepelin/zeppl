@@ -83,6 +83,29 @@ static void test_distance_labels(void)
     TEST_ASSERT_EQUAL_STRING("mi", units_distance_label(UNITS_MPH));
 }
 
+// --- temperature ---------------------------------------------------------
+
+static void test_temp_celsius_passthrough(void)
+{
+    TEST_ASSERT_EQUAL_INT(23, units_temp_display(23, UNITS_CELSIUS));
+    TEST_ASSERT_EQUAL_INT(-40, units_temp_display(-40, UNITS_CELSIUS));
+}
+
+static void test_temp_fahrenheit_conversion(void)
+{
+    TEST_ASSERT_EQUAL_INT(32, units_temp_display(0, UNITS_FAHRENHEIT));     // 0 C
+    TEST_ASSERT_EQUAL_INT(212, units_temp_display(100, UNITS_FAHRENHEIT));  // boil
+    TEST_ASSERT_EQUAL_INT(-40, units_temp_display(-40, UNITS_FAHRENHEIT));  // crossover
+    TEST_ASSERT_EQUAL_INT(73, units_temp_display(23, UNITS_FAHRENHEIT));    // 73.4 -> 73
+    TEST_ASSERT_EQUAL_INT(192, units_temp_display(89, UNITS_FAHRENHEIT));   // 192.2 -> 192
+}
+
+static void test_temp_labels(void)
+{
+    TEST_ASSERT_EQUAL_STRING("C", units_temp_label(UNITS_CELSIUS));
+    TEST_ASSERT_EQUAL_STRING("F", units_temp_label(UNITS_FAHRENHEIT));
+}
+
 void RunTests(void)
 {
     RUN_TEST(test_speed_mph_passthrough);
@@ -94,4 +117,7 @@ void RunTests(void)
     RUN_TEST(test_distance_tenths_mi);
     RUN_TEST(test_speed_labels);
     RUN_TEST(test_distance_labels);
+    RUN_TEST(test_temp_celsius_passthrough);
+    RUN_TEST(test_temp_fahrenheit_conversion);
+    RUN_TEST(test_temp_labels);
 }
