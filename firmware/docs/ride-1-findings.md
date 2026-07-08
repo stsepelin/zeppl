@@ -123,6 +123,19 @@ Three separate fuel things, only the first available now:
   taken while the low-fuel lamp is ON, then diff the status frames (same method
   as the neutral hunt).
 
+**Derived: fuel economy (trip-computer metrics).** `A8 83 10` (fuel) ÷
+`A8 69 10` (distance) gives instantaneous / trip-average / total-fuel economy.
+Demonstrated on ride 1: 2730 fuel-ticks/km overall, and it varies by segment
+(1778 moving vs 2533 stop-start) — the real trip-computer pattern. Works today
+in RELATIVE units (ticks/km: live efficiency bar, compare-to-average). For real
+**L/100km / mpg**, calibrate the fuel-tick volume once by fill-up:
+`mL/tick = litres_added * 1000 / ticks_consumed` (spec-anchored estimate
+~0.02-0.03 mL/tick). **Range / distance-to-empty** = tank (18.9 L) − fuel used
+since the last fill (a fill *reset* + mL/tick; no fuel-level sender needed — the
+level gauge isn't on the bus anyway, and this is what the stock "countdown"
+does). Natural companion-app feature (per-ride history, fill logging, lifetime
+economy); a live economy readout can also sit on the cluster.
+
 **Caveat:** the static keep-alive frames could hide an oil/battery/ABS status
 bit that simply never changed during an all-engine-running ride. A capture that
 includes ignition-on / cranking / a real fault would reveal it; until then the

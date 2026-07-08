@@ -293,6 +293,13 @@ and brings a GPS. Builds on the existing NimBLE peripheral + Android central.
   them on the phone, with a clear-codes action. Needs **TX** (Stage 4:
   request/response), so it lands after the TX path is bench-validated. The MIL
   lamp bit is already available passively (`68 88 10`).
+- **Fuel economy / range.** Both counters are on the bus — fuel consumed
+  (`A8 83 10`) and distance (`A8 69 10`) — so trip-computer metrics come out of
+  their ratio: instantaneous / trip-average economy, trip fuel, and
+  range-to-empty (tank 18.9 L − fuel-since-fill; no fuel-level sender needed).
+  Relative economy (ticks/km) works today; real L/100km / mpg needs a one-time
+  fill-up calibration of mL-per-fuel-tick, stored in the app with per-ride
+  history + fill logging. See `firmware/docs/ride-1-findings.md`.
 
 ### Carried-over hardware verification (from Phase 2.5)
 
