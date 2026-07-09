@@ -77,6 +77,11 @@ object BondedClusters {
         }
     }
 
+    /** The bonded cluster with this address, or null if it isn't paired. */
+    @SuppressLint("MissingPermission")
+    fun byAddress(context: Context, address: String): BluetoothDevice? =
+        list(context).firstOrNull { it.address == address }
+
     /**
      * Remove the OS-side bond for the given device. Returns true if the
      * removal request was accepted (the actual unbond completes

@@ -33,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.vrodcluster.companion.ui.theme.VRodTheme
 
 /**
@@ -92,7 +93,16 @@ private fun MainContent(navController: NavHostController, modifier: Modifier = M
             RideScreen(onSetUpLink = { navController.navigateTopLevel(Cluster) })
         }
         composable<Cluster> {
-            ClusterScreen(onPickCluster = { navController.navigate(Scan) })
+            ClusterScreen(
+                onPickCluster = { navController.navigate(Scan) },
+                onOpenCluster = { navController.navigate(ClusterDetail(it)) },
+            )
+        }
+        composable<ClusterDetail> { entry ->
+            ClusterDetailScreen(
+                address = entry.toRoute<ClusterDetail>().address,
+                onBack = { navController.popBackStack() },
+            )
         }
         composable<Settings> {
             SettingsScreen(onConfigureApps = { navController.navigate(AppList) })

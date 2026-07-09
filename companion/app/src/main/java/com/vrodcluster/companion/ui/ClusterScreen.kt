@@ -2,10 +2,9 @@ package com.vrodcluster.companion.ui
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,15 +14,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -43,17 +40,18 @@ import com.vrodcluster.companion.ble.BleConnState
 import com.vrodcluster.companion.ble.BleService
 import com.vrodcluster.companion.ble.BleState
 import com.vrodcluster.companion.ble.BondedClusters
+import com.vrodcluster.companion.ble.ClusterNames
 import com.vrodcluster.companion.ui.theme.StatusColors
 
 /**
- * Device hub. Organized around the clusters themselves rather than loose
- * verbs: a connection card (with one-tap reconnect-to-latest), a list of
- * paired clusters each with its own Connect/Forget, and a single "Add cluster"
- * that opens the scan. No more separate Connect + Scan buttons.
+ * Device hub. Organized around the clusters themselves: a connection card (with
+ * one-tap reconnect-to-latest), and a list of paired clusters. Each row's quick
+ * Connect/Disconnect lives inline; tapping the row opens the per-cluster detail
+ * (rename, firmware, diagnostics, forget).
  */
 @SuppressLint("MissingPermission")
 @Composable
-fun ClusterScreen(onPickCluster: () -> Unit) {
+fun ClusterScreen(onPickCluster: () -> Unit, onOpenCluster: (String) -> Unit) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
 
@@ -87,14 +85,6 @@ fun ClusterScreen(onPickCluster: () -> Unit) {
         blePerms = result.values.all { it }
         if (blePerms) bonded = BondedClusters.list(context)
     }
-
-    // Non-null while the forget-confirmation dialog is up for that device.
-    var forgetTarget by remember { mutableStateOf<BluetoothDevice?>(null) }
-    // Android-style: tap the Firmware row seven times to unlock developer mode.
-    var firmwareTaps by remember { mutableStateOf(0) }
-    // One reused Toast so rapid taps update the visible message instead of
-    // queuing a backlog of stale countdown toasts.
-    val fwToast = remember { Toast.makeText(context, "", Toast.LENGTH_SHORT) }
 
     val connected = BleState.conn == BleConnState.CONNECTED
     val busy = BleState.conn in setOf(
@@ -150,13 +140,14 @@ fun ClusterScreen(onPickCluster: () -> Unit) {
                 } else {
                     bonded.forEach { dev ->
                         DeviceRow(
-                            dev = dev,
+                            name = ClusterNames.display(context, dev.address, dev.name),
+                            address = dev.address,
                             connected = isConnectedTo(dev),
                             onConnect = {
                                 BleService.start(context, address = dev.address, autoConnect = true)
                             },
                             onDisconnect = { BleService.stop(context) },
-                            onForget = { forgetTarget = dev },
+                            onOpen = { onOpenCluster(dev.address) },
                         )
                     }
                 }
@@ -167,86 +158,26 @@ fun ClusterScreen(onPickCluster: () -> Unit) {
                 }
             }
         }
-
-        SectionCard(title = "Setup & maintenance") {
-            Text(
-                "Speed calibration, fault-code diagnostics, and firmware come online with the next bricks — they need a live link to the cluster.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            InfoRow("Speed calibration", "Coming soon")
-            InfoRow("Diagnostics (DTC)", "Coming soon")
-            InfoRow("Firmware", "—", onClick = {
-                if (AppPrefs.developerMode) {
-                    fwToast.setText("Developer mode is already on")
-                    fwToast.show()
-                } else {
-                    firmwareTaps++
-                    val left = 7 - firmwareTaps
-                    when {
-                        left <= 0 -> {
-                            AppPrefs.developerMode = true
-                            fwToast.setText("Developer mode enabled")
-                            fwToast.show()
-                        }
-                        left in 1..3 -> {
-                            fwToast.setText(
-                                "$left ${if (left == 1) "step" else "steps"} from developer mode",
-                            )
-                            fwToast.show()
-                        }
-                    }
-                }
-            })
-        }
-    }
-
-    forgetTarget?.let { target ->
-        AlertDialog(
-            onDismissRequest = { forgetTarget = null },
-            title = { Text("Forget this cluster?") },
-            text = {
-                Text(
-                    "Removes the phone-side pairing with ${target.name ?: target.address}. " +
-                        "You can add it again later.",
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        BondedClusters.forget(target)
-                        bonded = bonded - target
-                        forgetTarget = null
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error,
-                    ),
-                ) { Text("Forget") }
-            },
-            dismissButton = {
-                TextButton(onClick = { forgetTarget = null }) { Text("Cancel") }
-            },
-        )
     }
 }
 
-@SuppressLint("MissingPermission")
 @Composable
 private fun DeviceRow(
-    dev: BluetoothDevice,
+    name: String,
+    address: String,
     connected: Boolean,
     onConnect: () -> Unit,
     onDisconnect: () -> Unit,
-    onForget: () -> Unit,
+    onOpen: () -> Unit,
 ) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onOpen).padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(dev.name ?: "Unnamed cluster", style = MaterialTheme.typography.bodyLarge)
+            Text(name, style = MaterialTheme.typography.bodyLarge)
             Text(
-                dev.address,
+                address,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -256,15 +187,12 @@ private fun DeviceRow(
         } else {
             FilledTonalButton(onClick = onConnect) { Text("Connect") }
         }
-        Spacer(Modifier.width(8.dp))
-        // Danger action: red outline + text, and it opens a confirmation.
-        OutlinedButton(
-            onClick = onForget,
-            colors = ButtonDefaults.outlinedButtonColors(
-                contentColor = MaterialTheme.colorScheme.error,
-            ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.error),
-        ) { Text("Forget") }
+        Icon(
+            Icons.Filled.ChevronRight,
+            contentDescription = "Details",
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp).size(24.dp),
+        )
     }
 }
 

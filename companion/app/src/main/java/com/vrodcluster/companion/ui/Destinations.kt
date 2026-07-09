@@ -23,6 +23,9 @@ import kotlinx.serialization.Serializable
 @Serializable object Scan       // pushed from Cluster: pick a cluster to connect
 @Serializable object AppList    // pushed from Settings: choose forwarding apps
 
+/** Pushed from Cluster: per-cluster detail (rename, firmware, diagnostics, forget). */
+@Serializable data class ClusterDetail(val address: String)
+
 /** A top-level tab in the navigation suite. `route` is one of the objects above. */
 data class TopLevelDestination(
     val route: Any,
