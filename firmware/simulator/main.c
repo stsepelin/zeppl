@@ -21,6 +21,8 @@
 #include "phone_data.h"
 #include "test_bridge.h"
 #include "emoji_font.h"
+#include "map_tile.h"
+#include "screen_map.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -214,6 +216,51 @@ int main(void)
     }
     lv_sdl_window_set_title(display, "V-Rod cluster simulator");
     lv_sdl_mouse_create();
+
+    // Map spike: VROD_MAP=<tiles_dir> renders the moving-map screen instead of
+    // the gauge. VROD_MAP_CENTER="lat,lon" (default: tileset centre),
+    // VROD_MAP_PPT px/tile (default 256), VROD_MAP_SPEED mph. Honours VROD_SHOT.
+    const char *mapdir = getenv("VROD_MAP");
+    if (mapdir) {
+        map_tileset_t *ts = map_tileset_load_dir(mapdir);
+        if (!ts) {
+            fprintf(stderr, "map: failed to load %s\n", mapdir);
+            return 1;
+        }
+        double      ctx = 0, cty = 0;
+        const char *ctr = getenv("VROD_MAP_CENTER");
+        if (ctr) {
+            double lat, lon;
+            if (sscanf(ctr, "%lf,%lf", &lat, &lon) == 2)
+                map_lonlat_to_tilef(lon, lat, ts->zoom, &ctx, &cty);
+        } else {
+            double minx = 1e18, miny = 1e18, maxx = -1e18, maxy = -1e18;
+            for (int i = 0; i < ts->ntiles; i++) {
+                double x = ts->tiles[i].tx, y = ts->tiles[i].ty;
+                if (x < minx)
+                    minx = x;
+                if (x > maxx)
+                    maxx = x;
+                if (y < miny)
+                    miny = y;
+                if (y > maxy)
+                    maxy = y;
+            }
+            ctx = (minx + maxx + 1) / 2.0;
+            cty = (miny + maxy + 1) / 2.0;
+        }
+        double ppt   = getenv("VROD_MAP_PPT") ? atof(getenv("VROD_MAP_PPT")) : 256.0;
+        int    speed = getenv("VROD_MAP_SPEED") ? atoi(getenv("VROD_MAP_SPEED")) : 52;
+        fprintf(stderr, "map: %d tiles z%d, center (%.3f,%.3f), ppt %.0f\n", ts->ntiles, ts->zoom,
+                ctx, cty, ppt);
+        lv_screen_load(screen_map_create(ts, DISPLAY_W, DISPLAY_H));
+        while (1) {
+            screen_map_update(ctx, cty, ppt, speed);
+            lv_timer_handler();
+            maybe_screenshot();
+            usleep(UI_TICK_MS * 1000);
+        }
+    }
 
     // Diagnostic: log every invalidated area (VROD_INVLOG=1). Backend-
     // independent — reveals what the widget tree marks dirty per frame, which
