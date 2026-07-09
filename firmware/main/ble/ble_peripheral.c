@@ -288,14 +288,13 @@ static void start_advertising(void)
     // Undirected (general discoverable) — used when no bond exists or
     // when the rider has toggled BT VISIBILITY on to add another phone.
     //
-    // Split the advert. flags (3) + complete name "V-Rod Cluster" (15) +
-    // complete 128-bit service UUID (18) = 36 bytes, which overflows the
-    // 31-byte legacy advert limit. NimBLE returns BLE_HS_EMSGSIZE and
-    // ble_gap_adv_start() never runs — the symptom Android-side is a
-    // scan that stays in SCANNING forever. Move the UUID to the scan
-    // response; Android's SCAN_MODE_LOW_LATENCY is an active scan, so
-    // the scan response is fetched and ScanFilter.setServiceUuid() still
-    // matches.
+    // Keep the 128-bit service UUID in the scan response, not the main
+    // advert. flags (3) + complete name + complete 128-bit UUID (18) can
+    // exceed the 31-byte legacy advert limit; when it does NimBLE returns
+    // BLE_HS_EMSGSIZE and ble_gap_adv_start() never runs — the symptom
+    // Android-side is a scan that stays in SCANNING forever. Android's
+    // SCAN_MODE_LOW_LATENCY is an active scan, so the scan response is
+    // fetched and ScanFilter.setServiceUuid() still matches.
     struct ble_hs_adv_fields fields = { 0 };
     fields.flags            = BLE_HS_ADV_F_DISC_GEN | BLE_HS_ADV_F_BREDR_UNSUP;
     fields.name             = (uint8_t *)ble_svc_gap_device_name();
@@ -321,8 +320,7 @@ static void start_advertising(void)
     if (rc != 0) { ESP_LOGE(TAG, "ble_gap_adv_start rc=%d", rc); return; }
 
     state_set_advertising(true);
-    ESP_LOGI(TAG, "advertising as 'V-Rod Cluster' (undirected, %s)",
-             has_bond ? "override-on" : "no bond");
+    ESP_LOGI(TAG, "advertising as 'Zeppl' (undirected, %s)", has_bond ? "override-on" : "no bond");
 }
 
 static int gap_event_cb(struct ble_gap_event *event, void *arg)
@@ -520,7 +518,7 @@ void ble_peripheral_init(void)
     rc = ble_gatts_add_svcs(svcs);
     if (rc != 0) { ESP_LOGE(TAG, "ble_gatts_add_svcs rc=%d", rc); return; }
 
-    ble_svc_gap_device_name_set("V-Rod Cluster");
+    ble_svc_gap_device_name_set("Zeppl");
 
     nimble_port_freertos_init(nimble_host_task);
     state_set_powered(true);
