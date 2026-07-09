@@ -302,13 +302,25 @@ menu "V-Rod cluster"
             connects are silent.
 
     config VROD_MAP_DEMO
-        bool "Vector map demo (embedded Tallinn route)"
+        bool "Bench demo: synthetic gauge + vector map"
         default n
+        select VROD_INCLUDE_SIM_ENGINE
         help
-            Boot straight into the moving-map screen instead of the gauge,
-            animating a baked Tallinn route from an embedded vector tile
-            archive (tools/maptiles). Self-contained: no SD card, no phone.
-            A spike to see the map renderer on real hardware; reflash a
-            normal build to get the gauge back.
+            One flag for the whole bench demo (no bike, no phone needed). It
+            chains both demos:
+
+              - forces the synthetic driving-cycle gauge to run (even in a
+                J1850 build), so the gauge and the map's instrument strip show
+                live-looking speed / RPM / gear;
+              - registers the compact vector-map screen from an embedded
+                Tallinn route + tiles (tools/maptiles).
+
+            Boots to the gauge; double-tap toggles to the map. When a phone
+            streams GPS the map follows real position, else it plays the baked
+            route.
+
+            OFF in production: the entire map module and the embedded tiles are
+            compiled out (no baked-route fallback ships). The real SD-backed map
+            will be its own option.
 
 endmenu

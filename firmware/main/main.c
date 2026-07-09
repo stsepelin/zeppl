@@ -80,9 +80,11 @@ void app_main(void)
     phone_data_init();
     icon_cache_init();  // PSRAM buffers for streamed app-notification icons
 #if CONFIG_VROD_INCLUDE_SIM_ENGINE
-#if !CONFIG_VROD_J1850
-    // The J1850 producer and the sim both write vehicle_data; the real
-    // bus wins whenever it's compiled in.
+#if !CONFIG_VROD_J1850 || CONFIG_VROD_MAP_DEMO
+    // The J1850 producer and the sim both write vehicle_data; the real bus
+    // wins whenever it's compiled in - except in the bench demo, where the sim
+    // drives the gauge + the map's instrument strip regardless (no live bus at
+    // a desk, so gear/rpm would otherwise read empty).
     sim_engine_start();
 #endif
 #endif
