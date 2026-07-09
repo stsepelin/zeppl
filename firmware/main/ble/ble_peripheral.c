@@ -318,6 +318,19 @@ static int gap_event_cb(struct ble_gap_event *event, void *arg)
                 state_set_connected((const uint8_t[6]){0});
             }
             ESP_LOGI(TAG, "central connected; handle=%u", event->connect.conn_handle);
+            // Ask for a generous supervision timeout so a brief esp_hosted / RF
+            // stall doesn't drop the link (we were seeing status=8/19 churn with
+            // whatever short timeout the phone negotiated). 30-50 ms interval,
+            // no slave latency, 6 s timeout (units: interval 1.25 ms, timeout 10 ms).
+            struct ble_gap_upd_params upd = {
+                .itvl_min            = 24,
+                .itvl_max            = 40,
+                .latency             = 0,
+                .supervision_timeout = 600,
+            };
+            int urc = ble_gap_update_params(event->connect.conn_handle, &upd);
+            if (urc != 0)
+                ESP_LOGW(TAG, "ble_gap_update_params rc=%d", urc);
         } else {
             ESP_LOGW(TAG, "connect failed; status=%d", event->connect.status);
             start_advertising();
