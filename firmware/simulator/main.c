@@ -281,7 +281,10 @@ int main(void)
             while (fscanf(tf, "%lf %lf %f", &lat, &lon, &mph) == 3) {
                 double tx, ty;
                 map_lonlat_to_tilef(lon, lat, ts->zoom, &tx, &ty);
-                screen_map_update(tx, ty, ppt, (int)lrint(mph));
+                int spd = (int)lrint(mph), g, tp, tc;
+                screen_map_synth(spd, &g, &tp, &tc);
+                screen_map_render(tx, ty, ppt);
+                screen_map_commit(spd, g, tp, tc);
                 lv_timer_handler();  // flush label layout before the snapshot
                 char path[1024];
                 snprintf(path, sizeof(path), "%s/frame_%05d.png", outdir, frame++);
@@ -294,7 +297,10 @@ int main(void)
         }
 
         while (1) {
-            screen_map_update(ctx, cty, ppt, speed);
+            int g, tp, tc;
+            screen_map_synth(speed, &g, &tp, &tc);
+            screen_map_render(ctx, cty, ppt);
+            screen_map_commit(speed, g, tp, tc);
             lv_timer_handler();
             maybe_screenshot();
             usleep(UI_TICK_MS * 1000);

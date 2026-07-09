@@ -52,8 +52,13 @@ static void anim_task(void *arg)
         while ((p = next_point(p, end, &lat, &lon, &mph)) != NULL) {
             double tx, ty;
             map_lonlat_to_tilef(lon, lat, s_ts->zoom, &tx, &ty);
+            int spd = (int)lrint(mph), g, tp, tc;
+            screen_map_synth(spd, &g, &tp, &tc);
+            // Heavy rasterise off the lock; only the swap + strip run under it,
+            // so the LVGL render task is never blocked on our CPU work.
+            screen_map_render(tx, ty, MAP_DEMO_PPT);
             bsp_display_lock(-1);
-            screen_map_update(tx, ty, MAP_DEMO_PPT, (int)lrint(mph));
+            screen_map_commit(spd, g, tp, tc);
             bsp_display_unlock();
             vTaskDelay(pdMS_TO_TICKS(MAP_DEMO_FRAME_MS));
         }
