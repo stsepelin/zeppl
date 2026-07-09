@@ -180,6 +180,56 @@ static void test_parse_call_active_and_end(void)
     TEST_ASSERT_EQUAL_INT(PHONE_EVT_CALL_END, evt.type);
 }
 
+static void test_parse_location(void)
+{
+    uint8_t buf[32];
+    size_t  i = 0;
+    buf[i++]  = PHONE_EVT_LOCATION;
+    i += put_u16(buf + i, 10);
+    i += put_u32(buf + i, (uint32_t)594829680);  // lat_e7 = 59.482968
+    i += put_u32(buf + i, (uint32_t)248509760);  // lon_e7 = 24.850976
+    i += put_u16(buf + i, 12345);                // heading_cd
+
+    size_t        consumed = 0;
+    phone_event_t evt;
+    TEST_ASSERT_EQUAL_INT(PHONE_PARSE_OK, phone_protocol_parse(buf, i, &consumed, &evt));
+    TEST_ASSERT_EQUAL_INT(PHONE_EVT_LOCATION, evt.type);
+    TEST_ASSERT_EQUAL_INT32(594829680, evt.location.lat_e7);
+    TEST_ASSERT_EQUAL_INT32(248509760, evt.location.lon_e7);
+    TEST_ASSERT_EQUAL_UINT16(12345, evt.location.heading_cd);
+}
+
+static void test_parse_location_no_heading(void)
+{
+    // payload 8 (no heading) parses; heading defaults to unknown. Negative
+    // lat/lon exercise the signed cast.
+    uint8_t buf[16];
+    size_t  i = 0;
+    buf[i++]  = PHONE_EVT_LOCATION;
+    i += put_u16(buf + i, 8);
+    i += put_u32(buf + i, (uint32_t)(-374000000));  // southern hemisphere
+    i += put_u32(buf + i, (uint32_t)(-56000000));
+
+    size_t        consumed = 0;
+    phone_event_t evt;
+    TEST_ASSERT_EQUAL_INT(PHONE_PARSE_OK, phone_protocol_parse(buf, i, &consumed, &evt));
+    TEST_ASSERT_EQUAL_INT32(-374000000, evt.location.lat_e7);
+    TEST_ASSERT_EQUAL_INT32(-56000000, evt.location.lon_e7);
+    TEST_ASSERT_EQUAL_UINT16(0xFFFF, evt.location.heading_cd);
+}
+
+static void test_parse_location_too_short_rejected(void)
+{
+    uint8_t buf[16];
+    buf[0] = PHONE_EVT_LOCATION;
+    buf[1] = 7;
+    buf[2] = 0;  // payload 7 < 8
+    memset(buf + 3, 0, 7);
+    size_t        consumed = 0;
+    phone_event_t evt;
+    TEST_ASSERT_EQUAL_INT(PHONE_PARSE_BAD_FIELD, phone_protocol_parse(buf, 10, &consumed, &evt));
+}
+
 static void test_parse_dismiss(void)
 {
     uint8_t       buf[16];
@@ -526,4 +576,7 @@ void RunTests(void)
     RUN_TEST(test_parse_icon_chunk);
     RUN_TEST(test_parse_icon_too_short_rejected);
     RUN_TEST(test_parse_call_active_and_end);
+    RUN_TEST(test_parse_location);
+    RUN_TEST(test_parse_location_no_heading);
+    RUN_TEST(test_parse_location_too_short_rejected);
 }

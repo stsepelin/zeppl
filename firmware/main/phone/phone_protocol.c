@@ -143,6 +143,21 @@ phone_parse_result_t phone_protocol_parse(const uint8_t  *buf,
         *consumed = total_len;
         return PHONE_PARSE_OK;
 
+    case PHONE_EVT_LOCATION: {
+        // i32 lat_e7 + i32 lon_e7 + u16 heading_cd. Length-keyed: a heading-less
+        // sender (payload 8) still parses, heading defaults to unknown.
+        if (payload_len < 8) {
+            *consumed = total_len;
+            return PHONE_PARSE_BAD_FIELD;
+        }
+        out->type                = PHONE_EVT_LOCATION;
+        out->location.lat_e7     = (int32_t)rd_u32(p);
+        out->location.lon_e7     = (int32_t)rd_u32(p + 4);
+        out->location.heading_cd = (payload_len >= 10) ? rd_u16(p + 8) : 0xFFFF;
+        *consumed                = total_len;
+        return PHONE_PARSE_OK;
+    }
+
     default:
         *consumed = total_len;
         return PHONE_PARSE_BAD_TYPE;

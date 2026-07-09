@@ -17,6 +17,11 @@ void phone_data_apply(const phone_event_t *evt);
 
 void phone_data_get(phone_state_t *out);
 
+// Latest GPS position from the phone (PHONE_EVT_LOCATION), with age since the
+// last fix. `out->valid` is false until the first fix. The map view uses age to
+// fall back (to the demo track / hold) when the feed goes stale.
+void phone_data_get_location(phone_location_t *out);
+
 // Cluster-side housekeeping, called each UI update. Auto-dismisses a lingering
 // non-call notification after a timeout so it doesn't sit on the gauge; the
 // phone is NOT told (the entry stays in its shade). Calls are never timed out.

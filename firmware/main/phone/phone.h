@@ -70,6 +70,15 @@ typedef struct {
     uint16_t       len;  // bytes in this chunk
 } icon_chunk_t;
 
+// Rider position streamed from the phone's GPS (the cluster has no GPS of its
+// own). Fixed-point to keep the wire payload small; the map view converts to
+// degrees. heading_cd is course-over-ground in centidegrees, 0xFFFF = unknown.
+typedef struct {
+    int32_t  lat_e7;      // latitude  * 1e7
+    int32_t  lon_e7;      // longitude * 1e7
+    uint16_t heading_cd;  // 0..35999, or 0xFFFF when stationary/unknown
+} location_t;
+
 typedef enum {
     PHONE_EVT_NOTIF         = 0x01,
     PHONE_EVT_NOTIF_DISMISS = 0x02,
@@ -80,6 +89,7 @@ typedef enum {
     // via the cluster buttons). Payload-less.
     PHONE_EVT_CALL_ACTIVE = 0x06,
     PHONE_EVT_CALL_END    = 0x07,
+    PHONE_EVT_LOCATION    = 0x08,  // GPS position for the map view
 } phone_event_type_t;
 
 typedef struct {
@@ -90,8 +100,20 @@ typedef struct {
         now_playing_t    media;       // PHONE_EVT_MEDIA
         vehicle_config_t config;      // PHONE_EVT_CONFIG
         icon_chunk_t     icon;        // PHONE_EVT_ICON
+        location_t       location;    // PHONE_EVT_LOCATION
     };
 } phone_event_t;
+
+// Latest GPS position snapshot, with freshness so the map can fall back when the
+// feed goes stale (phone out of range, GPS lost). Returned by
+// phone_data_get_location(); `valid` is false until the first fix arrives.
+typedef struct {
+    bool     valid;
+    int32_t  lat_e7;
+    int32_t  lon_e7;
+    uint16_t heading_cd;
+    uint32_t age_ms;  // since the last fix was applied
+} phone_location_t;
 
 // Combined snapshot, returned by phone_data_get() to consumers (UI).
 typedef struct {

@@ -158,19 +158,19 @@ void app_main(void)
         bsp_display_lock(-1);
     }
 #if CONFIG_VROD_MAP_DEMO
-    // Spike: skip the gauge and boot straight into the moving-map demo. The
-    // paint loop above left the panel black; map_demo builds+loads the screen.
+    // Spike: show the moving map instead of the gauge. The map screen itself is
+    // built AFTER the radio comes up (below) - nimble is memory-tight on this
+    // board and the tileset parse grabs ~100 KB of internal RAM, which starved
+    // nimble_port_init when the map loaded first. Panel stays black until then.
     bsp_display_unlock();
-    map_demo_start();
     bsp_display_brightness_set(settings_store_current()->brightness);
-    ESP_LOGI(TAG, "map demo running");
-    return;
-#endif
+#else
     boot_screen_show();
     lv_refr_now(NULL);
     bsp_display_unlock();
     vTaskDelay(pdMS_TO_TICKS(20));
     bsp_display_brightness_set(settings_store_current()->brightness);
+#endif
 
     // Non-display init continues in parallel with the boot animation
     // (LVGL task is pinned to core 1, the calls below run on core 0).
@@ -184,6 +184,12 @@ void app_main(void)
     ble_peripheral_init();
     telemetry_publisher_start();
 
+#if CONFIG_VROD_MAP_DEMO
+    // Now that nimble has claimed its RAM, build + show the map (loads the
+    // embedded tileset and starts the animation task).
+    map_demo_start();
+    ESP_LOGI(TAG, "map demo running");
+#endif
     ESP_LOGI(TAG, "boot complete");
     // app_main can return — all the real work runs in the FreeRTOS tasks
     // we spawned (ui_update_task, event_watcher_task, sim_engine_task,

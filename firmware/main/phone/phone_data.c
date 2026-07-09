@@ -50,11 +50,18 @@ static SemaphoreHandle_t  s_mutex;
 // lv_tick when s_state.notif last became the active one; drives auto-dismiss.
 static uint32_t s_shown_ms;
 
+// Latest GPS fix from the phone (PHONE_EVT_LOCATION). Guarded by s_mutex.
+static bool     s_loc_valid;
+static int32_t  s_loc_lat, s_loc_lon;
+static uint16_t s_loc_heading;
+static uint32_t s_loc_ms;
+
 void phone_data_init(void)
 {
     memset(&s_state, 0, sizeof(s_state));
     memset(s_queue, 0, sizeof(s_queue));
     s_queue_count = 0;
+    s_loc_valid   = false;
     s_mutex       = xSemaphoreCreateMutex();
 }
 
@@ -159,6 +166,13 @@ void phone_data_apply(const phone_event_t *evt)
             s_state.media_banner_shown = false;
         }
         break;
+    case PHONE_EVT_LOCATION:
+        s_loc_valid   = true;
+        s_loc_lat     = evt->location.lat_e7;
+        s_loc_lon     = evt->location.lon_e7;
+        s_loc_heading = evt->location.heading_cd;
+        s_loc_ms      = lv_tick_get();
+        break;
     case PHONE_EVT_CONFIG:
     case PHONE_EVT_ICON:
         break;  // handled in ble_peripheral (config -> NVS; icon -> cache)
@@ -174,6 +188,22 @@ void phone_data_get(phone_state_t *out)
         memcpy(out, &s_state, sizeof(s_state));
         xSemaphoreGive(s_mutex);
     }
+}
+
+void phone_data_get_location(phone_location_t *out)
+{
+    if (!out)
+        return;
+    if (xSemaphoreTake(s_mutex, pdMS_TO_TICKS(10)) != pdTRUE) {
+        out->valid = false;
+        return;
+    }
+    out->valid      = s_loc_valid;
+    out->lat_e7     = s_loc_lat;
+    out->lon_e7     = s_loc_lon;
+    out->heading_cd = s_loc_heading;
+    out->age_ms     = s_loc_valid ? (uint32_t)(lv_tick_get() - s_loc_ms) : 0xFFFFFFFFu;
+    xSemaphoreGive(s_mutex);
 }
 
 void phone_data_tick(void)

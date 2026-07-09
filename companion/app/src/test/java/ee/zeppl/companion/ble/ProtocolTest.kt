@@ -247,4 +247,23 @@ class ProtocolTest {
             Protocol.encodeConfig(188),
         )
     }
+
+    @Test fun `encodes a location fix`() {
+        // Mirrors test_phone_protocol.c::test_parse_location. 59.482968,24.850976
+        // -> lat_e7 594829680, lon_e7 248509760; heading 12345 cd.
+        val b = Protocol.encodeLocation(59.482968, 24.850976, 12345)
+        val buf = java.nio.ByteBuffer.wrap(b).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        assertEquals(0x08.toByte(), buf.get())      // type
+        assertEquals(10.toShort(), buf.short)        // payload_len
+        assertEquals(594829680, buf.int)             // lat_e7
+        assertEquals(248509760, buf.int)             // lon_e7
+        assertEquals(12345.toShort(), buf.short)     // heading_cd
+    }
+
+    @Test fun `location heading unknown round-trips as 0xFFFF`() {
+        val b = Protocol.encodeLocation(0.0, 0.0, Protocol.HEADING_UNKNOWN)
+        val buf = java.nio.ByteBuffer.wrap(b).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        buf.position(11)
+        assertEquals(0xFFFF.toShort(), buf.short)
+    }
 }

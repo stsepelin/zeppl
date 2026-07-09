@@ -1,6 +1,8 @@
 #include "map_demo.h"
 #include "map_tile.h"
+#include "phone_data.h"
 #include "screen_map.h"
+#include "vehicle_data.h"
 
 #include "bsp/esp-bsp.h"
 #include "bsp/display.h"
@@ -22,8 +24,21 @@ static const char *TAG = "map_demo";
 
 #define MAP_DEMO_PPT      340.0  // px per tile (view zoom)
 #define MAP_DEMO_FRAME_MS 66     // ~15 fps playback
+#define LOC_STALE_MS      5000   // beyond this with no fix, fall back to the demo track
+#define MAP_TACH_REDLINE  9000   // rpm mapped to a full tach bar
 
 static map_tileset_t *s_ts;
+
+// Instrument strip from the real bus data (gear N when out of 1..6).
+static void strip_from_vehicle(const vehicle_data_t *vd, int *speed, int *gear, int *tach,
+                               int *temp)
+{
+    *speed  = vd->speed_mph;
+    *gear   = (vd->gear >= GEAR_1 && vd->gear <= GEAR_6) ? (int)vd->gear : 0;
+    int pct = (int)((uint32_t)vd->rpm * 100u / MAP_TACH_REDLINE);
+    *tach   = pct > 100 ? 100 : pct;
+    *temp   = vd->engine_temp_c;
+}
 
 // Advance one track line ("lat lon speed_mph"); returns pointer past the newline
 // or NULL at the end. Parses into *lat/*lon/*mph.
@@ -43,25 +58,42 @@ static const char *next_point(const char *p, const char *end, double *lat, doubl
 static void anim_task(void *arg)
 {
     (void)arg;
-    const char *begin = track_txt_start;
-    const char *end   = track_txt_end;
+    const char *end    = track_txt_end;
+    const char *cursor = track_txt_start;  // demo-track playback position
     for (;;) {
-        const char *p = begin;
-        double      lat, lon;
-        float       mph;
-        while ((p = next_point(p, end, &lat, &lon, &mph)) != NULL) {
-            double tx, ty;
+        double tx, ty;
+        int    speed, gear, tach, temp;
+
+        phone_location_t loc;
+        phone_data_get_location(&loc);
+        if (loc.valid && loc.age_ms < LOC_STALE_MS) {
+            // Real: position from the phone's GPS, strip from the J1850 bus.
+            map_lonlat_to_tilef(loc.lon_e7 / 1e7, loc.lat_e7 / 1e7, s_ts->zoom, &tx, &ty);
+            vehicle_data_t vd;
+            vehicle_data_get(&vd);
+            strip_from_vehicle(&vd, &speed, &gear, &tach, &temp);
+        } else {
+            // Fallback: walk the baked demo route + synthesise the strip.
+            double      lat, lon;
+            float       mph;
+            const char *np = next_point(cursor, end, &lat, &lon, &mph);
+            if (np == NULL) {
+                cursor = track_txt_start;  // loop the route
+                continue;
+            }
+            cursor = np;
             map_lonlat_to_tilef(lon, lat, s_ts->zoom, &tx, &ty);
-            int spd = (int)lrint(mph), g, tp, tc;
-            screen_map_synth(spd, &g, &tp, &tc);
-            // Heavy rasterise off the lock; only the swap + strip run under it,
-            // so the LVGL render task is never blocked on our CPU work.
-            screen_map_render(tx, ty, MAP_DEMO_PPT);
-            bsp_display_lock(-1);
-            screen_map_commit(spd, g, tp, tc);
-            bsp_display_unlock();
-            vTaskDelay(pdMS_TO_TICKS(MAP_DEMO_FRAME_MS));
+            speed = (int)lrint(mph);
+            screen_map_synth(speed, &gear, &tach, &temp);
         }
+
+        // Heavy rasterise off the lock; only the swap + strip run under it, so
+        // the LVGL render task is never blocked on our CPU work.
+        screen_map_render(tx, ty, MAP_DEMO_PPT);
+        bsp_display_lock(-1);
+        screen_map_commit(speed, gear, tach, temp);
+        bsp_display_unlock();
+        vTaskDelay(pdMS_TO_TICKS(MAP_DEMO_FRAME_MS));
     }
 }
 
