@@ -17,16 +17,9 @@ LV_FONT_DECLARE(jbm_bold_33);
 #define ROW_W 540
 
 static lv_obj_t   *s_odo_value;
-static lv_obj_t   *s_econ_value;  // current (windowed) economy
 static lv_obj_t   *s_trip_dist[2];
 static lv_obj_t   *s_trip_econ[2];  // per-trip average economy
 static lv_timer_t *s_refresh;
-
-// Current-economy window: recompute over each ~200 m of travel so the reading
-// is "recent" rather than instantaneous-noisy.
-#define ECON_WINDOW_M 200u
-static bool     s_win_set;
-static uint32_t s_win_odo, s_win_fuel;
 
 static void fmt_tenths(char *buf, size_t n, uint32_t m, display_units_t u)
 {
@@ -67,19 +60,6 @@ static void refresh(lv_timer_t *t)
     lv_label_set_text(s_trip_econ[0], buf);
     fmt_econ(buf, sizeof(buf), units_econ_x10(vd.trip2_fuel_ticks, vd.trip2_m, u), u);
     lv_label_set_text(s_trip_econ[1], buf);
-
-    // Current economy over the rolling distance window.
-    if (s_win_set && vd.odometer_m - s_win_odo >= ECON_WINDOW_M) {
-        fmt_econ(buf, sizeof(buf),
-                 units_econ_x10(vd.fuel_ticks_total - s_win_fuel, vd.odometer_m - s_win_odo, u), u);
-        lv_label_set_text(s_econ_value, buf);
-        s_win_odo  = vd.odometer_m;
-        s_win_fuel = vd.fuel_ticks_total;
-    } else if (!s_win_set) {
-        s_win_odo  = vd.odometer_m;
-        s_win_fuel = vd.fuel_ticks_total;
-        s_win_set  = true;
-    }
 }
 
 static void reset_trip(int idx)
@@ -141,14 +121,14 @@ static lv_obj_t *label(lv_obj_t *parent, const char *text, lv_align_t align, uin
 // economy (top-right, dim) + RESET button (bottom-right).
 static void trip_card(lv_obj_t *scr, int idx, const char *name, int32_t y, lv_event_cb_t reset_cb)
 {
-    lv_obj_t *row = card(scr, y, 115);
+    lv_obj_t *row = card(scr, y, 128);
     label(row, name, LV_ALIGN_TOP_LEFT, VROD_TEXT);
     s_trip_dist[idx] = label(row, "0.0", LV_ALIGN_BOTTOM_LEFT, VROD_ORANGE);
     s_trip_econ[idx] = label(row, "--", LV_ALIGN_TOP_RIGHT, VROD_TEXT_DIM);
 
     lv_obj_t *btn = lv_button_create(row);
-    lv_obj_set_size(btn, 150, 56);
-    lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, 0, 0);
+    lv_obj_set_size(btn, 150, 52);
+    lv_obj_align(btn, LV_ALIGN_BOTTOM_RIGHT, 0, 0);  // sits below the avg-econ line
     lv_obj_set_style_bg_color(btn, lv_color_hex(0x2A2A2A), 0);
     lv_obj_set_style_border_color(btn, lv_color_hex(VROD_ORANGE), 0);
     lv_obj_set_style_border_width(btn, 1, 0);
@@ -174,19 +154,14 @@ lv_obj_t *screen_settings_trip_create(void)
     lv_obj_align(title, LV_ALIGN_TOP_MID, 0, 45);
 
     // ODOMETER — tap the row to set the value (one-time mileage entry).
-    lv_obj_t *odo = card(scr, 120, 70);
+    lv_obj_t *odo = card(scr, 130, 80);
     lv_obj_add_flag(odo, LV_OBJ_FLAG_CLICKABLE);
     lv_obj_add_event_cb(odo, odo_row_cb, LV_EVENT_CLICKED, NULL);
     label(odo, "ODOMETER", LV_ALIGN_LEFT_MID, VROD_TEXT);
     s_odo_value = label(odo, "0", LV_ALIGN_RIGHT_MID, VROD_ORANGE);
 
-    // ECONOMY — current (windowed) fuel economy.
-    lv_obj_t *econ = card(scr, 200, 60);
-    label(econ, "ECONOMY", LV_ALIGN_LEFT_MID, VROD_TEXT);
-    s_econ_value = label(econ, "--", LV_ALIGN_RIGHT_MID, VROD_ORANGE);
-
-    trip_card(scr, 0, "TRIP1", 275, reset0_cb);
-    trip_card(scr, 1, "TRIP2", 400, reset1_cb);
+    trip_card(scr, 0, "TRIP1", 240, reset0_cb);
+    trip_card(scr, 1, "TRIP2", 380, reset1_cb);
 
     lv_obj_t *back = lv_button_create(scr);
     lv_obj_set_size(back, 260, 80);

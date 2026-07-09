@@ -58,6 +58,7 @@ add_executable(vrod_sim
     ${MAIN_DIR}/display/screen_settings_general.c
     ${MAIN_DIR}/display/screen_settings_trip.c
     ${MAIN_DIR}/display/screen_settings_odoset.c
+    ${MAIN_DIR}/display/screen_settings_bluetooth.c
     ${MAIN_DIR}/display/format.c
     ${MAIN_DIR}/display/gesture.c
     ${MAIN_DIR}/display/units.c
