@@ -80,7 +80,6 @@ fun DeveloperScreen(onExit: () -> Unit) {
                 )
                 if (isConnected) {
                     SpeedCalibrationCard()
-                    ManualDivisorCard()
                 } else {
                     SectionCard(title = "Speed calibration") {
                         Text(
