@@ -25,6 +25,7 @@
 #endif
 #if CONFIG_VROD_J1850
 #include "j1850_driver.h"
+#include "j1850_bench_feed.h"
 #include "odo_store.h"
 #endif
 #if defined(CONFIG_VROD_J1850_ADC_GPIO) && CONFIG_VROD_J1850_ADC_GPIO >= 0
@@ -91,6 +92,9 @@ void app_main(void)
     // Restore the persisted odometer/trips into the driver, then keep them
     // saved (periodic + on user reset). Must follow driver_init (it seeds it).
     odo_store_init();
+#if CONFIG_VROD_J1850_BENCH_SPEED
+    j1850_bench_feed_start();
+#endif
 #endif
 #if CONFIG_VROD_RIDE_LOG
     // Mount the SD sink + start its flush task before frames arrive; a missing
