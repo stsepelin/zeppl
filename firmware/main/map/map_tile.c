@@ -15,17 +15,26 @@ static uint32_t rd32(const uint8_t *p)
     return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24);
 }
 
-bool map_tile_parse(const uint8_t *data, size_t len, map_tile_t *out)
+// Parse a ZMT0 tile. When `copy` is true the bytes are duplicated into an owned
+// buffer (files can be freed after); when false the feature xy pointers alias
+// `data` directly (for flash-mapped embedded archives - zero RAM copy; `data`
+// must outlive the tile). feats[] is always heap-owned.
+static bool parse_into(const uint8_t *data, size_t len, map_tile_t *out, bool copy)
 {
     // magic(4) + z(2) + x(4) + y(4) + count(2) = 16-byte header.
     if (len < 16 || memcmp(data, "ZMT0", 4) != 0)
         return false;
 
-    uint16_t nfeat = rd16(data + 14);
-    uint8_t *raw   = malloc(len);
-    if (!raw)
-        return false;
-    memcpy(raw, data, len);
+    uint16_t       nfeat = rd16(data + 14);
+    const uint8_t *base  = data;
+    uint8_t       *raw   = NULL;
+    if (copy) {
+        raw = malloc(len);
+        if (!raw)
+            return false;
+        memcpy(raw, data, len);
+        base = raw;
+    }
 
     map_feature_t *feats = nfeat ? calloc(nfeat, sizeof(map_feature_t)) : NULL;
     if (nfeat && !feats) {
@@ -37,9 +46,9 @@ bool map_tile_parse(const uint8_t *data, size_t len, map_tile_t *out)
     for (uint16_t i = 0; i < nfeat; i++) {
         if (off + 4 > len)
             goto bad;
-        uint8_t  type  = raw[off];
-        uint8_t  style = raw[off + 1];
-        uint16_t npts  = rd16(raw + off + 2);
+        uint8_t  type  = base[off];
+        uint8_t  style = base[off + 1];
+        uint16_t npts  = rd16(base + off + 2);
         off += 4;
         if (off + (size_t)npts * 4 > len)
             goto bad;
@@ -47,13 +56,13 @@ bool map_tile_parse(const uint8_t *data, size_t len, map_tile_t *out)
         feats[i].style = style;
         feats[i].npts  = npts;
         // off is 4-aligned (16 header + 4-byte feat headers + npts*4 runs), and
-        // raw is malloc-aligned, so the uint16 view is safe on our LE targets.
-        feats[i].xy = (const uint16_t *)(raw + off);
+        // base is malloc/flash-aligned, so the uint16 view is safe on LE targets.
+        feats[i].xy = (const uint16_t *)(base + off);
         off += (size_t)npts * 4;
     }
 
-    out->tx    = rd32(data + 6);
-    out->ty    = rd32(data + 10);
+    out->tx    = rd32(base + 6);
+    out->ty    = rd32(base + 10);
     out->nfeat = nfeat;
     out->feats = feats;
     out->raw   = raw;
@@ -63,6 +72,37 @@ bad:
     free(feats);
     free(raw);
     return false;
+}
+
+bool map_tile_parse(const uint8_t *data, size_t len, map_tile_t *out)
+{
+    return parse_into(data, len, out, true);
+}
+
+map_tileset_t *map_tileset_load_mem(const uint8_t *data, size_t len)
+{
+    // ZMTA: magic(4) + zoom(2) + rsvd(2) + count(4), then 16-byte index entries.
+    if (len < 12 || memcmp(data, "ZMTA", 4) != 0)
+        return NULL;
+    uint16_t zoom  = rd16(data + 4);
+    uint32_t count = rd32(data + 8);
+    if (12 + (size_t)count * 16 > len)
+        return NULL;
+
+    map_tileset_t *ts = calloc(1, sizeof(*ts));
+    ts->zoom          = zoom;
+    ts->tiles         = calloc(count, sizeof(map_tile_t));
+
+    for (uint32_t i = 0; i < count; i++) {
+        const uint8_t *e   = data + 12 + (size_t)i * 16;
+        uint32_t       off = rd32(e + 8), tlen = rd32(e + 12);
+        if ((size_t)off + tlen > len)
+            continue;
+        // Parse in place: xy aliases the flash-mapped archive, no copy.
+        if (parse_into(data + off, tlen, &ts->tiles[ts->ntiles], false))
+            ts->ntiles++;
+    }
+    return ts;
 }
 
 void map_tile_free(map_tile_t *t)

@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <time.h>
 #include <stdint.h>
+#include <math.h>
 
 #define DISPLAY_W   800
 #define DISPLAY_H   800
@@ -131,24 +132,14 @@ static void perf_summary(int n)
 // after VROD_SHOT_FRAMES (default 60) main-loop iterations, then exit — lets
 // us review the layout headlessly without a physical panel. lv_snapshot
 // re-renders the widget tree to ARGB8888; lodepng writes a 32-bit PNG.
-static void maybe_screenshot(void)
+// Snapshot the active screen to a 32-bit PNG. Returns 0 on success. Used both
+// by the one-shot VROD_SHOT path and the route animation's per-frame dump.
+static int write_screenshot(const char *path)
 {
-    const char *path = getenv("VROD_SHOT");
-    if (!path)
-        return;
-
-    static int  frame = 0;
-    int         want  = 60;
-    const char *f     = getenv("VROD_SHOT_FRAMES");
-    if (f && atoi(f) > 0)
-        want = atoi(f);
-    if (++frame < want)
-        return;
-
     lv_draw_buf_t *snap = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_ARGB8888);
     if (!snap) {
         fprintf(stderr, "[shot] snapshot failed\n");
-        exit(1);
+        return -1;
     }
 
     uint32_t w = snap->header.w, h = snap->header.h, stride = snap->header.stride;
@@ -173,18 +164,37 @@ static void maybe_screenshot(void)
     lv_draw_buf_destroy(snap);
     if (err) {
         fprintf(stderr, "[shot] encode error %u: %s\n", err, lodepng_error_text(err));
-        exit(1);
+        return -1;
     }
 
     FILE *fp = fopen(path, "wb");
     if (!fp) {
         fprintf(stderr, "[shot] cannot open %s\n", path);
-        exit(1);
+        free(png);
+        return -1;
     }
     fwrite(png, 1, png_sz, fp);
     fclose(fp);
     free(png);
-    fprintf(stderr, "[shot] wrote %s (%ux%u, %zu bytes)\n", path, w, h, png_sz);
+    return 0;
+}
+
+static void maybe_screenshot(void)
+{
+    const char *path = getenv("VROD_SHOT");
+    if (!path)
+        return;
+
+    static int  frame = 0;
+    int         want  = 60;
+    const char *f     = getenv("VROD_SHOT_FRAMES");
+    if (f && atoi(f) > 0)
+        want = atoi(f);
+    if (++frame < want)
+        return;
+
+    if (write_screenshot(path) == 0)
+        fprintf(stderr, "[shot] wrote %s\n", path);
     exit(0);
 }
 
@@ -254,6 +264,35 @@ int main(void)
         fprintf(stderr, "map: %d tiles z%d, center (%.3f,%.3f), ppt %.0f\n", ts->ntiles, ts->zoom,
                 ctx, cty, ppt);
         lv_screen_load(screen_map_create(ts, DISPLAY_W, DISPLAY_H));
+
+        // Route animation: VROD_TRACK=<file> (lines "lat lon speed_mph") drives
+        // the map centre; each frame is dumped to VROD_TRACK_OUT/frame_%05d.png.
+        const char *track = getenv("VROD_TRACK");
+        if (track) {
+            const char *outdir = getenv("VROD_TRACK_OUT");
+            FILE       *tf     = fopen(track, "r");
+            if (!tf || !outdir) {
+                fprintf(stderr, "track: need VROD_TRACK file + VROD_TRACK_OUT dir\n");
+                return 1;
+            }
+            double lat, lon;
+            float  mph;
+            int    frame = 0;
+            while (fscanf(tf, "%lf %lf %f", &lat, &lon, &mph) == 3) {
+                double tx, ty;
+                map_lonlat_to_tilef(lon, lat, ts->zoom, &tx, &ty);
+                screen_map_update(tx, ty, ppt, (int)lrint(mph));
+                lv_timer_handler();  // flush label layout before the snapshot
+                char path[1024];
+                snprintf(path, sizeof(path), "%s/frame_%05d.png", outdir, frame++);
+                if (write_screenshot(path) != 0)
+                    return 1;
+            }
+            fclose(tf);
+            fprintf(stderr, "track: wrote %d frames to %s\n", frame, outdir);
+            return 0;
+        }
+
         while (1) {
             screen_map_update(ctx, cty, ppt, speed);
             lv_timer_handler();

@@ -38,7 +38,12 @@ void map_tile_free(map_tile_t *t);
 
 // Load every <dir>/<zoom>/<x>/<y>.bin (zoom from manifest.json). Host/sim only.
 map_tileset_t *map_tileset_load_dir(const char *dir);
-void           map_tileset_free(map_tileset_t *ts);
+
+// Load a packed ZMTA archive from memory (flash-mapped embedded blob). Tiles are
+// parsed in place - `data` must outlive the tileset. See tools/maptiles/pack.py.
+map_tileset_t *map_tileset_load_mem(const uint8_t *data, size_t len);
+
+void map_tileset_free(map_tileset_t *ts);
 
 // Slippy-map projection: lon/lat degrees -> fractional tile coordinate at zoom.
 void map_lonlat_to_tilef(double lon, double lat, int zoom, double *tx, double *ty);

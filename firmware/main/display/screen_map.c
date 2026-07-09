@@ -1,5 +1,6 @@
 #include "screen_map.h"
 #include "map_render.h"
+#include "esp_heap_caps.h"
 
 #include <stdlib.h>
 
@@ -22,8 +23,9 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_obj_set_style_bg_color(scr, lv_color_black(), 0);
     lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
 
-    // On the device this buffer lives in PSRAM; the sim mallocs it on the heap.
-    s_buf    = malloc((size_t)w * h * sizeof(uint16_t));
+    // 800x800 RGB565 = 1.28 MB - too big for internal RAM, so PSRAM. The sim's
+    // esp_heap_caps shim maps this to malloc.
+    s_buf    = heap_caps_malloc((size_t)w * h * sizeof(uint16_t), MALLOC_CAP_SPIRAM);
     s_canvas = lv_canvas_create(scr);
     lv_canvas_set_buffer(s_canvas, s_buf, w, h, LV_COLOR_FORMAT_RGB565);
     lv_obj_center(s_canvas);

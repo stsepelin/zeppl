@@ -48,9 +48,12 @@ static void draw_seg(canvas_t *c, int x0, int y0, int x1, int y1, uint16_t color
 }
 
 // Even-odd scanline fill of a screen-space polygon (up to MAX_POLY points).
+// Scratch buffers are static, not stack: rendering is single-threaded (the map
+// task / LVGL), and 12 KB of stack arrays overflows a FreeRTOS task stack.
 #define MAX_POLY 1024
 static void fill_poly(canvas_t *c, const float *xs, const float *ys, int n, uint16_t color)
 {
+    static float xint[MAX_POLY];
     if (n < 3)
         return;
     float ymin = ys[0], ymax = ys[0];
@@ -66,7 +69,6 @@ static void fill_poly(canvas_t *c, const float *xs, const float *ys, int n, uint
     if (y1 > c->h)
         y1 = c->h;
 
-    float xint[MAX_POLY];
     for (int y = y0; y < y1; y++) {
         float yc = y + 0.5f;
         int   m  = 0;
@@ -102,8 +104,8 @@ static void draw_feature(canvas_t *c, const map_feature_t *f, double sox, double
                          int width_px)
 {
     if (f->type == 1) {
-        float xs[MAX_POLY], ys[MAX_POLY];
-        int   n = f->npts < MAX_POLY ? f->npts : MAX_POLY;
+        static float xs[MAX_POLY], ys[MAX_POLY];
+        int          n = f->npts < MAX_POLY ? f->npts : MAX_POLY;
         for (int i = 0; i < n; i++) {
             xs[i] = (float)(sox + f->xy[i * 2] * sc);
             ys[i] = (float)(soy + f->xy[i * 2 + 1] * sc);

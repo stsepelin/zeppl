@@ -10,6 +10,7 @@
 #include "ble_peripheral.h"
 #include "boot_screen.h"
 #include "emoji_font.h"
+#include "map_demo.h"
 #include "phone_data.h"
 #include "icon_cache.h"
 #include "telemetry_publisher.h"
@@ -156,6 +157,15 @@ void app_main(void)
         vTaskDelay(pdMS_TO_TICKS(20));
         bsp_display_lock(-1);
     }
+#if CONFIG_VROD_MAP_DEMO
+    // Spike: skip the gauge and boot straight into the moving-map demo. The
+    // paint loop above left the panel black; map_demo builds+loads the screen.
+    bsp_display_unlock();
+    map_demo_start();
+    bsp_display_brightness_set(settings_store_current()->brightness);
+    ESP_LOGI(TAG, "map demo running");
+    return;
+#endif
     boot_screen_show();
     lv_refr_now(NULL);
     bsp_display_unlock();

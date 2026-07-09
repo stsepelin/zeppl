@@ -301,4 +301,14 @@ menu "V-Rod cluster"
             rider to confirm, and stores the bond in NVS so subsequent
             connects are silent.
 
+    config VROD_MAP_DEMO
+        bool "Vector map demo (embedded Tallinn route)"
+        default n
+        help
+            Boot straight into the moving-map screen instead of the gauge,
+            animating a baked Tallinn route from an embedded vector tile
+            archive (tools/maptiles). Self-contained: no SD card, no phone.
+            A spike to see the map renderer on real hardware; reflash a
+            normal build to get the gauge back.
+
 endmenu
