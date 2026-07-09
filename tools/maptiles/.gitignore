@@ -3,3 +3,4 @@ tiles/
 *.pbf
 *.geojsonl
 *.png
+__pycache__/
