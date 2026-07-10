@@ -26,6 +26,9 @@ Background:
     (fuse / reverse-polarity / load-dump TVS / mini560 / output
     reverse-block) into the header 5V; parts list + bench test.
     Prerequisite for powering the cluster on the bike.
+  - `docs/gps-module.md` — optional NEO-6M map-position module (UART on
+    GPIO 21, `CONFIG_VROD_GPS_UART`); wiring schematic + bench bring-up.
+    Map is dual-source: module preferred, phone GPS fallback.
   - `docs/live-gauge-bench-test.md` — build config (`CONFIG_VROD_J1850=y`)
     + stationary checklist to show real bus data on the gauge, laptop USB
     powered, before a ride.

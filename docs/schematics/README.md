@@ -20,6 +20,7 @@ without any toolchain.
 | `j1850_tx.py/.svg` | Phase 3 Stage 4 — **canonical TX (high-side)** | High-side PNP source: dominant = drive bus HIGH. Correct for standard VPW (idle LOW / dominant HIGH), now confirmed on the bike. 2N2907A needed. |
 | `discrete_divider.py/.svg` | Phase 6 | 12V discrete-signal divider (10k/2.7k + optional 3.3V zener), ×6 for turns/beam/neutral/oil/ignition. Sized for 14.4V charging voltage. |
 | `bike-power-chain.py/.svg` | Phase 6 (power) | Protected 12V→5V bike-power chain: fuse + reverse-polarity + load-dump TVS → mini560 → output reverse-block Schottky → board header 5V, with USB-C data coexisting via the board's own AO3401. Full parts list + bench test in `../../firmware/docs/bike-power-injection.md`. |
+| `gps_module.py/.svg` | Map (optional) | NEO-6M / GY-NEO6MV2 map-position module: 5V/GND + module TX → GPIO 21 (3.3V TTL, no level shift), RX-only. Wiring + bring-up in `../../firmware/docs/gps-module.md`. |
 
 ## Regenerate
 
