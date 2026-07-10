@@ -154,17 +154,20 @@ static lv_obj_t *readout(lv_obj_t *p, const char *cap, const lv_font_t *font, ui
 // (flat top + splayed sides, open bottom), baked like gear_indicator: a white
 // outline that is thick + opaque in the middle and tapers thinner + fades to
 // transparent at the ends, rotated to sit tangent to the fuel arc's E/F ends.
-#define CHIP_W    200
-#define CHIP_H    140
-#define CHIP_CX   100.0f  // shape centre in buffer-local coords
-#define CHIP_CY   66.0f
-#define CHIP_SPAN 78.0f  // centre-to-end taper/fade span
+// Buffer is generous (220x200) so the wide shape still fits once rotated ~44 deg
+// at the E/F ends. The shape is the gauge selector widened ~1.35x horizontally
+// (longer flat top + more splay), centred on the pivot at (110,100).
+#define CHIP_W    220
+#define CHIP_H    200
+#define CHIP_CX   110.0f  // shape centre in buffer-local coords (= CHIP_W/2)
+#define CHIP_CY   100.0f
+#define CHIP_SPAN 105.0f  // centre-to-end taper/fade span
 static const lv_point_precise_t k_chip_top[] = {
-    {28, 92},  {52, 52},              // left diagonal side
-    {57, 47},  {63, 44},  {71, 42},   // smooth left shoulder
-    {100, 41},                        // flat top
-    {129, 42}, {137, 44}, {143, 47},  // smooth right shoulder
-    {148, 52}, {172, 92},             // right diagonal side
+    {13, 126}, {45, 86},               // left diagonal side
+    {52, 81},  {60, 78},   {71, 76},   // smooth left shoulder
+    {110, 75},                         // flat top
+    {149, 76}, {160, 78},  {168, 81},  // smooth right shoulder
+    {175, 86}, {207, 126},             // right diagonal side
 };
 
 static void bake_chip(uint8_t *buf, float deg)
@@ -183,7 +186,7 @@ static void bake_chip(uint8_t *buf, float deg)
             float d  = fabsf(px - CHIP_CX);
             float tw = fminf(d / CHIP_SPAN, 1.0f);
             float r  = 2.8f - 1.9f * tw;  // ~5.6 px centre -> ~1.8 px ends
-            float ta = fminf(fmaxf((d - 34.0f) / (CHIP_SPAN - 34.0f), 0.0f), 1.0f);
+            float ta = fminf(fmaxf((d - 46.0f) / (CHIP_SPAN - 46.0f), 0.0f), 1.0f);
             float al = 255.0f * (1.0f - ta);
             // Rotate around the shape centre.
             float rx = px - CHIP_CX, ry = py - CHIP_CY;
