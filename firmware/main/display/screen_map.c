@@ -44,6 +44,7 @@ static lv_obj_t      *s_gear_v;
 static lv_obj_t      *s_speed_v;
 static lv_obj_t      *s_speed_u;
 static lv_obj_t      *s_rpm_v;
+static lv_obj_t      *s_fuel_v;
 static lv_obj_t      *s_fuel_arc;
 static lv_obj_t      *s_turn_l;
 static lv_obj_t      *s_turn_r;
@@ -149,6 +150,48 @@ static lv_obj_t *readout(lv_obj_t *p, const char *cap, const lv_font_t *font, ui
     return v;
 }
 
+// A compact BMW-style frame (flat top, splayed sides, concave bottom) around a
+// value - the same shape as the gauge's gear selector, drawn small with two
+// polylines. `cap` sits above the frame; returns the value label. Container is
+// 140x78; place its top-left via LV_ALIGN_TOP_MID + (x, y).
+static const lv_point_precise_t k_chip_top[] = {
+    {14, 64}, {38, 24}, {49, 17}, {91, 17}, {102, 24}, {126, 64},
+};
+static const lv_point_precise_t k_chip_arc[] = {
+    {2, 60}, {28, 72}, {70, 78}, {112, 72}, {138, 60},
+};
+
+static lv_obj_t *chip(lv_obj_t *p, const char *cap, const lv_font_t *font, uint32_t color, int x,
+                      int y)
+{
+    lv_obj_t *f = lv_obj_create(p);
+    lv_obj_remove_style_all(f);
+    lv_obj_set_size(f, 140, 82);
+    lv_obj_align(f, LV_ALIGN_TOP_MID, x, y);
+    lv_obj_remove_flag(f, LV_OBJ_FLAG_SCROLLABLE);
+
+    for (int i = 0; i < 2; i++) {
+        lv_obj_t *ln = lv_line_create(f);
+        lv_line_set_points(ln, i ? k_chip_arc : k_chip_top, i ? 5 : 6);
+        lv_obj_set_style_line_color(ln, lv_color_hex(VROD_TEXT_DIM), 0);
+        lv_obj_set_style_line_width(ln, 2, 0);
+        lv_obj_set_style_line_rounded(ln, true, 0);
+    }
+
+    lv_obj_t *c = lv_label_create(f);
+    lv_obj_set_style_text_font(c, &jbm_bold_26, 0);
+    lv_obj_set_style_text_color(c, lv_color_hex(VROD_TEXT_DIM), 0);
+    lv_label_set_text(c, cap);
+    lv_obj_align(c, LV_ALIGN_TOP_MID, 0, -26);
+
+    lv_obj_t *v = lv_label_create(f);
+    lv_obj_set_style_text_font(v, font, 0);
+    lv_obj_set_style_text_color(v, lv_color_hex(color), 0);
+    lv_label_set_text(v, "--");
+    lv_obj_align(v, LV_ALIGN_TOP_MID, 0, 26);
+    return v;
+}
+
 lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
 {
     (void)w;
@@ -223,29 +266,25 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_label_set_text(s_turn_r, ICON_ARROW_R);
     lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 330, MAP_H + 22);
 
-    // Readout row: TEMP | GEAR | SPEED (big centre) | RPM. Fuel is the arc below.
-    s_temp_v = readout(scr, "TEMP", &jbm_bold_33, VROD_TEXT, -250, MAP_H + 62, MAP_H + 84);
-    s_gear_v = readout(scr, "GEAR", &jbm_bold_45, VROD_ORANGE, -140, MAP_H + 62, MAP_H + 82);
-    s_rpm_v  = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, 250, MAP_H + 62, MAP_H + 84);
+    // TEMP + RPM as plain readouts at the outer edges.
+    s_temp_v = readout(scr, "TEMP", &jbm_bold_33, VROD_TEXT, -285, MAP_H + 40, MAP_H + 62);
+    s_rpm_v  = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, 285, MAP_H + 40, MAP_H + 62);
 
-    // #56: rounded box around the gear digit, like the reference cluster.
-    lv_obj_set_style_border_color(s_gear_v, lv_color_hex(VROD_TEXT_DIM), 0);
-    lv_obj_set_style_border_width(s_gear_v, 2, 0);
-    lv_obj_set_style_radius(s_gear_v, 8, 0);
-    lv_obj_set_style_pad_hor(s_gear_v, 16, 0);
-    lv_obj_set_style_pad_ver(s_gear_v, 2, 0);
-    lv_obj_set_style_text_align(s_gear_v, LV_TEXT_ALIGN_CENTER, 0);
+    // GEAR + FUEL in matching trapezoid chips (the gauge's gear-selector shape),
+    // flanking the fuel arc; SPEED sits big in the centre.
+    s_gear_v = chip(scr, "GEAR", &jbm_bold_45, VROD_ORANGE, -120, MAP_H + 76);
+    s_fuel_v = chip(scr, "FUEL", &jbm_bold_45, VROD_TEXT, 120, MAP_H + 76);
 
     s_speed_v = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);
     lv_obj_set_style_text_color(s_speed_v, lv_color_hex(VROD_TEXT), 0);
     lv_label_set_text(s_speed_v, "0");
-    lv_obj_align(s_speed_v, LV_ALIGN_TOP_MID, 0, MAP_H + 52);
+    lv_obj_align(s_speed_v, LV_ALIGN_TOP_MID, 0, MAP_H + 78);
     s_speed_u = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_u, &jbm_bold_26, 0);
     lv_obj_set_style_text_color(s_speed_u, lv_color_hex(VROD_TEXT_DIM), 0);
     lv_label_set_text(s_speed_u, "MPH");
-    lv_obj_align(s_speed_u, LV_ALIGN_TOP_MID, 0, MAP_H + 142);
+    lv_obj_align(s_speed_u, LV_ALIGN_TOP_MID, 0, MAP_H + 150);
 
     // Fuel arc hugging the bottom bezel - the same segmented E..F arc as the
     // full gauge (concentric with the round display), for a consistent look.
@@ -369,6 +408,7 @@ void screen_map_commit(const vehicle_data_t *data, const settings_t *settings)
     lv_label_set_text_fmt(s_speed_v, "%d", units_speed_display(data->speed_mph, settings->units));
     lv_label_set_text(s_speed_u, units_speed_label(settings->units));
     lv_label_set_text_fmt(s_rpm_v, "%d", data->rpm);
+    lv_label_set_text_fmt(s_fuel_v, "%d%%", data->fuel_level * 100 / 6);
     fuel_arc_set_level(s_fuel_arc, data->fuel_level);
 
     // Turn arrows: green when active, dim otherwise. Cached (house rule).
