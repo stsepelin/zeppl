@@ -4,6 +4,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 LV_FONT_DECLARE(jbm_bold_72);
 LV_FONT_DECLARE(jbm_bold_45);
@@ -17,6 +18,11 @@ LV_FONT_DECLARE(jbm_bold_26);
 #define SCR_W          800
 #define MAP_H          540  // chord y; map above, instruments below
 #define MOVE_THRESH_PX 1.5  // skip a map redraw if the view shifted less
+// Tile-bitmap cache: each map tile is rasterised once at TILE_PX (= the view's
+// px-per-tile), then scrolling is just a blit of the cached tiles into the
+// canvas - no per-frame re-rasterise. TILE_PX must match the ppt callers pass.
+#define TILE_PX 340
+#define CACHE_N 24  // >= visible tiles (~3x3) + margin for scroll-in
 
 static lv_obj_t      *s_canvas;
 static lv_obj_t      *s_tach;
@@ -36,6 +42,64 @@ static bool   s_have_last;
 static double s_last_tx, s_last_ty, s_last_ppt;
 // Last values pushed to the strip, so unchanged widgets don't repaint.
 static int s_l_speed = -1, s_l_gear = -999, s_l_tach = -1, s_l_temp = -999;
+
+// Tile-bitmap LRU. Each slot holds one rasterised tile at TILE_PX*TILE_PX;
+// buffers are allocated lazily in PSRAM as tiles are first seen.
+static uint16_t *s_cache_buf[CACHE_N];
+static uint32_t  s_cache_tx[CACHE_N], s_cache_ty[CACHE_N];
+static bool      s_cache_valid[CACHE_N];
+static uint32_t  s_cache_lru[CACHE_N];
+static uint32_t  s_lru_clock;
+
+// Return the cached bitmap for tile (tx,ty), rasterising it on a miss (evicting
+// the least-recently-used slot). Only misses do CPU work; hits are free.
+static const uint16_t *cache_get(uint32_t tx, uint32_t ty)
+{
+    for (int i = 0; i < CACHE_N; i++) {
+        if (s_cache_valid[i] && s_cache_tx[i] == tx && s_cache_ty[i] == ty) {
+            s_cache_lru[i] = ++s_lru_clock;
+            return s_cache_buf[i];
+        }
+    }
+    int victim = 0;
+    for (int i = 0; i < CACHE_N; i++) {
+        if (!s_cache_valid[i]) {
+            victim = i;
+            break;
+        }
+        if (s_cache_lru[i] < s_cache_lru[victim])
+            victim = i;
+    }
+    if (!s_cache_buf[victim])
+        s_cache_buf[victim] =
+            heap_caps_malloc((size_t)TILE_PX * TILE_PX * sizeof(uint16_t), MALLOC_CAP_SPIRAM);
+    map_render_tile(s_cache_buf[victim], TILE_PX, s_ts, tx, ty);
+    s_cache_tx[victim]    = tx;
+    s_cache_ty[victim]    = ty;
+    s_cache_valid[victim] = true;
+    s_cache_lru[victim]   = ++s_lru_clock;
+    return s_cache_buf[victim];
+}
+
+// Blit a TILE_PX*TILE_PX source into dst at (ox,oy), clipped to the canvas.
+static void blit_tile(uint16_t *dst, int dw, int dh, const uint16_t *src, int ox, int oy)
+{
+    for (int sy = 0; sy < TILE_PX; sy++) {
+        int dy = oy + sy;
+        if (dy < 0 || dy >= dh)
+            continue;
+        int sx = 0, dx = ox, w = TILE_PX;
+        if (dx < 0) {
+            sx = -dx;
+            w += dx;
+            dx = 0;
+        }
+        if (dx + w > dw)
+            w = dw - dx;
+        if (w > 0)
+            memcpy(&dst[dy * dw + dx], &src[sy * TILE_PX + sx], (size_t)w * sizeof(uint16_t));
+    }
+}
 
 static lv_obj_t *caption(lv_obj_t *parent, const char *txt, int dx, int dy)
 {
@@ -133,8 +197,28 @@ bool screen_map_render(double center_tx, double center_ty, double ppt)
         if (dpx < MOVE_THRESH_PX)
             return false;
     }
-    int back = 1 - s_front;
-    map_render_rgb565(s_buf[back], SCR_W, MAP_H, s_ts, center_tx, center_ty, ppt);
+    int       back = 1 - s_front;
+    uint16_t *dst  = s_buf[back];
+
+    // Composite the visible tiles by blitting their cached bitmaps - a memcpy
+    // each, no re-rasterise. ppt is expected to equal TILE_PX so the tiles tile
+    // the canvas 1:1. Every visible tile slot gets a bitmap (real or all-bg), so
+    // the blits cover the whole canvas - no separate background fill needed.
+    double half_w = (SCR_W / 2.0) / ppt;
+    double half_h = (MAP_H / 2.0) / ppt;
+    int    mintx  = (int)floor(center_tx - half_w);
+    int    maxtx  = (int)floor(center_tx + half_w);
+    int    minty  = (int)floor(center_ty - half_h);
+    int    maxty  = (int)floor(center_ty + half_h);
+    for (int ty = minty; ty <= maxty; ty++) {
+        for (int tx = mintx; tx <= maxtx; tx++) {
+            const uint16_t *tbuf = cache_get((uint32_t)tx, (uint32_t)ty);
+            int             ox   = (int)lrint(SCR_W / 2.0 + ((double)tx - center_tx) * ppt);
+            int             oy   = (int)lrint(MAP_H / 2.0 + ((double)ty - center_ty) * ppt);
+            blit_tile(dst, SCR_W, MAP_H, tbuf, ox, oy);
+        }
+    }
+
     s_back_ready = back;
     s_have_last  = true;
     s_last_tx    = center_tx;
