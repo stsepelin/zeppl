@@ -3,6 +3,7 @@
 #include "esp_heap_caps.h"
 
 #include "fuel_arc.h"
+#include "sprite_raster.h"
 #include "theme.h"
 #include "units.h"
 #include "warning_lights.h"
@@ -149,47 +150,73 @@ static lv_obj_t *readout(lv_obj_t *p, const char *cap, const lv_font_t *font, ui
     return v;
 }
 
-// A compact frame around a value - just the TOP of the gauge's gear-selector
-// shape (flat top with splayed sides, open bottom), rotated to sit tangent to
-// the fuel arc at its E/F ends. The frame lives in a 180x120 container; `pts`
-// (6 rotated points) is filled by chip_rot per side. Returns the value label.
-#define CHIP_CX 90.0f  // shape centre in container-local coords
-#define CHIP_CY 60.0f
+// A frame around a value - just the TOP of the gauge's gear-selector shape
+// (flat top + splayed sides, open bottom), baked like gear_indicator: a white
+// outline that is thick + opaque in the middle and tapers thinner + fades to
+// transparent at the ends, rotated to sit tangent to the fuel arc's E/F ends.
+#define CHIP_W    200
+#define CHIP_H    140
+#define CHIP_CX   100.0f  // shape centre in buffer-local coords
+#define CHIP_CY   66.0f
+#define CHIP_SPAN 78.0f  // centre-to-end taper/fade span
 static const lv_point_precise_t k_chip_top[] = {
-    {34, 84}, {58, 44}, {69, 37}, {111, 37}, {122, 44}, {146, 84},
+    {28, 92},  {52, 52},              // left diagonal side
+    {57, 47},  {63, 44},  {71, 42},   // smooth left shoulder
+    {100, 41},                        // flat top
+    {129, 42}, {137, 44}, {143, 47},  // smooth right shoulder
+    {148, 52}, {172, 92},             // right diagonal side
 };
 
-static void chip_rot(lv_point_precise_t *out, float deg)
+static void bake_chip(uint8_t *buf, float deg)
 {
+    memset(buf, 0, (size_t)CHIP_W * CHIP_H * 4);
     float a = deg * (float)M_PI / 180.0f, ca = cosf(a), sa = sinf(a);
-    for (int i = 0; i < 6; i++) {
-        float x = (float)k_chip_top[i].x - CHIP_CX, y = (float)k_chip_top[i].y - CHIP_CY;
-        out[i].x = (int32_t)lrintf(CHIP_CX + x * ca - y * sa);
-        out[i].y = (int32_t)lrintf(CHIP_CY + x * sa + y * ca);
+    int   n = sizeof(k_chip_top) / sizeof(k_chip_top[0]);
+    for (int i = 0; i < n - 1; i++) {
+        float x0 = (float)k_chip_top[i].x, y0 = (float)k_chip_top[i].y;
+        float x1 = (float)k_chip_top[i + 1].x, y1 = (float)k_chip_top[i + 1].y;
+        int   steps = (int)hypotf(x1 - x0, y1 - y0) + 1;
+        for (int s = 0; s <= steps; s++) {
+            float t  = (float)s / (float)steps;
+            float px = x0 + (x1 - x0) * t, py = y0 + (y1 - y0) * t;
+            // Width taper + alpha fade from the shape centre, like the gauge.
+            float d  = fabsf(px - CHIP_CX);
+            float tw = fminf(d / CHIP_SPAN, 1.0f);
+            float r  = 2.8f - 1.9f * tw;  // ~5.6 px centre -> ~1.8 px ends
+            float ta = fminf(fmaxf((d - 34.0f) / (CHIP_SPAN - 34.0f), 0.0f), 1.0f);
+            float al = 255.0f * (1.0f - ta);
+            // Rotate around the shape centre.
+            float rx = px - CHIP_CX, ry = py - CHIP_CY;
+            sprite_stamp_disk_max(buf, CHIP_W, CHIP_H, CHIP_CX + rx * ca - ry * sa,
+                                  CHIP_CY + rx * sa + ry * ca, r, al, 0xFFFFFF);
+        }
     }
 }
 
 static lv_obj_t *chip(lv_obj_t *p, const lv_font_t *font, uint32_t color, int x, int y,
-                      lv_point_precise_t *pts)
+                      uint8_t *buf, lv_image_dsc_t *dsc, float deg)
 {
     lv_obj_t *f = lv_obj_create(p);
     lv_obj_remove_style_all(f);
-    lv_obj_set_size(f, 180, 120);
+    lv_obj_set_size(f, CHIP_W, CHIP_H);
     lv_obj_align(f, LV_ALIGN_TOP_MID, x, y);
     lv_obj_remove_flag(f, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_clip_corner(f, false, 0);
 
-    lv_obj_t *ln = lv_line_create(f);
-    lv_line_set_points(ln, pts, 6);
-    lv_obj_set_style_line_color(ln, lv_color_hex(VROD_TEXT_DIM), 0);
-    lv_obj_set_style_line_width(ln, 2, 0);
-    lv_obj_set_style_line_rounded(ln, true, 0);
+    if (buf) {
+        bake_chip(buf, deg);
+        sprite_dsc_init_argb(dsc, buf, CHIP_W, CHIP_H);
+        lv_obj_t *img = lv_image_create(f);
+        lv_image_set_src(img, dsc);
+        lv_obj_set_pos(img, 0, 0);
+        lv_obj_remove_flag(img, LV_OBJ_FLAG_CLICKABLE);
+    }
 
     lv_obj_t *v = lv_label_create(f);
     lv_obj_set_style_text_font(v, font, 0);
     lv_obj_set_style_text_color(v, lv_color_hex(color), 0);
     lv_label_set_text(v, "--");
-    lv_obj_align(v, LV_ALIGN_CENTER, 0, 4);
+    lv_obj_align(v, LV_ALIGN_TOP_MID, 0, 42);  // sit in the frame's open band
     return v;
 }
 
@@ -270,13 +297,15 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     // RPM readout in the top-left corner (TEMP has moved into the right chip).
     s_rpm_v = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, -285, MAP_H + 40, MAP_H + 62);
 
-    // GEAR (left) + TEMP (right) in trapezoid frames above the E/F ends of the
-    // fuel arc, rotated tangent to the arc so they continue its curve.
-    static lv_point_precise_t s_gear_pts[6], s_temp_pts[6];
-    chip_rot(s_gear_pts, 24.0f);
-    chip_rot(s_temp_pts, -24.0f);
-    s_gear_v = chip(scr, &jbm_bold_45, VROD_ORANGE, -185, MAP_H + 58, s_gear_pts);
-    s_temp_v = chip(scr, &jbm_bold_45, VROD_TEXT, 185, MAP_H + 58, s_temp_pts);
+    // GEAR (left) + TEMP (right) in gear-selector frames stuck to the E/F edges,
+    // rotated tangent to the arc. Baked ARGB (thick/opaque centre -> thin/faded
+    // ends) so they match the gauge's frame exactly.
+    static uint8_t       *gbuf, *tbuf;
+    static lv_image_dsc_t gdsc, tdsc;
+    gbuf     = heap_caps_malloc((size_t)CHIP_W * CHIP_H * 4, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    tbuf     = heap_caps_malloc((size_t)CHIP_W * CHIP_H * 4, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    s_gear_v = chip(scr, &jbm_bold_45, VROD_ORANGE, -188, MAP_H + 84, gbuf, &gdsc, 29.0f);
+    s_temp_v = chip(scr, &jbm_bold_45, VROD_TEXT, 188, MAP_H + 84, tbuf, &tdsc, -29.0f);
 
     s_speed_v = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);
