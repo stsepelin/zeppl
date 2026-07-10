@@ -216,9 +216,11 @@ static lv_obj_t *chip(lv_obj_t *p, const lv_font_t *font, uint32_t color, int x,
     lv_obj_set_style_text_font(v, font, 0);
     lv_obj_set_style_text_color(v, lv_color_hex(color), 0);
     lv_label_set_text(v, "--");
-    // Centre on the shape's rotation pivot (CHIP_CX,CHIP_CY) - invariant under the
-    // tilt, so the value stays centred in the frame's band at any angle.
-    lv_obj_align(v, LV_ALIGN_TOP_MID, 0, (int)CHIP_CY - 24);
+    // The flat top sits 25 px above the pivot, so tilting the frame slides its
+    // centre sideways by 25*sin(deg); shift the value the same way to keep it
+    // centred under the top rather than on the (stationary) pivot.
+    int vdx = (int)lroundf(25.0f * sinf(deg * (float)M_PI / 180.0f));
+    lv_obj_align(v, LV_ALIGN_TOP_MID, vdx, (int)CHIP_CY - 24);
     return v;
 }
 
@@ -306,8 +308,8 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     static lv_image_dsc_t gdsc, tdsc;
     gbuf     = heap_caps_malloc((size_t)CHIP_W * CHIP_H * 4, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     tbuf     = heap_caps_malloc((size_t)CHIP_W * CHIP_H * 4, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    s_gear_v = chip(scr, &jbm_bold_45, VROD_ORANGE, -230, MAP_H + 46, gbuf, &gdsc, 33.0f);
-    s_temp_v = chip(scr, &jbm_bold_45, VROD_TEXT, 230, MAP_H + 46, tbuf, &tdsc, -33.0f);
+    s_gear_v = chip(scr, &jbm_bold_45, VROD_ORANGE, -232, MAP_H + 60, gbuf, &gdsc, 20.0f);
+    s_temp_v = chip(scr, &jbm_bold_45, VROD_TEXT, 232, MAP_H + 60, tbuf, &tdsc, -20.0f);
 
     s_speed_v = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);

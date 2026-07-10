@@ -85,7 +85,7 @@ static const fuel_geom_t FUEL_GEOM_FULL = {
 // panel, curve self-consistent) -- that concentricity only mattered for the
 // full gauge hugging the physical rim.
 static const fuel_geom_t FUEL_GEOM_COMPACT = {
-    .cont_w            = 320,
+    .cont_w            = 384,  // wide enough to seat the pump icon clear of the E label
     .cont_h            = 88,
     .arc_cy            = -174,
     .arc_r             = 238,
@@ -95,14 +95,14 @@ static const fuel_geom_t FUEL_GEOM_COMPACT = {
     .tick_h_major      = 15,
     .arc_span_deg      = 58.0f,
     .arc_end_dx        = 116,
-    .img_x             = 32,
+    .img_x             = 66,
     .img_y             = 20,
     .img_w             = 256,
     .img_h             = 60,
     .band_corner_r     = 4.0f,
     .band_tick_gap_deg = 1.5f,
     .icon_font         = &mdi_36,
-    .icon_ofs_x        = 6,
+    .icon_ofs_x        = 22,
     .icon_ofs_y        = -14,
     .label_font        = &jbm_bold_26,
     .label_ofs_y       = 4,
