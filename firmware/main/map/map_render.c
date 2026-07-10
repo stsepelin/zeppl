@@ -164,21 +164,14 @@ void map_render_rgb565(uint16_t *buf, int w, int h, const map_tileset_t *ts, dou
     }
 }
 
-void map_render_tile(uint16_t *dst, int px, const map_tileset_t *ts, uint32_t tx, uint32_t ty)
+void map_render_tile_data(uint16_t *dst, int px, const map_tile_t *tile)
 {
     canvas_t c = {dst, px, px};
     for (int i = 0; i < px * px; i++)
         dst[i] = MAP_BG565;
 
-    const map_tile_t *tile = NULL;
-    for (int t = 0; t < ts->ntiles; t++) {
-        if (ts->tiles[t].tx == tx && ts->tiles[t].ty == ty) {
-            tile = &ts->tiles[t];
-            break;
-        }
-    }
     if (!tile)
-        return;  // off the baked area: background only
+        return;  // off the baked area / missing tile: background only
 
     double sc = (double)px / MAP_TILE_EXTENT;  // px per extent unit (tile-local)
     for (int pass = -1; pass <= MAP_STYLE_MAJOR; pass++) {
@@ -197,4 +190,16 @@ void map_render_tile(uint16_t *dst, int px, const map_tileset_t *ts, uint32_t tx
             draw_feature(&c, f, 0.0, 0.0, sc, width_px);
         }
     }
+}
+
+void map_render_tile(uint16_t *dst, int px, const map_tileset_t *ts, uint32_t tx, uint32_t ty)
+{
+    const map_tile_t *tile = NULL;
+    for (int t = 0; t < ts->ntiles; t++) {
+        if (ts->tiles[t].tx == tx && ts->tiles[t].ty == ty) {
+            tile = &ts->tiles[t];
+            break;
+        }
+    }
+    map_render_tile_data(dst, px, tile);
 }

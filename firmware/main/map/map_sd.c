@@ -8,7 +8,6 @@
 
 #include "bsp/esp-bsp.h"
 #include "driver/sdmmc_host.h"
-#include "esp_heap_caps.h"
 #include "esp_log.h"
 #include "esp_vfs_fat.h"
 #include "freertos/FreeRTOS.h"
@@ -89,45 +88,6 @@ static bool mount_card(void)
     return true;
 }
 
-// Read a whole file into a PSRAM buffer (the archive can be several MB - too big
-// for internal RAM). Returns the buffer (caller owns) + length, or NULL.
-static uint8_t *read_file_psram(const char *path, size_t *len_out)
-{
-    FILE *f = fopen(path, "rb");
-    if (!f) {
-        ESP_LOGW(TAG, "cannot open %s", path);
-        return NULL;
-    }
-    fseek(f, 0, SEEK_END);
-    long len = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if (len <= 0) {
-        fclose(f);
-        return NULL;
-    }
-    uint8_t *buf = heap_caps_malloc((size_t)len, MALLOC_CAP_SPIRAM);
-    if (!buf) {
-        ESP_LOGE(TAG, "no PSRAM for %ld-byte archive", len);
-        fclose(f);
-        return NULL;
-    }
-    size_t got = 0;
-    while (got < (size_t)len) {
-        size_t n = fread(buf + got, 1, (size_t)len - got, f);
-        if (n == 0)
-            break;
-        got += n;
-    }
-    fclose(f);
-    if (got != (size_t)len) {
-        ESP_LOGE(TAG, "short read %zu/%ld", got, len);
-        heap_caps_free(buf);
-        return NULL;
-    }
-    *len_out = got;
-    return buf;
-}
-
 // Centre of the baked area, so the map shows something before the first fix.
 static void tileset_center(double *tx, double *ty)
 {
@@ -183,18 +143,18 @@ void map_sd_load(void)
     if (!mount_card())
         return;
 
-    size_t   len;
-    uint8_t *bytes = read_file_psram(CONFIG_VROD_MAP_SD_PATH, &len);
-    if (!bytes)
-        return;
-    s_ts = map_tileset_load_mem_owned(bytes, len);  // frees bytes on failure
+    // Streaming: read only the tile index into RAM and keep the file open, so a
+    // country-sized archive (tens of MB) costs ~index bytes, not the whole file
+    // in PSRAM. Tiles are read off the card on demand as the map scrolls.
+    s_ts = map_tileset_open_file(CONFIG_VROD_MAP_SD_PATH);
     if (!s_ts || s_ts->ntiles == 0) {
-        ESP_LOGE(TAG, "bad archive %s", CONFIG_VROD_MAP_SD_PATH);
+        ESP_LOGE(TAG, "bad/missing archive %s", CONFIG_VROD_MAP_SD_PATH);
         map_tileset_free(s_ts);
         s_ts = NULL;
         return;
     }
-    ESP_LOGI(TAG, "loaded %d tiles z%d (%zu KB from SD)", s_ts->ntiles, s_ts->zoom, len / 1024);
+    ESP_LOGI(TAG, "streaming %d tiles z%d from %s", s_ts->ntiles, s_ts->zoom,
+             CONFIG_VROD_MAP_SD_PATH);
 
     bsp_display_lock(-1);
     s_screen = screen_map_create(s_ts, 800, 800);

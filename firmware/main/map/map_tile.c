@@ -139,6 +139,35 @@ bool map_tileset_covers(const map_tileset_t *ts, uint32_t tx, uint32_t ty)
     return tx >= ts->min_tx && tx <= ts->max_tx && ty >= ts->min_ty && ty <= ts->max_ty;
 }
 
+// Order tiles by (tx, ty) so streaming lookups can binary-search. pack.py sorts
+// y filenames as strings, not numerically, so the on-disk index is not usably
+// ordered; sort in RAM at load instead (independent of the packer).
+static int tile_cmp(const void *a, const void *b)
+{
+    const map_tile_t *x = a, *y = b;
+    if (x->tx != y->tx)
+        return x->tx < y->tx ? -1 : 1;
+    if (x->ty != y->ty)
+        return x->ty < y->ty ? -1 : 1;
+    return 0;
+}
+
+static int find_index(const map_tileset_t *ts, uint32_t tx, uint32_t ty)
+{
+    int lo = 0, hi = ts->ntiles - 1;
+    while (lo <= hi) {
+        int      mid = (lo + hi) / 2;
+        uint32_t mtx = ts->tiles[mid].tx, mty = ts->tiles[mid].ty;
+        if (mtx == tx && mty == ty)
+            return mid;
+        if (mtx < tx || (mtx == tx && mty < ty))
+            lo = mid + 1;
+        else
+            hi = mid - 1;
+    }
+    return -1;
+}
+
 map_tileset_t *map_tileset_load_mem(const uint8_t *data, size_t len)
 {
     map_tileset_t *ts = load_mem_impl(data, len, NULL);
@@ -273,7 +302,74 @@ void map_tileset_free(map_tileset_t *ts)
         map_tile_free(&ts->tiles[i]);
     free(ts->tiles);
     free(ts->owned);
+    if (ts->fp)
+        fclose((FILE *)ts->fp);
     free(ts);
+}
+
+map_tileset_t *map_tileset_open_file(const char *path)
+{
+    FILE *f = fopen(path, "rb");
+    if (!f)
+        return NULL;
+    uint8_t hdr[12];
+    if (fread(hdr, 1, 12, f) != 12 || memcmp(hdr, "ZMTA", 4) != 0) {
+        fclose(f);
+        return NULL;
+    }
+    uint16_t zoom  = rd16(hdr + 4);
+    uint32_t count = rd32(hdr + 8);
+
+    map_tileset_t *ts = calloc(1, sizeof(*ts));
+    if (!ts) {
+        fclose(f);
+        return NULL;
+    }
+    ts->zoom  = zoom;
+    ts->fp    = f;
+    ts->tiles = count ? calloc(count, sizeof(map_tile_t)) : NULL;
+    if (count && !ts->tiles) {
+        fclose(f);
+        free(ts);
+        return NULL;
+    }
+
+    // Read the whole index in one go (count * 16 bytes) - far fewer syscalls
+    // than per-entry reads for a big set. Only tx/ty/offset/len; no geometry.
+    size_t   idx_sz = (size_t)count * 16;
+    uint8_t *idx    = idx_sz ? malloc(idx_sz) : NULL;
+    if (idx && fread(idx, 1, idx_sz, f) == idx_sz) {
+        for (uint32_t i = 0; i < count; i++) {
+            const uint8_t *e           = idx + (size_t)i * 16;
+            ts->tiles[ts->ntiles].tx   = rd32(e);
+            ts->tiles[ts->ntiles].ty   = rd32(e + 4);
+            ts->tiles[ts->ntiles].foff = rd32(e + 8);
+            ts->tiles[ts->ntiles].flen = rd32(e + 12);
+            ts->ntiles++;
+        }
+    }
+    free(idx);
+    qsort(ts->tiles, ts->ntiles, sizeof(map_tile_t), tile_cmp);
+    compute_bbox(ts);
+    return ts;
+}
+
+bool map_tileset_read_tile(map_tileset_t *ts, uint32_t tx, uint32_t ty, map_tile_t *out)
+{
+    if (!ts || !ts->fp)
+        return false;
+    int i = find_index(ts, tx, ty);
+    if (i < 0)
+        return false;
+    uint32_t off = ts->tiles[i].foff, len = ts->tiles[i].flen;
+    uint8_t *buf = malloc(len ? len : 1);
+    if (!buf)
+        return false;
+    FILE *f  = (FILE *)ts->fp;
+    bool  ok = fseek(f, (long)off, SEEK_SET) == 0 && fread(buf, 1, len, f) == len &&
+               parse_into(buf, len, out, true);  // copy=true: `out` owns its bytes
+    free(buf);
+    return ok;
 }
 
 map_tileset_t *map_tileset_load_file(const char *path)

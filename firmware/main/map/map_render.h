@@ -14,3 +14,8 @@ void map_render_rgb565(uint16_t *buf, int w, int h, const map_tileset_t *ts, dou
 // the map is a memcpy, not a re-rasterise. Fills only the background if the tile
 // isn't in the set (off the edge of the baked area).
 void map_render_tile(uint16_t *dst, int px, const map_tileset_t *ts, uint32_t tx, uint32_t ty);
+
+// Rasterise an already-parsed tile (or just the background if `tile` is NULL).
+// The streaming SD path reads+parses a tile on demand and rasterises it here,
+// without the tileset holding every tile's geometry in RAM.
+void map_render_tile_data(uint16_t *dst, int px, const map_tile_t *tile);

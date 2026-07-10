@@ -307,14 +307,21 @@ int main(void)
     // Map spike: VROD_MAP=<tiles_dir> renders the moving-map screen instead of
     // the gauge. VROD_MAP_CENTER="lat,lon" (default: tileset centre),
     // VROD_MAP_PPT px/tile (default 256), VROD_MAP_SPEED mph. Honours VROD_SHOT.
-    const char *mapdir = getenv("VROD_MAP");
-    const char *mapzmta = getenv("VROD_MAP_ZMTA");
-    if (mapdir || mapzmta) {
-        // VROD_MAP_ZMTA exercises the packed-archive file loader (the on-device
-        // SD path); VROD_MAP is the per-tile directory loader.
-        map_tileset_t *ts = mapzmta ? map_tileset_load_file(mapzmta) : map_tileset_load_dir(mapdir);
+    const char *mapdir    = getenv("VROD_MAP");
+    const char *mapzmta   = getenv("VROD_MAP_ZMTA");
+    const char *mapstream = getenv("VROD_MAP_STREAM");  // like the on-device SD path
+    if (mapdir || mapzmta || mapstream) {
+        // VROD_MAP_STREAM opens the archive for streaming (index in RAM, tiles
+        // read on demand) - the real on-device SD path; VROD_MAP_ZMTA loads a
+        // packed archive whole; VROD_MAP is the per-tile directory loader.
+        map_tileset_t *ts = mapstream ? map_tileset_open_file(mapstream)
+                            : mapzmta ? map_tileset_load_file(mapzmta)
+                                      : map_tileset_load_dir(mapdir);
         if (!ts) {
-            fprintf(stderr, "map: failed to load %s\n", mapzmta ? mapzmta : mapdir);
+            fprintf(stderr, "map: failed to load %s\n",
+                    mapstream ? mapstream
+                    : mapzmta ? mapzmta
+                              : mapdir);
             return 1;
         }
         double      ctx = 0, cty = 0;

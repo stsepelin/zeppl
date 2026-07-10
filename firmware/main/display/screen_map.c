@@ -86,7 +86,19 @@ static const uint16_t *cache_get(uint32_t tx, uint32_t ty)
     if (!s_cache_buf[victim])
         s_cache_buf[victim] =
             heap_caps_malloc((size_t)TILE_PX * TILE_PX * sizeof(uint16_t), MALLOC_CAP_SPIRAM);
-    map_render_tile(s_cache_buf[victim], TILE_PX, s_ts, tx, ty);
+    if (s_ts->fp) {
+        // Streaming: read + parse this one tile off SD, rasterise, free. Only
+        // the cache miss touches the card; hits are pure blits.
+        map_tile_t tile;
+        if (map_tileset_read_tile(s_ts, tx, ty, &tile)) {
+            map_render_tile_data(s_cache_buf[victim], TILE_PX, &tile);
+            map_tile_free(&tile);
+        } else {
+            map_render_tile_data(s_cache_buf[victim], TILE_PX, NULL);  // gap / off-area
+        }
+    } else {
+        map_render_tile(s_cache_buf[victim], TILE_PX, s_ts, tx, ty);
+    }
     s_cache_tx[victim]    = tx;
     s_cache_ty[victim]    = ty;
     s_cache_valid[victim] = true;

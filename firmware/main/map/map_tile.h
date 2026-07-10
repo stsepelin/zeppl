@@ -22,7 +22,8 @@ typedef struct {
     uint32_t       tx, ty;
     uint16_t       nfeat;
     map_feature_t *feats;
-    uint8_t       *raw;  // owning copy of the tile bytes; xy points into it
+    uint8_t       *raw;         // owning copy of the tile bytes; xy points into it
+    uint32_t       foff, flen;  // byte offset + length in the archive (streaming mode)
 } map_tile_t;
 
 typedef struct {
@@ -30,6 +31,7 @@ typedef struct {
     int         ntiles;
     map_tile_t *tiles;
     uint8_t    *owned;  // backing archive buffer to free with the set, or NULL
+    void       *fp;     // open FILE* when streaming from disk, else NULL
     // Tile-coordinate bounding box of the baked area (inclusive). Used to tell
     // whether the rider's position has map data (else "off area", e.g. another
     // country). Valid only when ntiles > 0.
@@ -56,6 +58,17 @@ map_tileset_t *map_tileset_load_mem_owned(uint8_t *data, size_t len);
 // a heap buffer and load it (owned). NULL on open / bad-archive. Host, sim, and
 // the on-device SD path all reach the file the same way via VFS.
 map_tileset_t *map_tileset_load_file(const char *path);
+
+// Open a ZMTA archive for streaming: read only the index into RAM and keep the
+// file open. Tiles carry no geometry until map_tileset_read_tile reads them on
+// demand - so a country-sized archive costs ~index bytes of RAM, not the whole
+// file. NULL on open / bad-archive.
+map_tileset_t *map_tileset_open_file(const char *path);
+
+// Streaming: seek to tile (tx,ty), read + parse it into `out` (owned - free with
+// map_tile_free). false if the tile is absent or the read fails. The index is
+// sorted at open time, so the lookup is a binary search.
+bool map_tileset_read_tile(map_tileset_t *ts, uint32_t tx, uint32_t ty, map_tile_t *out);
 
 void map_tileset_free(map_tileset_t *ts);
 

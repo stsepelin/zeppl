@@ -334,6 +334,53 @@ static void test_load_file_missing(void)
     TEST_ASSERT_NULL(map_tileset_load_file("/tmp/does_not_exist_zmta_9v3"));
 }
 
+// --- streaming loader (index in RAM, tiles read on demand) ------------------
+
+static void test_open_file_streams_tiles(void)
+{
+    uint8_t b[1024];
+    size_t  n      = build_archive(b);  // tiles (100,200) and (101,201)
+    char    path[] = "/tmp/zmta_str_XXXXXX";
+    int     fd     = mkstemp(path);
+    TEST_ASSERT_TRUE(fd >= 0);
+    close(fd);
+    write_file(path, b, n);
+
+    map_tileset_t *ts = map_tileset_open_file(path);
+    TEST_ASSERT_NOT_NULL(ts);
+    TEST_ASSERT_EQUAL_INT(16, ts->zoom);
+    TEST_ASSERT_EQUAL_INT(2, ts->ntiles);
+    TEST_ASSERT_NOT_NULL(ts->fp);                        // file kept open
+    TEST_ASSERT_TRUE(map_tileset_covers(ts, 100, 200));  // bbox computed at open
+
+    map_tile_t t;
+    TEST_ASSERT_TRUE(map_tileset_read_tile(ts, 100, 200, &t));  // read on demand
+    TEST_ASSERT_EQUAL_UINT32(100, t.tx);
+    TEST_ASSERT_EQUAL_UINT16(2, t.nfeat);
+    map_tile_free(&t);
+
+    TEST_ASSERT_FALSE(map_tileset_read_tile(ts, 999, 999, &t));  // absent tile
+    map_tileset_free(ts);                                        // closes the file
+    unlink(path);
+}
+
+static void test_read_tile_rejects_null_and_nonstreaming(void)
+{
+    map_tile_t t;
+    TEST_ASSERT_FALSE(map_tileset_read_tile(NULL, 1, 1, &t));
+    // A whole-loaded (non-streaming) set has fp==NULL, so read_tile is a no-op.
+    uint8_t        b[1024];
+    size_t         n  = build_archive(b);
+    map_tileset_t *ts = map_tileset_load_mem(b, n);
+    TEST_ASSERT_FALSE(map_tileset_read_tile(ts, 100, 200, &t));
+    map_tileset_free(ts);
+}
+
+static void test_open_file_missing(void)
+{
+    TEST_ASSERT_NULL(map_tileset_open_file("/tmp/does_not_exist_zmta_str_x"));
+}
+
 // --- coverage / off-area (bounding box over the baked tiles) ----------------
 
 static void test_covers_within_and_outside_bbox(void)
@@ -381,4 +428,7 @@ void RunTests(void)
     RUN_TEST(test_load_file_missing);
     RUN_TEST(test_covers_within_and_outside_bbox);
     RUN_TEST(test_covers_null_set_is_false);
+    RUN_TEST(test_open_file_streams_tiles);
+    RUN_TEST(test_read_tile_rejects_null_and_nonstreaming);
+    RUN_TEST(test_open_file_missing);
 }
