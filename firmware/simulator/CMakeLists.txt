@@ -27,6 +27,9 @@ endif()
 # Our lv_conf.h lives next to this CMakeLists; tell LVGL to find it there.
 # LV_CONF_INCLUDE_SIMPLE → all LVGL .c files do `#include "lv_conf.h"`.
 add_compile_definitions(LV_CONF_INCLUDE_SIMPLE LV_LVGL_H_INCLUDE_SIMPLE)
+# The sim is a map-capable build (it can render the map), so compile the
+# map-gated UI - notably the Settings > General LAYOUT toggle - into it.
+add_compile_definitions(CONFIG_VROD_MAP_DEMO=1)
 include_directories(BEFORE ${SIM_DIR})  # so lv_conf.h is found before LVGL's
 
 # LVGL's SDL + FreeType bindings #include the SDL / ft2build.h headers
