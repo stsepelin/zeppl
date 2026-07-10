@@ -52,6 +52,17 @@ static double haversine_m(double lat1, double lon1, double lat2, double lon2)
     return 2.0 * R * asin(sqrt(a));
 }
 
+// Initial compass bearing from point 1 to point 2 (degrees, 0 = north, CW).
+static double bearing_deg(double lat1, double lon1, double lat2, double lon2)
+{
+    double p1 = lat1 * M_PI / 180.0, p2 = lat2 * M_PI / 180.0;
+    double dl = (lon2 - lon1) * M_PI / 180.0;
+    double y  = sin(dl) * cos(p2);
+    double x  = cos(p1) * sin(p2) - sin(p1) * cos(p2) * cos(dl);
+    double b  = atan2(y, x) * 180.0 / M_PI;
+    return b < 0 ? b + 360.0 : b;
+}
+
 // Parse the embedded track ("lat lon speed" lines) into route points +
 // cumulative distances (metres). Speed is discarded.
 static void parse_route(void)
@@ -121,12 +132,13 @@ static void anim_task(void *arg)
         vehicle_data_t vd;
         vehicle_data_get(&vd);
 
-        double           lat, lon;
+        double           lat, lon, heading;
         phone_location_t loc;
         phone_data_get_location(&loc);
         if (loc.valid && loc.age_ms < LOC_STALE_MS) {
-            lat = loc.lat_e7 / 1e7;  // a real phone GPS fix overrides the route
-            lon = loc.lon_e7 / 1e7;
+            lat     = loc.lat_e7 / 1e7;  // a real phone GPS fix overrides the route
+            lon     = loc.lon_e7 / 1e7;
+            heading = loc.heading_cd == 0xFFFF ? -1.0 : loc.heading_cd / 100.0;
         } else {
             // Demo: advance along the baked route at the gauge's own speed, so
             // the map scrolls exactly as fast as the speedo reads.
@@ -134,6 +146,9 @@ static void anim_task(void *arg)
             if (s_total_m > 0 && s_dist_m >= s_total_m)
                 s_dist_m = fmod(s_dist_m, s_total_m);  // loop the route
             route_at(s_dist_m, &lat, &lon);
+            double lat2, lon2;  // a few metres ahead, for the travel direction
+            route_at(s_dist_m + 8.0, &lat2, &lon2);
+            heading = bearing_deg(lat, lon, lat2, lon2);
         }
 
         double tx, ty;
@@ -142,7 +157,7 @@ static void anim_task(void *arg)
         // the LVGL renderer (core 1) for CPU; only the swap + strip run under
         // the lock.
         int64_t t0 = esp_timer_get_time();
-        screen_map_render(tx, ty, MAP_DEMO_PPT);
+        screen_map_render(tx, ty, MAP_DEMO_PPT, heading);
         int64_t us = esp_timer_get_time() - t0;
         bsp_display_lock(-1);
         screen_map_commit(&vd, settings_store_current());

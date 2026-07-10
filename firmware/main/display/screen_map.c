@@ -28,6 +28,10 @@ LV_FONT_DECLARE(jbm_bold_26);
 // canvas - no per-frame re-rasterise. TILE_PX must match the ppt callers pass.
 #define TILE_PX 340
 #define CACHE_N 24  // >= visible tiles (~3x3) + margin for scroll-in
+// Heading-up: the tiles composite into a square scratch bigger than the map
+// region (>= its diagonal, ~473 px radius), then one rotated resample fills the
+// canvas so the travel direction points up. Allocated lazily; north-up skips it.
+#define SCRATCH_SZ 960
 
 static lv_obj_t      *s_canvas;
 static lv_obj_t      *s_warn;
@@ -46,8 +50,10 @@ static uint16_t *s_buf[2];
 static int       s_front;       // buffer the canvas currently shows
 static int       s_back_ready;  // buffer holding a fresh render, or -1
 
+static uint16_t *s_scratch;  // heading-up compositing buffer, lazily allocated
+
 static bool   s_have_last;
-static double s_last_tx, s_last_ty, s_last_ppt;
+static double s_last_tx, s_last_ty, s_last_ppt, s_last_heading;
 
 // Tile-bitmap LRU. Each slot holds one rasterised tile at TILE_PX*TILE_PX;
 // buffers are allocated lazily in PSRAM as tiles are first seen.
@@ -152,13 +158,13 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     // Rider position marker, at the map's vertical centre.
     lv_obj_t *marker = lv_obj_create(scr);
     lv_obj_remove_style_all(marker);
-    lv_obj_set_size(marker, 16, 16);
+    lv_obj_set_size(marker, 48, 48);
     lv_obj_set_style_radius(marker, LV_RADIUS_CIRCLE, 0);
     lv_obj_set_style_bg_color(marker, lv_color_hex(VROD_ORANGE), 0);
     lv_obj_set_style_bg_opa(marker, LV_OPA_COVER, 0);
     lv_obj_set_style_border_color(marker, lv_color_black(), 0);
-    lv_obj_set_style_border_width(marker, 3, 0);
-    lv_obj_align(marker, LV_ALIGN_TOP_MID, 0, MAP_H / 2 - 8);
+    lv_obj_set_style_border_width(marker, 5, 0);
+    lv_obj_align(marker, LV_ALIGN_TOP_MID, 0, MAP_H / 2 - 24);
 
     lv_obj_t *div = lv_obj_create(scr);
     lv_obj_remove_style_all(div);
@@ -211,12 +217,60 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     return scr;
 }
 
-bool screen_map_render(double center_tx, double center_ty, double ppt)
+// Composite the visible tiles into `dst` (dw x dh) by blitting their cached
+// bitmaps - a memcpy each, no re-rasterise. The centre tile coord maps to the
+// buffer centre. Every covered slot gets a bitmap (real or all-bg), so the blits
+// paint the whole buffer - no separate background fill needed.
+static void composite_tiles(uint16_t *dst, int dw, int dh, double cx, double cy, double ppt)
+{
+    double half_w = (dw / 2.0) / ppt;
+    double half_h = (dh / 2.0) / ppt;
+    int    mintx  = (int)floor(cx - half_w);
+    int    maxtx  = (int)floor(cx + half_w);
+    int    minty  = (int)floor(cy - half_h);
+    int    maxty  = (int)floor(cy + half_h);
+    for (int ty = minty; ty <= maxty; ty++) {
+        for (int tx = mintx; tx <= maxtx; tx++) {
+            const uint16_t *tbuf = cache_get((uint32_t)tx, (uint32_t)ty);
+            int             ox   = (int)lrint(dw / 2.0 + ((double)tx - cx) * ppt);
+            int             oy   = (int)lrint(dh / 2.0 + ((double)ty - cy) * ppt);
+            blit_tile(dst, dw, dh, tbuf, ox, oy);
+        }
+    }
+}
+
+// Rotated resample of the square scratch into the canvas so `heading_deg` (0 =
+// north, clockwise) points up: an ahead-in-travel point lands above the marker.
+// Nearest-neighbour; out-of-scratch pixels fall back to background.
+static void rotate_blit(uint16_t *dst, const uint16_t *src, double heading_deg)
+{
+    double a  = heading_deg * M_PI / 180.0;
+    double ca = cos(a), sa = sin(a);
+    double dcx = SCR_W / 2.0, dcy = MAP_H / 2.0;
+    double sc = SCRATCH_SZ / 2.0;
+    for (int y = 0; y < MAP_H; y++) {
+        double ry = y - dcy;
+        for (int x = 0; x < SCR_W; x++) {
+            double rx          = x - dcx;
+            int    sx          = (int)lrint(sc + rx * ca - ry * sa);
+            int    sy          = (int)lrint(sc + rx * sa + ry * ca);
+            dst[y * SCR_W + x] = ((unsigned)sx < SCRATCH_SZ && (unsigned)sy < SCRATCH_SZ)
+                                     ? src[sy * SCRATCH_SZ + sx]
+                                     : 0x1082;  // MAP_BG565
+        }
+    }
+}
+
+// heading_deg < 0 keeps the map north-up (cheap direct composite); >= 0 rotates
+// so the heading points up (composite to scratch, then one rotated resample).
+bool screen_map_render(double center_tx, double center_ty, double ppt, double heading_deg)
 {
     if (!s_buf[0])
         return false;
-    // Skip if the view barely moved since the last render (nothing to repaint).
-    if (s_have_last && ppt == s_last_ppt) {
+    // Skip if neither the view nor the heading moved since the last render.
+    bool heading_turned = heading_deg >= 0 && (!s_have_last || s_last_heading < 0 ||
+                                               fabs(heading_deg - s_last_heading) > 0.5);
+    if (s_have_last && ppt == s_last_ppt && !heading_turned) {
         double dpx = hypot((center_tx - s_last_tx) * ppt, (center_ty - s_last_ty) * ppt);
         if (dpx < MOVE_THRESH_PX)
             return false;
@@ -224,30 +278,24 @@ bool screen_map_render(double center_tx, double center_ty, double ppt)
     int       back = 1 - s_front;
     uint16_t *dst  = s_buf[back];
 
-    // Composite the visible tiles by blitting their cached bitmaps - a memcpy
-    // each, no re-rasterise. ppt is expected to equal TILE_PX so the tiles tile
-    // the canvas 1:1. Every visible tile slot gets a bitmap (real or all-bg), so
-    // the blits cover the whole canvas - no separate background fill needed.
-    double half_w = (SCR_W / 2.0) / ppt;
-    double half_h = (MAP_H / 2.0) / ppt;
-    int    mintx  = (int)floor(center_tx - half_w);
-    int    maxtx  = (int)floor(center_tx + half_w);
-    int    minty  = (int)floor(center_ty - half_h);
-    int    maxty  = (int)floor(center_ty + half_h);
-    for (int ty = minty; ty <= maxty; ty++) {
-        for (int tx = mintx; tx <= maxtx; tx++) {
-            const uint16_t *tbuf = cache_get((uint32_t)tx, (uint32_t)ty);
-            int             ox   = (int)lrint(SCR_W / 2.0 + ((double)tx - center_tx) * ppt);
-            int             oy   = (int)lrint(MAP_H / 2.0 + ((double)ty - center_ty) * ppt);
-            blit_tile(dst, SCR_W, MAP_H, tbuf, ox, oy);
-        }
+    if (heading_deg < 0) {
+        composite_tiles(dst, SCR_W, MAP_H, center_tx, center_ty, ppt);
+    } else {
+        if (!s_scratch)
+            s_scratch = heap_caps_malloc((size_t)SCRATCH_SZ * SCRATCH_SZ * sizeof(uint16_t),
+                                         MALLOC_CAP_SPIRAM);
+        if (!s_scratch)
+            return false;
+        composite_tiles(s_scratch, SCRATCH_SZ, SCRATCH_SZ, center_tx, center_ty, ppt);
+        rotate_blit(dst, s_scratch, heading_deg);
     }
 
-    s_back_ready = back;
-    s_have_last  = true;
-    s_last_tx    = center_tx;
-    s_last_ty    = center_ty;
-    s_last_ppt   = ppt;
+    s_back_ready   = back;
+    s_have_last    = true;
+    s_last_tx      = center_tx;
+    s_last_ty      = center_ty;
+    s_last_ppt     = ppt;
+    s_last_heading = heading_deg;
     return true;
 }
 

@@ -15,8 +15,10 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h);
 
 // Composite the map into an off-screen back buffer, centred on a fractional
 // tile coord at `ppt` px/tile. Blits cached tiles; call OFF the LVGL lock.
-// Returns true if a new frame was produced (false if the view barely moved).
-bool screen_map_render(double center_tx, double center_ty, double ppt);
+// `heading_deg` < 0 keeps the map north-up; >= 0 (0 = north, clockwise) rotates
+// the map so that heading points up. Returns true if a new frame was produced
+// (false if neither the view nor the heading moved since the last call).
+bool screen_map_render(double center_tx, double center_ty, double ppt, double heading_deg);
 
 // Swap in the freshly-composited map (if any) and refresh the instrument
 // widgets from vehicle_data. Cheap (widgets cache internally); call UNDER the

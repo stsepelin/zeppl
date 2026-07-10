@@ -202,6 +202,16 @@ static void maybe_screenshot(void)
 // Synthesise a vehicle_data snapshot from speed alone, so the compact map's
 // gauge widgets show something plausible in VROD_MAP mode (which has no sim
 // engine feeding vehicle_data). Gear bands + within-band revs, fixed temp/fuel.
+// Compass bearing from point 1 to point 2 (degrees, 0 = north, CW).
+static double sim_bearing(double lat1, double lon1, double lat2, double lon2)
+{
+    double p1 = lat1 * M_PI / 180.0, p2 = lat2 * M_PI / 180.0;
+    double dl = (lon2 - lon1) * M_PI / 180.0;
+    double b  = atan2(sin(dl) * cos(p2), cos(p1) * sin(p2) - sin(p1) * cos(p2) * cos(dl));
+    b         = b * 180.0 / M_PI;
+    return b < 0 ? b + 360.0 : b;
+}
+
 static vehicle_data_t sim_map_vd(int mph)
 {
     static const int hi[6] = {8, 18, 30, 45, 62, 90};
@@ -327,12 +337,19 @@ int main(void)
                 return 1;
             }
 
+            // Heading-up by default along a track; VROD_MAP_NORTH=1 forces
+            // north-up so the two can be compared.
+            bool head_up = !getenv("VROD_MAP_NORTH");
+
             if (outdir) {
                 for (int i = 0; i < n; i++) {
                     double tx, ty;
                     map_lonlat_to_tilef(lon_pt[i], lat_pt[i], ts->zoom, &tx, &ty);
+                    int    j = (i + 1) % n;
+                    double heading =
+                        head_up ? sim_bearing(lat_pt[i], lon_pt[i], lat_pt[j], lon_pt[j]) : -1.0;
                     vehicle_data_t vd = sim_map_vd((int)lrint(mph_pt[i]));
-                    screen_map_render(tx, ty, ppt);
+                    screen_map_render(tx, ty, ppt, heading);
                     screen_map_commit(&vd, settings_store_current());
                     lv_timer_handler();
                     char path[1024];
@@ -345,7 +362,8 @@ int main(void)
             }
 
             // Interactive: glide along the route, interpolating between points.
-            fprintf(stderr, "track: animating %d points live\n", n);
+            fprintf(stderr, "track: animating %d points live (%s)\n", n,
+                    head_up ? "heading-up" : "north-up");
             double pos = 0.0;
             while (1) {
                 int    i0 = (int)pos, i1 = (i0 + 1) % n;
@@ -354,8 +372,9 @@ int main(void)
                 double lon = lon_pt[i0] + f * (lon_pt[i1] - lon_pt[i0]);
                 double tx, ty;
                 map_lonlat_to_tilef(lon, lat, ts->zoom, &tx, &ty);
+                double heading    = head_up ? sim_bearing(lat, lon, lat_pt[i1], lon_pt[i1]) : -1.0;
                 vehicle_data_t vd = sim_map_vd((int)lrint(mph_pt[i0]));
-                screen_map_render(tx, ty, ppt);
+                screen_map_render(tx, ty, ppt, heading);
                 screen_map_commit(&vd, settings_store_current());
                 lv_timer_handler();
                 maybe_screenshot();
@@ -368,7 +387,7 @@ int main(void)
 
         while (1) {
             vehicle_data_t vd = sim_map_vd(speed);
-            screen_map_render(ctx, cty, ppt);
+            screen_map_render(ctx, cty, ppt, -1.0);
             screen_map_commit(&vd, settings_store_current());
             lv_timer_handler();
             maybe_screenshot();
