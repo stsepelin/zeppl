@@ -20,9 +20,10 @@ with schemdraw.Drawing(file="gps_module.svg", show=False) as d:
         ).anchor("VCC")
     )
 
-    # ===== power: 5V rail -> onboard MIC5205 makes the chip's 3.3V, ~45 mA =====
+    # ===== power: board 5V (40-pin header) -> onboard MIC5205 -> 3.3V, ~45 mA.
+    # VCC_5V is USB-fed on the bench, bike-power-fed on the bike; same rail. =====
     d.add(elm.Line().left().at(gps.VCC).length(1.6))
-    d.add(elm.Vdd().label("+5V\n(bike-power rail)"))
+    d.add(elm.Vdd().label("+5V\n(board VCC_5V,\n40-pin header)"))
     d.add(elm.Line().left().at(gps.GND).length(1.6))
     d.add(elm.Ground().label("GND\n(common w/ P4)", loc="bottom"))
 

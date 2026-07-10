@@ -17,8 +17,8 @@ or not the module is fitted.
 
 | Module pin | Wires to | Notes |
 |------------|----------|-------|
-| **VCC** | **+5V** (bike-power 5V rail) | Onboard MIC5205 regulator makes the chip's 3.3V; ~45 mA. |
-| **GND** | **GND** (common with the P4) | |
+| **VCC** | **board +5V** — the 40-pin header 5V (`VCC_5V`) | Same rail whether USB-fed (bench) or bike-power-fed (bike). Onboard MIC5205 makes the chip's 3.3V; ~45 mA — negligible next to the board's ~1 A. |
+| **GND** | **GND** — any header ground (common with the P4) | |
 | **TX**  | **ESP32-P4 GPIO 21** (`VROD_GPS_RX_GPIO`) | Module's 3.3V TTL straight into the 3.3V GPIO — **no level shifter**. |
 | **RX**  | *(leave unwired)* | Only needed to push UBX config (fix rate / constellations). RX-only gives fixes. `VROD_GPS_TX_GPIO = -1`. |
 
