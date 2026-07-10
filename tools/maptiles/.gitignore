@@ -1,6 +1,8 @@
 .venv/
 tiles/
+downloads/
 *.pbf
 *.geojsonl
 *.png
+*.zmta
 __pycache__/

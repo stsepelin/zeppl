@@ -9,7 +9,29 @@ of content; a vector tile of the same area is ~1 KB of geometry. Central Tallinn
 (~5x3.5 km, 203 tiles) is **182 KB vector vs 26 MB raster — ~140x smaller**.
 Roads + water for all of Estonia land in ~0.3-0.5 GB.
 
-## Pipeline
+## One command (region.py)
+
+`region.py` runs the whole clip -> filter -> export -> bake -> pack chain and
+writes a ready-to-copy `.zmta`. Needs `osmium` (`brew install osmium-tool`);
+bake/pack are stdlib-only (no venv).
+
+```sh
+# A local Geofabrik extract, ~8 km around central Tallinn:
+python3 region.py --pbf ~/Downloads/estonia-260707.osm.pbf \
+    --center 59.437,24.745 --radius 8 --out tallinn.zmta
+
+# ...or a bounding box, or fetch from Geofabrik first (cached under downloads/):
+python3 region.py --pbf estonia.osm.pbf --bbox 24.60,59.36,24.95,59.50 --out tallinn.zmta
+python3 region.py --url https://download.geofabrik.de/europe/estonia-latest.osm.pbf \
+    --center 59.437,24.745 --radius 8 --out tallinn.zmta
+```
+
+Copy the result to the card as `/sdcard/map.zmta` (`CONFIG_VROD_MAP_SD_PATH`)
+for a real map build, or preview it in the sim with
+`VROD_MAP_ZMTA=tallinn.zmta ./build/vrod_sim`. Central Tallinn @ 8 km is
+~1900 tiles / ~900 KB.
+
+## Pipeline (manual steps, wrapped by region.py)
 
 ```sh
 python3 -m venv .venv && .venv/bin/pip install Pillow
