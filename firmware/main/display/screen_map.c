@@ -320,10 +320,10 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_label_set_text(s_speed_u, "MPH");
     lv_obj_align(s_speed_u, LV_ALIGN_TOP_MID, 0, MAP_H + 150);
 
-    // Fuel arc hugging the bottom bezel - the same segmented E..F arc as the
-    // full gauge (concentric with the round display), for a consistent look.
-    s_fuel_arc = fuel_arc_create(scr);
-    lv_obj_align(s_fuel_arc, LV_ALIGN_BOTTOM_MID, 0, -8);
+    // Compact fuel arc at the bottom - the same segmented E..F arc as the full
+    // gauge, ~1.5x smaller so the map strip has room to breathe.
+    s_fuel_arc = fuel_arc_create_compact(scr);
+    lv_obj_align(s_fuel_arc, LV_ALIGN_BOTTOM_MID, 0, -12);
 
     return scr;
 }
