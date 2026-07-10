@@ -17,11 +17,6 @@ LV_FONT_DECLARE(jbm_bold_26);
 #define SCR_W          800
 #define MAP_H          540  // chord y; map above, instruments below
 #define MOVE_THRESH_PX 1.5  // skip a map redraw if the view shifted less
-// The map rasterises at half resolution - a quarter of the PSRAM writes - and
-// LVGL scales the canvas 2x to fill the region. The big lever on render cost.
-#define MAP_SCALE 2
-#define BUF_W     (SCR_W / MAP_SCALE)
-#define BUF_H     (MAP_H / MAP_SCALE)
 
 static lv_obj_t      *s_canvas;
 static lv_obj_t      *s_tach;
@@ -65,20 +60,16 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_obj_set_style_bg_color(scr, lv_color_black(), 0);
     lv_obj_remove_flag(scr, LV_OBJ_FLAG_SCROLLABLE);
 
-    // Two half-res map buffers. PSRAM: 400x270 RGB565 = 216 KB each. Sim shim
+    // Two map buffers (top 2/3). PSRAM: 800x540 RGB565 = 864 KB each. Sim shim
     // maps heap_caps to malloc. Start on background so the first frame is clean.
     for (int i = 0; i < 2; i++) {
-        s_buf[i] = heap_caps_malloc((size_t)BUF_W * BUF_H * sizeof(uint16_t), MALLOC_CAP_SPIRAM);
-        for (int p = 0; p < BUF_W * BUF_H; p++)
+        s_buf[i] = heap_caps_malloc((size_t)SCR_W * MAP_H * sizeof(uint16_t), MALLOC_CAP_SPIRAM);
+        for (int p = 0; p < SCR_W * MAP_H; p++)
             s_buf[i][p] = 0x1082;  // MAP_BG565
     }
     s_canvas = lv_canvas_create(scr);
-    lv_canvas_set_buffer(s_canvas, s_buf[s_front], BUF_W, BUF_H, LV_COLOR_FORMAT_RGB565);
-    // Scale the 400x270 buffer up to the full 800x540 region, growing from the
-    // top-left corner so it covers the map area exactly.
-    lv_image_set_pivot(s_canvas, 0, 0);
-    lv_image_set_scale(s_canvas, 256 * MAP_SCALE);
-    lv_obj_align(s_canvas, LV_ALIGN_TOP_LEFT, 0, 0);
+    lv_canvas_set_buffer(s_canvas, s_buf[s_front], SCR_W, MAP_H, LV_COLOR_FORMAT_RGB565);
+    lv_obj_align(s_canvas, LV_ALIGN_TOP_MID, 0, 0);
 
     // Rider position marker, at the map's vertical centre.
     lv_obj_t *marker = lv_obj_create(scr);
@@ -143,9 +134,7 @@ bool screen_map_render(double center_tx, double center_ty, double ppt)
             return false;
     }
     int back = 1 - s_front;
-    // Render into the half-res buffer (ppt halved so the on-screen zoom, after
-    // the 2x canvas scale, matches the requested ppt).
-    map_render_rgb565(s_buf[back], BUF_W, BUF_H, s_ts, center_tx, center_ty, ppt / MAP_SCALE);
+    map_render_rgb565(s_buf[back], SCR_W, MAP_H, s_ts, center_tx, center_ty, ppt);
     s_back_ready = back;
     s_have_last  = true;
     s_last_tx    = center_tx;
@@ -157,8 +146,7 @@ bool screen_map_render(double center_tx, double center_ty, double ppt)
 void screen_map_commit(int speed_mph, int gear, int tach_pct, int temp_c)
 {
     if (s_back_ready >= 0) {
-        lv_canvas_set_buffer(s_canvas, s_buf[s_back_ready], BUF_W, BUF_H, LV_COLOR_FORMAT_RGB565);
-        lv_image_set_scale(s_canvas, 256 * MAP_SCALE);  // re-assert after set_buffer
+        lv_canvas_set_buffer(s_canvas, s_buf[s_back_ready], SCR_W, MAP_H, LV_COLOR_FORMAT_RGB565);
         lv_obj_invalidate(s_canvas);
         s_front      = s_back_ready;
         s_back_ready = -1;
