@@ -69,6 +69,7 @@ idf_component_register(
         vehicle
         simulator
         j1850
+        gps
         display
         display/widgets
         display/fonts
