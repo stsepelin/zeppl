@@ -355,7 +355,11 @@ static void sim_demo_map_build(void)
     ui_manager_set_map_screen(s_demo_map);
 }
 
-static void sim_demo_map_frame(void)
+// Map representation of the SHARED demo state: the readouts come straight from
+// the sim_engine driving cycle (same vehicle_data the classic gauge uses), and
+// the route advance is scaled by that speed -- so toggling classic<->map only
+// changes how the one demo is drawn, never the numbers.
+static void sim_demo_map_frame(const vehicle_data_t *vd)
 {
     double tx, ty, heading = -1.0;
     if (s_demo_npts >= 2) {
@@ -370,16 +374,17 @@ static void sim_demo_map_frame(void)
         // heading-up map. A longer baseline gives a stable travel direction.
         int look = (i0 + 6) % s_demo_npts;
         heading  = sim_bearing(s_demo_lat[i0], s_demo_lon[i0], s_demo_lat[look], s_demo_lon[look]);
-        s_demo_pos += 0.08;
+        // Advance in proportion to the shared demo speed (0.08/frame at 45 mph),
+        // so the map scrolls at the speed the readout shows and stops when it does.
+        s_demo_pos += vd->speed_mph * (0.08 / 45.0);
         if (s_demo_pos >= s_demo_npts)
             s_demo_pos -= s_demo_npts;
     } else {
         tx = (s_demo_ts->min_tx + s_demo_ts->max_tx + 1) / 2.0;
         ty = (s_demo_ts->min_ty + s_demo_ts->max_ty + 1) / 2.0;
     }
-    vehicle_data_t vd = sim_map_vd(45);
     screen_map_render(tx, ty, 340.0, heading);
-    screen_map_commit(&vd, settings_store_current());
+    screen_map_commit(vd, settings_store_current());
     screen_map_set_no_coverage(!map_tileset_covers(s_demo_ts, (uint32_t)tx, (uint32_t)ty));
 }
 
@@ -603,7 +608,7 @@ int main(void)
         vehicle_data_t snapshot;
         vehicle_data_get(&snapshot);
         if (s_demo_map && lv_screen_active() == s_demo_map)
-            sim_demo_map_frame();  // LAYOUT=MAP is showing: scroll the demo map
+            sim_demo_map_frame(&snapshot);  // same demo state, drawn as the map
         else
             screen_ride_update(&snapshot, settings_store_current());
 
