@@ -79,33 +79,35 @@ static const fuel_geom_t FUEL_GEOM_FULL = {
     .label_ofs_y       = 6,
 };
 
-// Compact strip for the map cluster: same shape, ~1.5x smaller. Radius, ticks,
-// span-width and the E/F offset scale by ~0.66; the image box is recomputed to
-// hug the smaller sweep. Not concentric with the bezel (it sits inside the map
-// panel, curve self-consistent) -- that concentricity only mattered for the
-// full gauge hugging the physical rim.
+// Compact strip for the map cluster. It keeps the SAME radius as the full gauge
+// (360) so its curve is concentric with the round 800x800 bezel and parallels
+// the screen edge exactly -- a smaller radius would dip into a tight U that
+// fights the display curve. "Compact" instead comes from a narrower sweep
+// (44 vs 58 deg) + thinner ticks + smaller labels, so the arc is a short,
+// shallow, bezel-hugging band. Bottom-aligned at -12: container top at screen
+// 698, arc centre at (400, 400) = the display centre.
 static const fuel_geom_t FUEL_GEOM_COMPACT = {
-    .cont_w            = 384,  // wide enough to seat the pump icon clear of the E label
-    .cont_h            = 88,
-    .arc_cy            = -174,
-    .arc_r             = 238,
+    .cont_w            = 384,
+    .cont_h            = 90,
+    .arc_cy            = -298,
+    .arc_r             = 360,
     .tick_w            = 4,
     .tick_w_major      = 5,
     .tick_h            = 10,
     .tick_h_major      = 15,
-    .arc_span_deg      = 58.0f,
-    .arc_end_dx        = 116,
-    .img_x             = 66,
-    .img_y             = 20,
-    .img_w             = 256,
-    .img_h             = 60,
+    .arc_span_deg      = 44.0f,
+    .arc_end_dx        = 136,
+    .img_x             = 48,
+    .img_y             = 22,
+    .img_w             = 292,
+    .img_h             = 54,
     .band_corner_r     = 4.0f,
     .band_tick_gap_deg = 1.5f,
     .icon_font         = &mdi_36,
-    .icon_ofs_x        = 22,
-    .icon_ofs_y        = -14,
+    .icon_ofs_x        = 4,
+    .icon_ofs_y        = -10,
     .label_font        = &jbm_bold_26,
-    .label_ofs_y       = 4,
+    .label_ofs_y       = 2,
 };
 
 typedef struct {
