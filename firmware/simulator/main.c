@@ -316,6 +316,68 @@ static vehicle_data_t sim_map_vd(int mph)
     return vd;
 }
 
+// --- demo map for the LAYOUT toggle ----------------------------------------
+// So the gauge/map choice in Settings actually switches the view in the sim
+// (like the device), build the committed demo map + route once, and render it
+// in the main loop while it is the active screen.
+#define DEMO_MAX_PTS 1024
+static lv_obj_t      *s_demo_map;
+static map_tileset_t *s_demo_ts;
+static double         s_demo_lat[DEMO_MAX_PTS], s_demo_lon[DEMO_MAX_PTS];
+static int            s_demo_npts;
+static double         s_demo_pos;
+
+static void sim_demo_map_build(void)
+{
+    const char *mp = getenv("VROD_DEMO_MAP");
+    if (!mp)
+        mp = "../main/assets/corridor.zmta";
+    s_demo_ts = map_tileset_load_file(mp);
+    if (!s_demo_ts || s_demo_ts->ntiles == 0) {
+        s_demo_ts = NULL;  // no committed tiles here -> LAYOUT=MAP falls back to gauge
+        return;
+    }
+    const char *tp = getenv("VROD_DEMO_TRACK");
+    if (!tp)
+        tp = "../main/assets/track.txt";
+    FILE *tf = fopen(tp, "r");
+    if (tf) {
+        double la, lo;
+        float  m;
+        while (s_demo_npts < DEMO_MAX_PTS && fscanf(tf, "%lf %lf %f", &la, &lo, &m) == 3) {
+            s_demo_lat[s_demo_npts] = la;
+            s_demo_lon[s_demo_npts] = lo;
+            s_demo_npts++;
+        }
+        fclose(tf);
+    }
+    s_demo_map = screen_map_create(s_demo_ts, DISPLAY_W, DISPLAY_H);
+    ui_manager_set_map_screen(s_demo_map);
+}
+
+static void sim_demo_map_frame(void)
+{
+    double tx, ty, heading = -1.0;
+    if (s_demo_npts >= 2) {
+        int    i0 = (int)s_demo_pos, i1 = (i0 + 1) % s_demo_npts;
+        double f   = s_demo_pos - i0;
+        double lat = s_demo_lat[i0] + f * (s_demo_lat[i1] - s_demo_lat[i0]);
+        double lon = s_demo_lon[i0] + f * (s_demo_lon[i1] - s_demo_lon[i0]);
+        map_lonlat_to_tilef(lon, lat, s_demo_ts->zoom, &tx, &ty);
+        heading = sim_bearing(lat, lon, s_demo_lat[i1], s_demo_lon[i1]);
+        s_demo_pos += 0.08;
+        if (s_demo_pos >= s_demo_npts)
+            s_demo_pos -= s_demo_npts;
+    } else {
+        tx = (s_demo_ts->min_tx + s_demo_ts->max_tx + 1) / 2.0;
+        ty = (s_demo_ts->min_ty + s_demo_ts->max_ty + 1) / 2.0;
+    }
+    vehicle_data_t vd = sim_map_vd(45);
+    screen_map_render(tx, ty, 340.0, heading);
+    screen_map_commit(&vd, settings_store_current());
+    screen_map_set_no_coverage(!map_tileset_covers(s_demo_ts, (uint32_t)tx, (uint32_t)ty));
+}
+
 int main(void)
 {
     // 1) Vehicle state + bridge listener. Comes before SDL window creation
@@ -507,10 +569,19 @@ int main(void)
     //    screens so the settings → back path rejoins the original instead
     //    of rebuilding the ride each time.
     ui_manager_init();
+    sim_demo_map_build();  // so the Settings LAYOUT toggle can switch to the map
     // Jump straight to a settings sub-screen for headless review (VROD_SHOT),
     // so screens behind a couple of taps can be screenshotted without driving.
     if (getenv("VROD_SETTINGS"))
         ui_manager_show_settings_general();
+    // VROD_LAYOUT_MAP=1 boots straight into the map layout (the same path the
+    // Settings toggle takes), for a headless check of the map view.
+    if (getenv("VROD_LAYOUT_MAP")) {
+        settings_t s = *settings_store_current();
+        s.layout     = LAYOUT_MAP;
+        settings_store_apply(&s);
+        ui_manager_show_home();
+    }
 
     // 4) Main loop: pump vehicle data + settings into the UI, then let
     //    LVGL render. The sim updates s_data on its own thread;
@@ -526,7 +597,10 @@ int main(void)
     while (1) {
         vehicle_data_t snapshot;
         vehicle_data_get(&snapshot);
-        screen_ride_update(&snapshot, settings_store_current());
+        if (s_demo_map && lv_screen_active() == s_demo_map)
+            sim_demo_map_frame();  // LAYOUT=MAP is showing: scroll the demo map
+        else
+            screen_ride_update(&snapshot, settings_store_current());
 
         lv_indev_t *indev   = lv_indev_get_next(NULL);
         bool        pressed = false;
