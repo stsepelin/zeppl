@@ -15,15 +15,15 @@ static void test_full_and_over_clamp(void)
 
 static void test_midscale_rounds_to_nearest_segment(void)
 {
-    TEST_ASSERT_EQUAL_INT(8, rpm_scale_lit(5000));  // 5000/10000 * 16 = 8
-    TEST_ASSERT_EQUAL_INT(2, rpm_scale_lit(1500));  // 2.4 -> rounds to 2
-    TEST_ASSERT_EQUAL_INT(4, rpm_scale_lit(2300));  // 3.68 -> rounds to 4
+    TEST_ASSERT_EQUAL_INT(5, rpm_scale_lit(5000));  // 5000/10000 * 10 = 5
+    TEST_ASSERT_EQUAL_INT(2, rpm_scale_lit(1500));  // 1.5 -> rounds to 2
+    TEST_ASSERT_EQUAL_INT(3, rpm_scale_lit(2600));  // 2.6 -> rounds to 3
 }
 
 static void test_redline_is_the_last_sector(void)
 {
-    // ceil(9000/10000 * 16) = 15: the last segment (index 15 of 16) is redline.
-    TEST_ASSERT_EQUAL_INT(15, rpm_scale_redline_seg());
+    // ceil(9000/10000 * 10) = 9: the last sector (index 9 of 10, = 9..10k) is red.
+    TEST_ASSERT_EQUAL_INT(9, rpm_scale_redline_seg());
     TEST_ASSERT_TRUE(rpm_scale_redline_seg() < RPM_SCALE_SEGMENTS);
 }
 

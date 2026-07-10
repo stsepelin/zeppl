@@ -5,7 +5,7 @@
 // segments. No LVGL - host-tested at 100% line/branch (see test_rpm_scale.c).
 
 #define RPM_SCALE_MAX      10000
-#define RPM_SCALE_SEGMENTS 16  // wide elongated sectors, like the classic redline
+#define RPM_SCALE_SEGMENTS 10  // one sector per 1000 rpm: dividers land on the 1..9 marks
 #define RPM_SCALE_REDLINE  9000
 
 // Number of lit segments for the given rpm, rounded to the nearest segment and

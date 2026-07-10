@@ -14,8 +14,8 @@
 // per-frame cost is a single blit and the device's DSI path never sees a swarm
 // of small object redraws.
 #define BAR_W   560
-#define BAR_H   14  // shallow: sectors read as wide elongated bars, not squares
-#define SEG_GAP 6
+#define BAR_H   16    // shallow: sectors read as wide elongated bars, not squares
+#define SEG_GAP 9     // clear gaps = the meaningful dividers between each 1000 rpm
 #define SEG_CR  5.0f  // rounded-rect corner radius, like the tach redline segments
 
 typedef struct {
