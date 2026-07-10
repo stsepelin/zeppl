@@ -8,6 +8,7 @@
 #include "bsp/esp-bsp.h"
 #include "bsp/display.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lvgl.h"
@@ -150,12 +151,19 @@ static void anim_task(void *arg)
 
         double tx, ty;
         map_lonlat_to_tilef(lon, lat, s_ts->zoom, &tx, &ty);
-        // Heavy rasterise off the lock; only the swap + strip run under it, so
-        // the LVGL render task is never blocked on our CPU work.
+        // Heavy rasterise off the lock AND on core 0, so it never competes with
+        // the LVGL renderer (core 1) for CPU; only the swap + strip run under
+        // the lock.
+        int64_t t0 = esp_timer_get_time();
         screen_map_render(tx, ty, MAP_DEMO_PPT);
+        int64_t us = esp_timer_get_time() - t0;
         bsp_display_lock(-1);
         screen_map_commit(speed, gear, tach, temp);
         bsp_display_unlock();
+
+        static int frame = 0;
+        if (++frame % 30 == 0)
+            ESP_LOGI(TAG, "rasterise %lld us (%d mph)", us, speed);
         vTaskDelay(pdMS_TO_TICKS(MAP_DEMO_FRAME_MS));
     }
 }
@@ -180,5 +188,7 @@ void map_demo_start(void)
     ui_manager_set_map_screen(s_screen);
     bsp_display_unlock();
 
-    xTaskCreatePinnedToCore(anim_task, "map_demo", 8192, NULL, 4, NULL, 1);
+    // Core 0 (the compute core: sim, event watcher, audio) - NOT core 1, which
+    // is LVGL's. Keeps the heavy rasterise from stealing cycles from rendering.
+    xTaskCreatePinnedToCore(anim_task, "map_demo", 8192, NULL, 4, NULL, 0);
 }
