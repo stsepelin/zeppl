@@ -30,10 +30,11 @@
 #include <time.h>
 #include <stdint.h>
 #include <math.h>
+#include <string.h>
 
-#define DISPLAY_W   800
-#define DISPLAY_H   800
-#define UI_TICK_MS  15      // ~66 FPS, matches firmware's LV_DEF_REFR_PERIOD
+#define DISPLAY_W  800
+#define DISPLAY_H  800
+#define UI_TICK_MS 15  // ~66 FPS, matches firmware's LV_DEF_REFR_PERIOD
 
 static void inv_log_cb(lv_event_t *e)
 {
@@ -198,6 +199,35 @@ static void maybe_screenshot(void)
     exit(0);
 }
 
+// Synthesise a vehicle_data snapshot from speed alone, so the compact map's
+// gauge widgets show something plausible in VROD_MAP mode (which has no sim
+// engine feeding vehicle_data). Gear bands + within-band revs, fixed temp/fuel.
+static vehicle_data_t sim_map_vd(int mph)
+{
+    static const int hi[6] = {8, 18, 30, 45, 62, 90};
+    vehicle_data_t   vd;
+    memset(&vd, 0, sizeof(vd));
+    vd.speed_mph     = (uint16_t)mph;
+    vd.engine_temp_c = 85;
+    vd.fuel_level    = 4;
+    if (mph <= 0) {
+        vd.gear = GEAR_NEUTRAL;
+        return vd;
+    }
+    int g = 0, lo = 0;
+    for (g = 0; g < 6; g++) {
+        if (mph < hi[g])
+            break;
+        lo = hi[g];
+    }
+    if (g > 5)
+        g = 5;
+    int span = hi[g] - lo;
+    vd.gear  = (gear_t)(g + 1);
+    vd.rpm   = (uint16_t)(1500 + (span > 0 ? (mph - lo) * 6500 / span : 0));
+    return vd;
+}
+
 int main(void)
 {
     // 1) Vehicle state + bridge listener. Comes before SDL window creation
@@ -206,7 +236,7 @@ int main(void)
     //    creation will fail seconds later.
     vehicle_data_init();
     phone_data_init();
-    test_bridge_start();       // localhost:7700 listener for ad-hoc payloads
+    test_bridge_start();  // localhost:7700 listener for ad-hoc payloads
 
     // 2) LVGL core + color-emoji fallback chain. emoji_font_init only
     //    depends on lv_init, not on the SDL window, so it runs ahead of
@@ -281,10 +311,9 @@ int main(void)
             while (fscanf(tf, "%lf %lf %f", &lat, &lon, &mph) == 3) {
                 double tx, ty;
                 map_lonlat_to_tilef(lon, lat, ts->zoom, &tx, &ty);
-                int spd = (int)lrint(mph), g, tp, tc;
-                screen_map_synth(spd, &g, &tp, &tc);
+                vehicle_data_t vd = sim_map_vd((int)lrint(mph));
                 screen_map_render(tx, ty, ppt);
-                screen_map_commit(spd, g, tp, tc);
+                screen_map_commit(&vd, settings_store_current());
                 lv_timer_handler();  // flush label layout before the snapshot
                 char path[1024];
                 snprintf(path, sizeof(path), "%s/frame_%05d.png", outdir, frame++);
@@ -297,10 +326,9 @@ int main(void)
         }
 
         while (1) {
-            int g, tp, tc;
-            screen_map_synth(speed, &g, &tp, &tc);
+            vehicle_data_t vd = sim_map_vd(speed);
             screen_map_render(ctx, cty, ppt);
-            screen_map_commit(speed, g, tp, tc);
+            screen_map_commit(&vd, settings_store_current());
             lv_timer_handler();
             maybe_screenshot();
             usleep(UI_TICK_MS * 1000);
@@ -346,22 +374,34 @@ int main(void)
 
         lv_indev_t *indev   = lv_indev_get_next(NULL);
         bool        pressed = false;
-        lv_point_t  pt      = { 0, 0 };
+        lv_point_t  pt      = {0, 0};
         if (indev) {
             pressed = (lv_indev_get_state(indev) == LV_INDEV_STATE_PRESSED);
             lv_indev_get_point(indev, &pt);
         }
         switch (gesture_update(&gesture, pressed, pt.x, pt.y, lv_tick_get())) {
-        case GESTURE_LONG_PRESS:  ui_manager_show_settings();              break;
-        case GESTURE_SWIPE_LEFT:  phone_data_handle_swipe(PHONE_SWIPE_LEFT);  break;
-        case GESTURE_SWIPE_RIGHT: phone_data_handle_swipe(PHONE_SWIPE_RIGHT); break;
-        case GESTURE_SWIPE_UP:    phone_data_handle_swipe(PHONE_SWIPE_UP);    break;
-        case GESTURE_SWIPE_DOWN:  phone_data_handle_swipe(PHONE_SWIPE_DOWN);  break;
+        case GESTURE_LONG_PRESS:
+            ui_manager_show_settings();
+            break;
+        case GESTURE_SWIPE_LEFT:
+            phone_data_handle_swipe(PHONE_SWIPE_LEFT);
+            break;
+        case GESTURE_SWIPE_RIGHT:
+            phone_data_handle_swipe(PHONE_SWIPE_RIGHT);
+            break;
+        case GESTURE_SWIPE_UP:
+            phone_data_handle_swipe(PHONE_SWIPE_UP);
+            break;
+        case GESTURE_SWIPE_DOWN:
+            phone_data_handle_swipe(PHONE_SWIPE_DOWN);
+            break;
         case GESTURE_TAP:
             if (screen_ride_info_hit(gesture.last_x, gesture.last_y))
                 screen_ride_cycle_info();
             break;
-        case GESTURE_NONE:        default:                                    break;
+        case GESTURE_NONE:
+        default:
+            break;
         }
 
         if (perf_n) {

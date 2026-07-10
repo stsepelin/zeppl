@@ -2,6 +2,7 @@
 #include "map_tile.h"
 #include "phone_data.h"
 #include "screen_map.h"
+#include "settings_store.h"
 #include "ui_manager.h"
 #include "vehicle_data.h"
 
@@ -27,7 +28,6 @@ static const char *TAG = "map_demo";
 #define MAP_DEMO_PPT      340.0  // px per tile (view zoom)
 #define MAP_DEMO_FRAME_MS 66     // ~15 fps playback
 #define LOC_STALE_MS      5000   // beyond this with no fix, fall back to the route
-#define MAP_TACH_REDLINE  9000   // rpm mapped to a full tach bar
 #define MPH_TO_MPS        0.44704
 #define MAX_ROUTE_PTS     512
 
@@ -41,18 +41,6 @@ static double s_lat[MAX_ROUTE_PTS], s_lon[MAX_ROUTE_PTS], s_cum[MAX_ROUTE_PTS];
 static int    s_npts;
 static double s_total_m;  // route length
 static double s_dist_m;   // distance travelled so far
-
-// Instrument strip from the shared vehicle_data (sim engine in the demo, J1850
-// on the bike). Gear reads N when out of 1..6.
-static void strip_from_vehicle(const vehicle_data_t *vd, int *speed, int *gear, int *tach,
-                               int *temp)
-{
-    *speed  = vd->speed_mph;
-    *gear   = (vd->gear >= GEAR_1 && vd->gear <= GEAR_6) ? (int)vd->gear : 0;
-    int pct = (int)((uint32_t)vd->rpm * 100u / MAP_TACH_REDLINE);
-    *tach   = pct > 100 ? 100 : pct;
-    *temp   = vd->engine_temp_c;
-}
 
 static double haversine_m(double lat1, double lon1, double lat2, double lon2)
 {
@@ -128,11 +116,10 @@ static void anim_task(void *arg)
             continue;
         }
 
-        // One shared source of truth: the strip always reads vehicle_data.
+        // One shared source of truth: the gauge widgets read vehicle_data, and
+        // the map scroll below advances at that same speed.
         vehicle_data_t vd;
         vehicle_data_get(&vd);
-        int speed, gear, tach, temp;
-        strip_from_vehicle(&vd, &speed, &gear, &tach, &temp);
 
         double           lat, lon;
         phone_location_t loc;
@@ -158,12 +145,12 @@ static void anim_task(void *arg)
         screen_map_render(tx, ty, MAP_DEMO_PPT);
         int64_t us = esp_timer_get_time() - t0;
         bsp_display_lock(-1);
-        screen_map_commit(speed, gear, tach, temp);
+        screen_map_commit(&vd, settings_store_current());
         bsp_display_unlock();
 
         static int frame = 0;
         if (++frame % 30 == 0)
-            ESP_LOGI(TAG, "rasterise %lld us (%d mph)", us, speed);
+            ESP_LOGI(TAG, "rasterise %lld us (%d mph)", us, vd.speed_mph);
         vTaskDelay(pdMS_TO_TICKS(MAP_DEMO_FRAME_MS));
     }
 }
