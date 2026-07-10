@@ -79,9 +79,11 @@ void app_main(void)
     phone_data_init();
     icon_cache_init();  // PSRAM buffers for streamed app-notification icons
 #if CONFIG_VROD_INCLUDE_SIM_ENGINE
-#if !CONFIG_VROD_J1850
-    // The J1850 producer and the sim both write vehicle_data; the real
-    // bus wins whenever it's compiled in.
+#if !CONFIG_VROD_J1850 || CONFIG_VROD_MAP_DEMO
+    // The J1850 producer and the sim both write vehicle_data; the real bus
+    // wins whenever it's compiled in - except in the bench demo, where the sim
+    // drives the gauge + the map's instrument strip regardless (no live bus at
+    // a desk, so gear/rpm would otherwise read empty).
     sim_engine_start();
 #endif
 #endif
@@ -174,6 +176,10 @@ void app_main(void)
     ble_peripheral_init();
     telemetry_publisher_start();
 
+    // The map is no longer started here: it loads lazily the first time the map
+    // layout is shown (ui_manager_show_home), so a classic setting never mounts
+    // the SD or builds the tileset. The boot hand-off always follows this point
+    // (ble is up), so the lazy load keeps nimble's RAM ordering.
     ESP_LOGI(TAG, "boot complete");
     // app_main can return — all the real work runs in the FreeRTOS tasks
     // we spawned (ui_update_task, event_watcher_task, sim_engine_task,

@@ -35,6 +35,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/display/units.c
     ${MAIN_DIR}/display/widgets/smooth.c
     ${MAIN_DIR}/display/widgets/fuel_scale.c
+    ${MAIN_DIR}/display/widgets/rpm_scale.c
     ${MAIN_DIR}/phone/phone_data.c
     ${MAIN_DIR}/phone/phone_protocol.c
     ${MAIN_DIR}/phone/telemetry_codec.c
@@ -78,6 +79,7 @@ add_library(vrod_widgets STATIC
     ${MAIN_DIR}/display/widgets/speed_display.c
     ${MAIN_DIR}/display/widgets/gear_indicator.c
     ${MAIN_DIR}/display/widgets/fuel_arc.c
+    ${MAIN_DIR}/display/widgets/rpm_bar.c
     ${MAIN_DIR}/display/widgets/temp_display.c
     ${MAIN_DIR}/display/widgets/turn_signals.c
     ${MAIN_DIR}/display/widgets/clock_display.c
@@ -113,6 +115,7 @@ add_unit_test(test_sim_math)
 add_unit_test(test_format)
 add_unit_test(test_smooth)
 add_unit_test(test_fuel_scale)
+add_unit_test(test_rpm_scale)
 add_unit_test(test_vehicle_data)
 add_unit_test(test_gear_calc)
 add_unit_test(test_trip_meter)
@@ -141,3 +144,11 @@ endfunction()
 add_widget_test(test_widget_caches)
 add_widget_test(test_sprite_raster)
 add_widget_test(test_tach_arc)
+
+# Map tile parser: regression tests only (map_tile.c allocates, so it is not in
+# the 100% branch gate - it compiles straight into the test, not vrod_pure).
+add_executable(test_map_tile tests/test_map_tile.c tests/test_runner.c
+    ${MAIN_DIR}/map/map_tile.c)
+target_include_directories(test_map_tile PRIVATE ${MAIN_DIR}/map external/unity)
+target_link_libraries(test_map_tile PRIVATE unity m)
+add_test(NAME test_map_tile COMMAND test_map_tile)

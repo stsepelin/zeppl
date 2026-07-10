@@ -105,14 +105,29 @@ phone_parse_result_t phone_protocol_parse(const uint8_t  *buf,
     }
 
     case PHONE_EVT_CONFIG: {
-        // u16 speed_divisor (LE). Length-keyed so future fields can append.
-        if (payload_len < 2) {
-            *consumed = total_len;
-            return PHONE_PARSE_BAD_FIELD;
+        // Field-keyed: a run of {u8 field_id, u8 len, value[len]} sub-fields, so
+        // each setting is written independently. Unknown ids are skipped by len.
+        out->type                     = PHONE_EVT_CONFIG;
+        out->config.has_speed_divisor = false;
+        out->config.has_layout        = false;
+        const uint8_t *q              = p;
+        const uint8_t *pend           = p + payload_len;
+        while (q + 2 <= pend) {
+            uint8_t fid  = q[0];
+            uint8_t flen = q[1];
+            q += 2;
+            if (q + flen > pend)
+                break;  // truncated value: stop, keep what parsed cleanly
+            if (fid == CONFIG_FIELD_SPEED_DIVISOR && flen == 2) {
+                out->config.speed_divisor     = (uint16_t)(q[0] | (q[1] << 8));
+                out->config.has_speed_divisor = true;
+            } else if (fid == CONFIG_FIELD_LAYOUT && flen == 1) {
+                out->config.layout     = q[0];
+                out->config.has_layout = true;
+            }
+            q += flen;  // unknown ids fall through to here and are skipped
         }
-        out->type                 = PHONE_EVT_CONFIG;
-        out->config.speed_divisor = rd_u16(p);
-        *consumed                 = total_len;
+        *consumed = total_len;
         return PHONE_PARSE_OK;
     }
 
@@ -142,6 +157,21 @@ phone_parse_result_t phone_protocol_parse(const uint8_t  *buf,
         out->type = (phone_event_type_t)type;
         *consumed = total_len;
         return PHONE_PARSE_OK;
+
+    case PHONE_EVT_LOCATION: {
+        // i32 lat_e7 + i32 lon_e7 + u16 heading_cd. Length-keyed: a heading-less
+        // sender (payload 8) still parses, heading defaults to unknown.
+        if (payload_len < 8) {
+            *consumed = total_len;
+            return PHONE_PARSE_BAD_FIELD;
+        }
+        out->type                = PHONE_EVT_LOCATION;
+        out->location.lat_e7     = (int32_t)rd_u32(p);
+        out->location.lon_e7     = (int32_t)rd_u32(p + 4);
+        out->location.heading_cd = (payload_len >= 10) ? rd_u16(p + 8) : 0xFFFF;
+        *consumed                = total_len;
+        return PHONE_PARSE_OK;
+    }
 
     default:
         *consumed = total_len;

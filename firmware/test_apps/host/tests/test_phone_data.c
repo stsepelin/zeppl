@@ -884,8 +884,70 @@ static void test_same_id_notif_updates_in_place(void)
     TEST_ASSERT_EQUAL_UINT32(5000, s.notif.call_start_ms);
 }
 
+// --- GPS location (phone -> map) -------------------------------------------
+
+static phone_event_t make_location(int32_t lat, int32_t lon, uint16_t heading)
+{
+    phone_event_t e;
+    memset(&e, 0, sizeof(e));
+    e.type                = PHONE_EVT_LOCATION;
+    e.location.lat_e7     = lat;
+    e.location.lon_e7     = lon;
+    e.location.heading_cd = heading;
+    return e;
+}
+
+static void test_location_apply_and_get(void)
+{
+    fresh();
+    lv_tick_stub_set(1000);
+    phone_event_t e = make_location(594829680, 248509760, 9000);
+    phone_data_apply(&e);
+
+    lv_tick_stub_set(1500);
+    phone_location_t loc;
+    phone_data_get_location(&loc);
+    TEST_ASSERT_TRUE(loc.valid);
+    TEST_ASSERT_EQUAL_INT32(594829680, loc.lat_e7);
+    TEST_ASSERT_EQUAL_INT32(248509760, loc.lon_e7);
+    TEST_ASSERT_EQUAL_UINT16(9000, loc.heading_cd);
+    TEST_ASSERT_EQUAL_UINT32(500, loc.age_ms);  // 1500 - 1000
+}
+
+static void test_location_invalid_before_first_fix(void)
+{
+    fresh();
+    phone_location_t loc;
+    phone_data_get_location(&loc);
+    TEST_ASSERT_FALSE(loc.valid);
+    TEST_ASSERT_EQUAL_UINT32(0xFFFFFFFFu, loc.age_ms);
+}
+
+static void test_location_get_null_safe(void)
+{
+    fresh();
+    phone_data_get_location(NULL);  // must not crash
+}
+
+static void test_location_get_dropped_when_take_fails(void)
+{
+    fresh();
+    phone_event_t e = make_location(1, 2, 3);
+    phone_data_apply(&e);
+    g_stub_take_succeeds = 0;
+    phone_location_t loc;
+    loc.valid = true;
+    phone_data_get_location(&loc);
+    TEST_ASSERT_FALSE(loc.valid);  // lock timeout -> reports invalid
+    g_stub_take_succeeds = 1;
+}
+
 void RunTests(void)
 {
+    RUN_TEST(test_location_apply_and_get);
+    RUN_TEST(test_location_invalid_before_first_fix);
+    RUN_TEST(test_location_get_null_safe);
+    RUN_TEST(test_location_get_dropped_when_take_fails);
     RUN_TEST(test_first_notif_becomes_active);
     RUN_TEST(test_dismiss_clears_when_queue_empty);
     RUN_TEST(test_dismiss_with_wrong_id_does_nothing);

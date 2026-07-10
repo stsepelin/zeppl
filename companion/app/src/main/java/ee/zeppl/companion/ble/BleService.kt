@@ -45,6 +45,7 @@ class BleService : Service() {
     private var calCollector:     SpeedCalCollector? = null
     private var rideCollector:    RideCollector?     = null
     private var callTracker:      CallStateTracker?  = null
+    private var locationSender:   LocationSender?    = null
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     override fun onCreate() {
@@ -107,6 +108,11 @@ class BleService : Service() {
         // Mirror the phone's own call state to the cluster (answer/hang up on
         // the phone, not just via the cluster buttons).
         callTracker = CallStateTracker(applicationContext).also { it.start() }
+        // Stream GPS position to the cluster's map view. Add the LOCATION
+        // foreground-service type up front (if permitted) so fixes keep flowing
+        // with the screen off, then start the sender.
+        updateForegroundType(CalibrationSession.active)
+        locationSender = LocationSender(applicationContext).also { it.start() }
         Log.i(TAG, "service started")
     }
 
@@ -136,6 +142,8 @@ class BleService : Service() {
         calCollector = null
         callTracker?.stop()
         callTracker = null
+        locationSender?.stop()
+        locationSender = null
         client?.stop()
         client = null
         previousSinkSend?.let { OutboundSink.send = it }
@@ -195,13 +203,14 @@ class BleService : Service() {
         NotificationManagerCompat.from(this).notify(NOTIF_ID, buildNotification())
     }
 
-    // While a calibration runs we add the LOCATION foreground-service type so
-    // GPS keeps flowing with the screen off. Only add it when fine-location is
-    // granted (the wizard requests it before starting) - startForeground with an
-    // ungranted location type throws.
+    // Add the LOCATION foreground-service type so GPS keeps flowing with the
+    // screen off - now used continuously for the map's position stream (and
+    // during a calibration run). Only add it when fine-location is granted;
+    // startForeground with an ungranted location type throws. The `calibrating`
+    // arg is kept for call-site symmetry but no longer gates the type.
     @SuppressLint("MissingPermission")
     private fun updateForegroundType(calibrating: Boolean) {
-        val withLocation = calibrating && ContextCompat.checkSelfPermission(
+        val withLocation = ContextCompat.checkSelfPermission(
             this, Manifest.permission.ACCESS_FINE_LOCATION,
         ) == PackageManager.PERMISSION_GRANTED
         val type = if (withLocation) FG_TYPE or ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION else FG_TYPE

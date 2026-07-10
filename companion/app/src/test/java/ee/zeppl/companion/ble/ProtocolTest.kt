@@ -241,10 +241,45 @@ class ProtocolTest {
     }
 
     @Test fun `encodes config speed divisor`() {
-        // Mirrors test_phone_protocol.c::test_parse_config_speed_divisor (188).
+        // Field-keyed: type, len=4, {id=1, len=2, u16 188}. Mirrors
+        // test_phone_protocol.c::test_parse_config_speed_divisor.
         assertArrayEquals(
-            byteArrayOf(0x04, 0x02, 0x00, 0xBC.toByte(), 0x00),
-            Protocol.encodeConfig(188),
+            byteArrayOf(0x04, 0x04, 0x00, 0x01, 0x02, 0xBC.toByte(), 0x00),
+            Protocol.encodeConfig(speedDivisor = 188),
         )
+    }
+
+    @Test fun `encodes config layout`() {
+        // {id=2, len=1, u8 1}. Mirrors test_parse_config_layout.
+        assertArrayEquals(
+            byteArrayOf(0x04, 0x03, 0x00, 0x02, 0x01, 0x01),
+            Protocol.encodeConfig(layout = Protocol.LAYOUT_MAP),
+        )
+    }
+
+    @Test fun `encodes config both fields`() {
+        assertArrayEquals(
+            byteArrayOf(0x04, 0x07, 0x00, 0x01, 0x02, 0xC8.toByte(), 0x00, 0x02, 0x01, 0x00),
+            Protocol.encodeConfig(speedDivisor = 200, layout = Protocol.LAYOUT_CLASSIC),
+        )
+    }
+
+    @Test fun `encodes a location fix`() {
+        // Mirrors test_phone_protocol.c::test_parse_location. 59.482968,24.850976
+        // -> lat_e7 594829680, lon_e7 248509760; heading 12345 cd.
+        val b = Protocol.encodeLocation(59.482968, 24.850976, 12345)
+        val buf = java.nio.ByteBuffer.wrap(b).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        assertEquals(0x08.toByte(), buf.get())      // type
+        assertEquals(10.toShort(), buf.short)        // payload_len
+        assertEquals(594829680, buf.int)             // lat_e7
+        assertEquals(248509760, buf.int)             // lon_e7
+        assertEquals(12345.toShort(), buf.short)     // heading_cd
+    }
+
+    @Test fun `location heading unknown round-trips as 0xFFFF`() {
+        val b = Protocol.encodeLocation(0.0, 0.0, Protocol.HEADING_UNKNOWN)
+        val buf = java.nio.ByteBuffer.wrap(b).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        buf.position(11)
+        assertEquals(0xFFFF.toShort(), buf.short)
     }
 }

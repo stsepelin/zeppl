@@ -301,4 +301,45 @@ menu "V-Rod cluster"
             rider to confirm, and stores the bond in NVS so subsequent
             connects are silent.
 
+    config VROD_MAP_DEMO
+        bool "Bench demo: synthetic gauge + vector map"
+        default n
+        select VROD_INCLUDE_SIM_ENGINE
+        help
+            One flag for the whole bench demo (no bike, no phone needed). It
+            chains both demos:
+
+              - forces the synthetic driving-cycle gauge to run (even in a
+                J1850 build), so the gauge and the map's instrument strip show
+                live-looking speed / RPM / gear;
+              - registers the compact vector-map screen from an embedded
+                Tallinn route + tiles (tools/maptiles).
+
+            Boots to the gauge; double-tap toggles to the map. When a phone
+            streams GPS the map follows real position, else it plays the baked
+            route.
+
+            OFF in production: the entire map module and the embedded tiles are
+            compiled out (no baked-route fallback ships). The real SD-backed map
+            is CONFIG_VROD_MAP_SD.
+
+    config VROD_MAP_SD
+        bool "Real map: vector tiles from microSD"
+        default n
+        help
+            Ship the moving map for real: mount the microSD, load a packed ZMTA
+            archive (tools/maptiles/pack.py) from CONFIG_VROD_MAP_SD_PATH into
+            PSRAM, and scroll it from live phone GPS + bus data - no synthetic
+            route. A city/region archive is small enough (roads + water at z16 =
+            hundreds of KB to a few MB) to keep off flash and on the card.
+
+            Boots to the gauge; double-tap toggles to the map. No-op if the card
+            or archive is missing. Independent of CONFIG_VROD_MAP_DEMO (that one
+            embeds a demo route in flash); enabling both is pointless but safe.
+
+    config VROD_MAP_SD_PATH
+        string "microSD path to the ZMTA map archive"
+        depends on VROD_MAP_SD
+        default "/sdcard/map.zmta"
+
 endmenu

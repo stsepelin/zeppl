@@ -20,6 +20,7 @@
 
 static lv_obj_t  *s_ride     = NULL;
 static lv_obj_t  *s_settings = NULL;
+static lv_obj_t  *s_map      = NULL;  // demo map screen, built by main.c if assets exist
 static settings_t s_current;
 
 // --- settings_store shim ---------------------------------------------------
@@ -105,6 +106,22 @@ void ui_manager_show_settings_bluetooth(void)
     if (!s)
         s = screen_settings_bluetooth_create();
     lv_screen_load(s);
+}
+
+void ui_manager_set_map_screen(lv_obj_t *map)
+{
+    s_map = map;
+}
+
+void ui_manager_show_home(void)
+{
+    // Honour the saved layout like the firmware: show the demo map when it's
+    // selected and available (main.c renders it in the loop), else the gauge.
+    if (s_map && settings_store_current()->layout == LAYOUT_MAP) {
+        lv_screen_load(s_map);
+        return;
+    }
+    ui_manager_show_ride();
 }
 
 void ui_manager_init(void)
