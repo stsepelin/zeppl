@@ -235,6 +235,48 @@ static void add_bezel_mask(void)
     lv_obj_remove_flag(cv, LV_OBJ_FLAG_CLICKABLE);  // never eat touch input
 }
 
+// Dev buttons: the gauge's gestures (long-press -> settings, swipe -> dismiss a
+// notification) are fiddly to fire with a mouse, so expose them as buttons in
+// the masked corners - over the bezel, off the round gauge, and on the top layer
+// so they never appear in VROD_SHOT screenshots. VROD_NO_DEVBTN hides them.
+static void sim_btn_settings_cb(lv_event_t *e)
+{
+    (void)e;
+    ui_manager_show_settings();
+}
+static void sim_btn_swipe_l_cb(lv_event_t *e)
+{
+    (void)e;
+    phone_data_handle_swipe(PHONE_SWIPE_LEFT);
+}
+static void sim_btn_swipe_r_cb(lv_event_t *e)
+{
+    (void)e;
+    phone_data_handle_swipe(PHONE_SWIPE_RIGHT);
+}
+
+static void corner_btn(lv_align_t align, int dx, int dy, const char *txt, lv_event_cb_t cb)
+{
+    lv_obj_t *b = lv_button_create(lv_layer_top());
+    lv_obj_set_size(b, 76, 40);
+    lv_obj_align(b, align, dx, dy);
+    lv_obj_set_style_bg_color(b, lv_color_hex(0x353A42), 0);
+    lv_obj_set_style_radius(b, 6, 0);
+    lv_obj_add_event_cb(b, cb, LV_EVENT_CLICKED, NULL);
+    lv_obj_t *l = lv_label_create(b);
+    lv_label_set_text(l, txt);
+    lv_obj_center(l);
+}
+
+static void add_sim_dev_buttons(void)
+{
+    if (getenv("VROD_NO_DEVBTN"))
+        return;
+    corner_btn(LV_ALIGN_TOP_LEFT, 6, 6, "SET", sim_btn_settings_cb);  // long-press
+    corner_btn(LV_ALIGN_BOTTOM_LEFT, 6, -6, LV_SYMBOL_LEFT, sim_btn_swipe_l_cb);
+    corner_btn(LV_ALIGN_BOTTOM_RIGHT, -6, -6, LV_SYMBOL_RIGHT, sim_btn_swipe_r_cb);
+}
+
 // Synthesise a vehicle_data snapshot from speed alone, so the compact map's
 // gauge widgets show something plausible in VROD_MAP mode (which has no sim
 // engine feeding vehicle_data). Gear bands + within-band revs, fixed temp/fuel.
@@ -302,7 +344,8 @@ int main(void)
     }
     lv_sdl_window_set_title(display, "V-Rod cluster simulator");
     lv_sdl_mouse_create();
-    add_bezel_mask();  // paint the round-panel corners so the gauge edge shows
+    add_bezel_mask();       // paint the round-panel corners so the gauge edge shows
+    add_sim_dev_buttons();  // corner buttons for settings / swipe gestures
 
     // Map spike: VROD_MAP=<tiles_dir> renders the moving-map screen instead of
     // the gauge. VROD_MAP_CENTER="lat,lon" (default: tileset centre),
