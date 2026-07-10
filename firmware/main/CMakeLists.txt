@@ -53,6 +53,7 @@ idf_component_register(
         display/fonts/jbm_bold_33.c
         display/fonts/jbm_bold_45.c
         display/fonts/jbm_bold_72.c
+        display/fonts/jbm_bold_90.c
         display/fonts/jbm_bold_144.c
         display/fonts/mdi_36.c
         display/fonts/mdi_50.c

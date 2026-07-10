@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-LV_FONT_DECLARE(jbm_bold_72);
+LV_FONT_DECLARE(jbm_bold_90);
 LV_FONT_DECLARE(jbm_bold_45);
 LV_FONT_DECLARE(jbm_bold_33);
 LV_FONT_DECLARE(jbm_bold_26);
@@ -334,19 +334,19 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_obj_align(s_rpm_bar, LV_ALIGN_TOP_MID, 0, MAP_H + 14);
 
     s_warn = warning_lights_create(scr, LAMPS, 6, WARN_LAYOUT_ROW);
-    lv_obj_align(s_warn, LV_ALIGN_TOP_MID, 0, MAP_H + 56);
+    lv_obj_align(s_warn, LV_ALIGN_TOP_MID, 0, MAP_H + 46);
 
     // Turn-signal arrows flanking the lamp row; lit green when active.
     s_turn_l = lv_label_create(scr);
     lv_obj_set_style_text_font(s_turn_l, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_l, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_l, ICON_ARROW_L);
-    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 22);
+    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 17);
     s_turn_r = lv_label_create(scr);
     lv_obj_set_style_text_font(s_turn_r, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_r, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_r, ICON_ARROW_R);
-    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 22);
+    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 17);
 
     // GEAR (left) + TEMP (right) in gear-selector frames stuck to the E/F edges,
     // rotated tangent to the arc. Baked ARGB (thick/opaque centre -> thin/faded
@@ -361,7 +361,7 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     s_temp_v = edge_chip(scr, &jbm_bold_33, VROD_TEXT, 37.0f, tbuf, &tdsc, "TEMP");
 
     s_speed_v = lv_label_create(scr);
-    lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);
+    lv_obj_set_style_text_font(s_speed_v, &jbm_bold_90, 0);
     lv_obj_set_style_text_color(s_speed_v, lv_color_hex(VROD_TEXT), 0);
     lv_label_set_text(s_speed_v, "0");
     lv_obj_align(s_speed_v, LV_ALIGN_TOP_MID, 0, MAP_H + 125);
