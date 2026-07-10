@@ -197,7 +197,7 @@ static void bake_chip(uint8_t *buf, float deg)
 }
 
 static lv_obj_t *chip(lv_obj_t *p, const lv_font_t *font, uint32_t color, int x, int y,
-                      uint8_t *buf, lv_image_dsc_t *dsc, float deg)
+                      uint8_t *buf, lv_image_dsc_t *dsc, float deg, const char *cap)
 {
     lv_obj_t *f = lv_obj_create(p);
     lv_obj_remove_style_all(f);
@@ -215,14 +215,36 @@ static lv_obj_t *chip(lv_obj_t *p, const lv_font_t *font, uint32_t color, int x,
         lv_obj_remove_flag(img, LV_OBJ_FLAG_CLICKABLE);
     }
 
+    const int   rot = (int)lroundf(deg * 10.0f);  // LVGL rotation is 0.1 deg units
+    const float a   = deg * (float)M_PI / 180.0f;
+    // Frame axes (rotated): "up" points toward the flat top, "down" to the open
+    // bottom. Value rides just above centre, caption sits below it, both tilted
+    // with the frame.
+    const float ux = sinf(a), uy = -cosf(a);
+    const int   cx = 0, cyb = (int)CHIP_CY - CHIP_H / 2;  // frame-centre align offset
+
+    if (cap) {
+        lv_obj_t *c = lv_label_create(f);
+        lv_obj_set_style_text_font(c, &jbm_bold_26, 0);
+        lv_obj_set_style_text_color(c, lv_color_hex(VROD_TEXT_DIM), 0);
+        lv_label_set_text(c, cap);
+        lv_obj_set_style_transform_pivot_x(c, LV_PCT(50), 0);
+        lv_obj_set_style_transform_pivot_y(c, LV_PCT(50), 0);
+        lv_obj_set_style_transform_rotation(c, rot, 0);
+        lv_obj_align(c, LV_ALIGN_CENTER, cx - (int)lroundf(30.0f * ux),
+                     cyb - (int)lroundf(30.0f * uy));
+    }
+
     lv_obj_t *v = lv_label_create(f);
     lv_obj_set_style_text_font(v, font, 0);
     lv_obj_set_style_text_color(v, lv_color_hex(color), 0);
     lv_label_set_text(v, "--");
-    // Centre on the frame's centroid (= the rotation pivot at CHIP_CX,CHIP_CY),
-    // which is tilt-invariant; LV_ALIGN_CENTER also re-centres on any text width
-    // or font, so gear "5" and temp "85 deg" both sit centred in the pocket.
-    lv_obj_align(v, LV_ALIGN_CENTER, 0, (int)CHIP_CY - CHIP_H / 2);
+    lv_obj_set_style_transform_pivot_x(v, LV_PCT(50), 0);
+    lv_obj_set_style_transform_pivot_y(v, LV_PCT(50), 0);
+    lv_obj_set_style_transform_rotation(v, rot, 0);
+    // Centre on the frame's centroid (= pivot), nudged toward the flat top to
+    // leave room for the caption; the tilt is applied about the label centre.
+    lv_obj_align(v, LV_ALIGN_CENTER, cx + (int)lroundf(10.0f * ux), cyb + (int)lroundf(10.0f * uy));
     return v;
 }
 
@@ -234,12 +256,12 @@ static lv_obj_t *chip(lv_obj_t *p, const lv_font_t *font, uint32_t color, int x,
 // centre). The tilt is the arc tangent there, so the frame follows the curve.
 #define CHIP_EDGE_R 343.0f
 static lv_obj_t *edge_chip(lv_obj_t *p, const lv_font_t *font, uint32_t color, float ang,
-                           uint8_t *buf, lv_image_dsc_t *dsc)
+                           uint8_t *buf, lv_image_dsc_t *dsc, const char *cap)
 {
     float a = ang * (float)M_PI / 180.0f;
     int   x = (int)lroundf(400.0f + CHIP_EDGE_R * cosf(a)) - 400;
     int   y = (int)lroundf(400.0f + CHIP_EDGE_R * sinf(a) - CHIP_CY);
-    return chip(p, font, color, x, y, buf, dsc, ang - 90.0f);
+    return chip(p, font, color, x, y, buf, dsc, ang - 90.0f, cap);
 }
 
 lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
@@ -328,8 +350,8 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     tbuf     = heap_caps_malloc((size_t)CHIP_W * CHIP_H * 4, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     // GEAR (left) + TEMP (right) on the edge arc, just up-and-out from the fuel
     // E/F ends. Angles mirror about 90 deg (bottom-centre).
-    s_gear_v = edge_chip(scr, &jbm_bold_45, VROD_ORANGE, 134.0f, gbuf, &gdsc);
-    s_temp_v = edge_chip(scr, &jbm_bold_33, VROD_TEXT, 46.0f, tbuf, &tdsc);
+    s_gear_v = edge_chip(scr, &jbm_bold_45, VROD_ORANGE, 134.0f, gbuf, &gdsc, "GEAR");
+    s_temp_v = edge_chip(scr, &jbm_bold_33, VROD_TEXT, 46.0f, tbuf, &tdsc, "TEMP");
 
     s_speed_v = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);
