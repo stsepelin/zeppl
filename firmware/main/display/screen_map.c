@@ -28,7 +28,7 @@ LV_FONT_DECLARE(mdi_60);
 // readout row - TEMP | GEAR | SPEED (big, centre) | RPM | FUEL - and a
 // horizontal RPM bar hugging the bottom bezel.
 #define SCR_W          800
-#define MAP_H          505  // chord y; map above, cluster below
+#define MAP_H          452  // chord y; smaller map, taller info section below
 #define MOVE_THRESH_PX 1.5  // skip a map redraw if the view shifted less
 // Tile-bitmap cache: each map tile is rasterised once at TILE_PX (= the view's
 // px-per-tile), then scrolling is just a blit of the cached tiles into the
@@ -329,37 +329,28 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     // Warning-lamp row just under the map (same lamps as the gauge's chevrons).
     static const lamp_id_t LAMPS[] = {LAMP_OIL,     LAMP_ENGINE,      LAMP_ABS,
                                       LAMP_BATTERY, LAMP_IMMOBILISER, LAMP_BEAM};
-    s_warn                         = warning_lights_create(scr, LAMPS, 6, WARN_LAYOUT_ROW);
-    lv_obj_align(s_warn, LV_ALIGN_TOP_MID, 0, MAP_H + 50);
+    // Full-width segmented shift-light RPM bar across the very top of the info
+    // section (the extra room comes from the smaller map).
+    s_rpm_bar = rpm_bar_create(scr);
+    lv_obj_align(s_rpm_bar, LV_ALIGN_TOP_MID, 0, MAP_H + 14);
+
+    s_warn = warning_lights_create(scr, LAMPS, 6, WARN_LAYOUT_ROW);
+    lv_obj_align(s_warn, LV_ALIGN_TOP_MID, 0, MAP_H + 56);
 
     // Turn-signal arrows flanking the lamp row; lit green when active.
     s_turn_l = lv_label_create(scr);
     lv_obj_set_style_text_font(s_turn_l, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_l, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_l, ICON_ARROW_L);
-    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 44);
+    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 52);
     s_turn_r = lv_label_create(scr);
     lv_obj_set_style_text_font(s_turn_r, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_r, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_r, ICON_ARROW_R);
-    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 44);
+    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 52);
 
-    // RPM: full-width segmented shift-light bar hugging the top, with a compact
-    // digital readout on the lamp row's empty left side.
-    s_rpm_bar = rpm_bar_create(scr);
-    lv_obj_align(s_rpm_bar, LV_ALIGN_TOP_MID, 0, MAP_H + 12);
-
-    lv_obj_t *rpm_cap = lv_label_create(scr);
-    lv_obj_set_style_text_font(rpm_cap, &jbm_bold_26, 0);
-    lv_obj_set_style_text_color(rpm_cap, lv_color_hex(VROD_TEXT_DIM), 0);
-    lv_label_set_text(rpm_cap, "RPM");
-    lv_obj_align(rpm_cap, LV_ALIGN_TOP_LEFT, 150, MAP_H + 56);
-
-    s_rpm_v = lv_label_create(scr);
-    lv_obj_set_style_text_font(s_rpm_v, &jbm_bold_33, 0);
-    lv_obj_set_style_text_color(s_rpm_v, lv_color_hex(VROD_TEXT), 0);
-    lv_label_set_text(s_rpm_v, "0");
-    lv_obj_align(s_rpm_v, LV_ALIGN_TOP_LEFT, 220, MAP_H + 51);
+    // RPM digital readout in the top-left corner, below the bar.
+    s_rpm_v = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, -285, MAP_H + 54, MAP_H + 76);
 
     // GEAR (left) + TEMP (right) in gear-selector frames stuck to the E/F edges,
     // rotated tangent to the arc. Baked ARGB (thick/opaque centre -> thin/faded
@@ -377,12 +368,12 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);
     lv_obj_set_style_text_color(s_speed_v, lv_color_hex(VROD_TEXT), 0);
     lv_label_set_text(s_speed_v, "0");
-    lv_obj_align(s_speed_v, LV_ALIGN_TOP_MID, 0, MAP_H + 120);
+    lv_obj_align(s_speed_v, LV_ALIGN_TOP_MID, 0, MAP_H + 173);
     s_speed_u = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_u, &jbm_bold_26, 0);
     lv_obj_set_style_text_color(s_speed_u, lv_color_hex(VROD_TEXT_DIM), 0);
     lv_label_set_text(s_speed_u, "MPH");
-    lv_obj_align(s_speed_u, LV_ALIGN_TOP_MID, 0, MAP_H + 192);
+    lv_obj_align(s_speed_u, LV_ALIGN_TOP_MID, 0, MAP_H + 245);
 
     // Compact fuel arc at the bottom - the same segmented E..F arc as the full
     // gauge, ~1.5x smaller so the map strip has room to breathe.
