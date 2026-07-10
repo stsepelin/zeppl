@@ -296,33 +296,74 @@ int main(void)
         lv_screen_load(screen_map_create(ts, DISPLAY_W, DISPLAY_H));
 
         // Route animation: VROD_TRACK=<file> (lines "lat lon speed_mph") drives
-        // the map centre; each frame is dumped to VROD_TRACK_OUT/frame_%05d.png.
+        // the map centre. With VROD_TRACK_OUT set, each frame is dumped to
+        // <dir>/frame_%05d.png; otherwise it animates the route live in the
+        // window (interpolated between points so the scroll glides).
         const char *track = getenv("VROD_TRACK");
         if (track) {
             const char *outdir = getenv("VROD_TRACK_OUT");
             FILE       *tf     = fopen(track, "r");
-            if (!tf || !outdir) {
-                fprintf(stderr, "track: need VROD_TRACK file + VROD_TRACK_OUT dir\n");
+            if (!tf) {
+                fprintf(stderr, "track: cannot open %s\n", track);
                 return 1;
             }
-            double lat, lon;
-            float  mph;
-            int    frame = 0;
-            while (fscanf(tf, "%lf %lf %f", &lat, &lon, &mph) == 3) {
-                double tx, ty;
-                map_lonlat_to_tilef(lon, lat, ts->zoom, &tx, &ty);
-                vehicle_data_t vd = sim_map_vd((int)lrint(mph));
-                screen_map_render(tx, ty, ppt);
-                screen_map_commit(&vd, settings_store_current());
-                lv_timer_handler();  // flush label layout before the snapshot
-                char path[1024];
-                snprintf(path, sizeof(path), "%s/frame_%05d.png", outdir, frame++);
-                if (write_screenshot(path) != 0)
-                    return 1;
+#define TRK_MAX 4096
+            static double lat_pt[TRK_MAX], lon_pt[TRK_MAX];
+            static float  mph_pt[TRK_MAX];
+            int           n = 0;
+            {
+                double la, lo;
+                float  m;
+                while (n < TRK_MAX && fscanf(tf, "%lf %lf %f", &la, &lo, &m) == 3) {
+                    lat_pt[n] = la;
+                    lon_pt[n] = lo;
+                    mph_pt[n] = m;
+                    n++;
+                }
             }
             fclose(tf);
-            fprintf(stderr, "track: wrote %d frames to %s\n", frame, outdir);
-            return 0;
+            if (n < 2) {
+                fprintf(stderr, "track: too few points (%d)\n", n);
+                return 1;
+            }
+
+            if (outdir) {
+                for (int i = 0; i < n; i++) {
+                    double tx, ty;
+                    map_lonlat_to_tilef(lon_pt[i], lat_pt[i], ts->zoom, &tx, &ty);
+                    vehicle_data_t vd = sim_map_vd((int)lrint(mph_pt[i]));
+                    screen_map_render(tx, ty, ppt);
+                    screen_map_commit(&vd, settings_store_current());
+                    lv_timer_handler();
+                    char path[1024];
+                    snprintf(path, sizeof(path), "%s/frame_%05d.png", outdir, i);
+                    if (write_screenshot(path) != 0)
+                        return 1;
+                }
+                fprintf(stderr, "track: wrote %d frames to %s\n", n, outdir);
+                return 0;
+            }
+
+            // Interactive: glide along the route, interpolating between points.
+            fprintf(stderr, "track: animating %d points live\n", n);
+            double pos = 0.0;
+            while (1) {
+                int    i0 = (int)pos, i1 = (i0 + 1) % n;
+                double f   = pos - i0;
+                double lat = lat_pt[i0] + f * (lat_pt[i1] - lat_pt[i0]);
+                double lon = lon_pt[i0] + f * (lon_pt[i1] - lon_pt[i0]);
+                double tx, ty;
+                map_lonlat_to_tilef(lon, lat, ts->zoom, &tx, &ty);
+                vehicle_data_t vd = sim_map_vd((int)lrint(mph_pt[i0]));
+                screen_map_render(tx, ty, ppt);
+                screen_map_commit(&vd, settings_store_current());
+                lv_timer_handler();
+                maybe_screenshot();
+                usleep(UI_TICK_MS * 1000);
+                pos += 0.08;  // fraction of a point per frame -> a gentle glide
+                if (pos >= n)
+                    pos -= n;
+            }
         }
 
         while (1) {
