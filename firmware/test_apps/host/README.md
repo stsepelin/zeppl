@@ -63,6 +63,7 @@ Today that's:
 | `main/display/units.c` | Pure math: km/h ↔ mph and metre ↔ km/mi conversions |
 | `main/display/widgets/smooth.c` | Pure math: single-pole step with snap |
 | `main/display/widgets/fuel_scale.c` | Fuel band grid quantization + gap-split segments |
+| `main/display/widgets/rpm_scale.c` | RPM -> lit-segment count + redline segment for the shift-light bar |
 | `main/phone/phone_data.c` | Mutex-guarded latest-value store + notification queue. FreeRTOS-stubbed. |
 | `main/phone/phone_protocol.c` | Binary TLV parser for the companion-app BLE wire format |
 | `main/phone/telemetry_codec.c` | Cluster -> phone telemetry frame encoder (vehicle_data -> TLV) |

@@ -12,6 +12,7 @@
 #include "speed_display.h"
 #include "gear_indicator.h"
 #include "fuel_arc.h"
+#include "rpm_bar.h"
 #include "temp_display.h"
 #include "theme.h"
 #include "turn_signals.h"
@@ -106,6 +107,7 @@ static void test_setters_guard_null_user_data(void)
     gear_indicator_set(bare, GEAR_1);
     gear_indicator_set_warning(bare, true);
     fuel_arc_set_level(bare, 3);
+    rpm_bar_set_rpm(bare, 5000);
     temp_display_set_value(bare, 90, UNITS_CELSIUS);
     turn_signals_set(bare, true, true);
     clock_display_set(bare, 8, 24);
@@ -377,6 +379,41 @@ static void test_fuel_compact_bakes_and_caches(void)
     TEST_ASSERT_EQUAL_INT(0, g_lv_obj_invalidate_calls);
     fuel_arc_set_level(w, 2);  // low: red band rebakes + one invalidate
     TEST_ASSERT_EQUAL_INT(1, g_lv_obj_invalidate_calls);
+}
+
+// --- rpm_bar ----------------------------------------------------------------
+// Re-bakes its segment strip only when the lit segment count changes; an rpm
+// that maps to the same number of lit segments must hit the cache.
+
+static void test_rpm_bar_cache_skips_same_segment_count(void)
+{
+    lv_obj_t *w = rpm_bar_create(NULL);
+    rpm_bar_set_rpm(w, 5000);
+    lv_stub_reset();
+    rpm_bar_set_rpm(w, 5000);
+    TEST_ASSERT_EQUAL_INT(0, g_lv_obj_invalidate_calls);
+    rpm_bar_set_rpm(w, 5100);  // still 10 lit segments -> cache hit
+    TEST_ASSERT_EQUAL_INT(0, g_lv_obj_invalidate_calls);
+}
+
+static void test_rpm_bar_rebakes_on_segment_change(void)
+{
+    lv_obj_t *w = rpm_bar_create(NULL);
+    rpm_bar_set_rpm(w, 2000);
+    lv_stub_reset();
+    rpm_bar_set_rpm(w, 3000);  // more lit segments -> rebake
+    TEST_ASSERT_EQUAL_INT(1, g_lv_obj_invalidate_calls);
+    rpm_bar_set_rpm(w, 9500);  // into the redline zone -> rebake
+    TEST_ASSERT_EQUAL_INT(2, g_lv_obj_invalidate_calls);
+}
+
+static void test_rpm_bar_alloc_fail_degrades(void)
+{
+    heap_caps_stub_fail_next(1);
+    lv_obj_t *w = rpm_bar_create(NULL);
+    lv_stub_reset();
+    rpm_bar_set_rpm(w, 6000);
+    TEST_ASSERT_EQUAL_INT(0, g_lv_obj_invalidate_calls);  // no buffer -> no bake
 }
 
 // --- notification_banner -----------------------------------------------------
@@ -961,6 +998,9 @@ void RunTests(void)
     RUN_TEST(test_fuel_low_level_renders_red);
     RUN_TEST(test_fuel_alloc_fail_degrades);
     RUN_TEST(test_fuel_compact_bakes_and_caches);
+    RUN_TEST(test_rpm_bar_cache_skips_same_segment_count);
+    RUN_TEST(test_rpm_bar_rebakes_on_segment_change);
+    RUN_TEST(test_rpm_bar_alloc_fail_degrades);
     RUN_TEST(test_notif_banner_inactive_is_quiet);
     RUN_TEST(test_notif_banner_cache_skips_unchanged);
     RUN_TEST(test_notif_banner_message_change_repaints_once);

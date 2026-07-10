@@ -41,6 +41,8 @@ jobs:
                '*/firmware/main/display/units.c' \
                '*/firmware/main/display/widgets/smooth.c' \
                '*/firmware/main/display/widgets/fuel_scale.c' \
+
+               '*/firmware/main/display/widgets/rpm_scale.c' \
                '*/firmware/main/phone/phone_data.c' \
                '*/firmware/main/phone/phone_protocol.c' \
                '*/firmware/main/phone/telemetry_codec.c' \
@@ -58,6 +60,8 @@ jobs:
                '*/firmware/main/j1850/ride_log_format.c' \
                '*/firmware/main/display/widgets/sprite_raster.h' \
                '*/firmware/main/display/widgets/fuel_arc.c' \
+
+               '*/firmware/main/display/widgets/rpm_bar.c' \
                '*/firmware/main/display/widgets/gear_indicator.c' \
                '*/firmware/main/display/widgets/speed_display.c' \
                '*/firmware/main/display/widgets/notification_banner.c' \

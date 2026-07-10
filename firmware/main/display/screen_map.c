@@ -3,6 +3,7 @@
 #include "esp_heap_caps.h"
 
 #include "fuel_arc.h"
+#include "rpm_bar.h"
 #include "sprite_raster.h"
 #include "theme.h"
 #include "units.h"
@@ -46,6 +47,7 @@ static lv_obj_t      *s_gear_v;
 static lv_obj_t      *s_speed_v;
 static lv_obj_t      *s_speed_u;
 static lv_obj_t      *s_rpm_v;
+static lv_obj_t      *s_rpm_bar;
 static lv_obj_t      *s_fuel_arc;
 static lv_obj_t      *s_turn_l;
 static lv_obj_t      *s_turn_r;
@@ -328,22 +330,36 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     static const lamp_id_t LAMPS[] = {LAMP_OIL,     LAMP_ENGINE,      LAMP_ABS,
                                       LAMP_BATTERY, LAMP_IMMOBILISER, LAMP_BEAM};
     s_warn                         = warning_lights_create(scr, LAMPS, 6, WARN_LAYOUT_ROW);
-    lv_obj_align(s_warn, LV_ALIGN_TOP_MID, 0, MAP_H + 16);
+    lv_obj_align(s_warn, LV_ALIGN_TOP_MID, 0, MAP_H + 50);
 
     // Turn-signal arrows flanking the lamp row; lit green when active.
     s_turn_l = lv_label_create(scr);
     lv_obj_set_style_text_font(s_turn_l, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_l, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_l, ICON_ARROW_L);
-    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 12);
+    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 44);
     s_turn_r = lv_label_create(scr);
     lv_obj_set_style_text_font(s_turn_r, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_r, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_r, ICON_ARROW_R);
-    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 12);
+    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 44);
 
-    // RPM readout in the top-left corner (TEMP has moved into the right chip).
-    s_rpm_v = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, -285, MAP_H + 40, MAP_H + 62);
+    // RPM: full-width segmented shift-light bar hugging the top, with a compact
+    // digital readout on the lamp row's empty left side.
+    s_rpm_bar = rpm_bar_create(scr);
+    lv_obj_align(s_rpm_bar, LV_ALIGN_TOP_MID, 0, MAP_H + 12);
+
+    lv_obj_t *rpm_cap = lv_label_create(scr);
+    lv_obj_set_style_text_font(rpm_cap, &jbm_bold_26, 0);
+    lv_obj_set_style_text_color(rpm_cap, lv_color_hex(VROD_TEXT_DIM), 0);
+    lv_label_set_text(rpm_cap, "RPM");
+    lv_obj_align(rpm_cap, LV_ALIGN_TOP_LEFT, 150, MAP_H + 56);
+
+    s_rpm_v = lv_label_create(scr);
+    lv_obj_set_style_text_font(s_rpm_v, &jbm_bold_33, 0);
+    lv_obj_set_style_text_color(s_rpm_v, lv_color_hex(VROD_TEXT), 0);
+    lv_label_set_text(s_rpm_v, "0");
+    lv_obj_align(s_rpm_v, LV_ALIGN_TOP_LEFT, 220, MAP_H + 51);
 
     // GEAR (left) + TEMP (right) in gear-selector frames stuck to the E/F edges,
     // rotated tangent to the arc. Baked ARGB (thick/opaque centre -> thin/faded
@@ -491,6 +507,7 @@ void screen_map_commit(const vehicle_data_t *data, const settings_t *settings)
     lv_label_set_text_fmt(s_speed_v, "%d", units_speed_display(data->speed_mph, settings->units));
     lv_label_set_text(s_speed_u, units_speed_label(settings->units));
     lv_label_set_text_fmt(s_rpm_v, "%d", data->rpm);
+    rpm_bar_set_rpm(s_rpm_bar, data->rpm);
     fuel_arc_set_level(s_fuel_arc, data->fuel_level);
 
     // Turn arrows: green when active, dim otherwise. Cached (house rule).
