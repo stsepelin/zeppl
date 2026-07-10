@@ -354,8 +354,8 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     tbuf     = heap_caps_malloc((size_t)CHIP_W * CHIP_H * 4, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     // GEAR (left) + TEMP (right) on the edge arc, just up-and-out from the fuel
     // E/F ends. Angles mirror about 90 deg (bottom-centre).
-    s_gear_v = edge_chip(scr, &jbm_bold_45, VROD_ORANGE, 139.0f, gbuf, &gdsc, "GEAR");
-    s_temp_v = edge_chip(scr, &jbm_bold_33, VROD_TEXT, 41.0f, tbuf, &tdsc, "TEMP");
+    s_gear_v = edge_chip(scr, &jbm_bold_45, VROD_ORANGE, 135.0f, gbuf, &gdsc, "GEAR");
+    s_temp_v = edge_chip(scr, &jbm_bold_33, VROD_TEXT, 45.0f, tbuf, &tdsc, "TEMP");
 
     s_speed_v = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);
