@@ -14,8 +14,8 @@
 // per-frame cost is a single blit and the device's DSI path never sees a swarm
 // of small object redraws.
 #define BAR_W   560
-#define BAR_H   22
-#define SEG_GAP 4
+#define BAR_H   14  // shallow: sectors read as wide elongated bars, not squares
+#define SEG_GAP 6
 #define SEG_CR  5.0f  // rounded-rect corner radius, like the tach redline segments
 
 typedef struct {
@@ -36,7 +36,9 @@ static void bake_bar(rpm_data_t *rd, int lit)
     for (int i = 0; i < RPM_SCALE_SEGMENTS; i++) {
         float    sx  = i * (seg_w + SEG_GAP);
         float    ccx = sx + seg_w / 2.0f;
-        uint32_t col = (i < lit) ? ((i >= redline) ? VROD_RED_BRIGHT : VROD_ORANGE) : VROD_RAIL;
+        // Redline sector is always red (a fixed danger zone, like the classic
+        // tach band); the rest read gray until lit, then orange.
+        uint32_t col = (i >= redline) ? VROD_RED : ((i < lit) ? VROD_ORANGE : VROD_RAIL);
         uint8_t  cb = col & 0xFF, cg = (col >> 8) & 0xFF, cr = (col >> 16) & 0xFF;
         // Solid rounded-rectangle chunk (redline-segment style), AA via the
         // shared rounded-box SDF in (x,y) space.

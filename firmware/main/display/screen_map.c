@@ -46,7 +46,6 @@ static lv_obj_t      *s_temp_v;
 static lv_obj_t      *s_gear_v;
 static lv_obj_t      *s_speed_v;
 static lv_obj_t      *s_speed_u;
-static lv_obj_t      *s_rpm_v;
 static lv_obj_t      *s_rpm_bar;
 static lv_obj_t      *s_fuel_arc;
 static lv_obj_t      *s_turn_l;
@@ -342,15 +341,12 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_obj_set_style_text_font(s_turn_l, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_l, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_l, ICON_ARROW_L);
-    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 52);
+    lv_obj_align(s_turn_l, LV_ALIGN_TOP_MID, -332, MAP_H + 22);
     s_turn_r = lv_label_create(scr);
     lv_obj_set_style_text_font(s_turn_r, &mdi_60, 0);
     lv_obj_set_style_text_color(s_turn_r, lv_color_hex(VROD_ARROW_OFF), 0);
     lv_label_set_text(s_turn_r, ICON_ARROW_R);
-    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 52);
-
-    // RPM digital readout in the top-left corner, below the bar.
-    s_rpm_v = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, -285, MAP_H + 54, MAP_H + 76);
+    lv_obj_align(s_turn_r, LV_ALIGN_TOP_MID, 332, MAP_H + 22);
 
     // GEAR (left) + TEMP (right) in gear-selector frames stuck to the E/F edges,
     // rotated tangent to the arc. Baked ARGB (thick/opaque centre -> thin/faded
@@ -497,7 +493,6 @@ void screen_map_commit(const vehicle_data_t *data, const settings_t *settings)
         lv_label_set_text(s_gear_v, "-");
     lv_label_set_text_fmt(s_speed_v, "%d", units_speed_display(data->speed_mph, settings->units));
     lv_label_set_text(s_speed_u, units_speed_label(settings->units));
-    lv_label_set_text_fmt(s_rpm_v, "%d", data->rpm);
     rpm_bar_set_rpm(s_rpm_bar, data->rpm);
     fuel_arc_set_level(s_fuel_arc, data->fuel_level);
 
