@@ -2,6 +2,7 @@
 #include "map_render.h"
 #include "esp_heap_caps.h"
 
+#include "fuel_arc.h"
 #include "theme.h"
 #include "units.h"
 #include "warning_lights.h"
@@ -22,7 +23,6 @@ LV_FONT_DECLARE(jbm_bold_26);
 #define SCR_W          800
 #define MAP_H          505  // chord y; map above, cluster below
 #define MOVE_THRESH_PX 1.5  // skip a map redraw if the view shifted less
-#define RPM_MAX        9000
 // Tile-bitmap cache: each map tile is rasterised once at TILE_PX (= the view's
 // px-per-tile), then scrolling is just a blit of the cached tiles into the
 // canvas - no per-frame re-rasterise. TILE_PX must match the ppt callers pass.
@@ -40,8 +40,7 @@ static lv_obj_t      *s_gear_v;
 static lv_obj_t      *s_speed_v;
 static lv_obj_t      *s_speed_u;
 static lv_obj_t      *s_rpm_v;
-static lv_obj_t      *s_fuel_v;
-static lv_obj_t      *s_rpm_bar;
+static lv_obj_t      *s_fuel_arc;
 static lv_obj_t      *s_no_map;  // "off area" overlay, shown when position has no tiles
 static map_tileset_t *s_ts;
 
@@ -206,11 +205,10 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     s_warn                         = warning_lights_create(scr, LAMPS, 6, WARN_LAYOUT_ROW);
     lv_obj_align(s_warn, LV_ALIGN_TOP_MID, 0, MAP_H + 16);
 
-    // Readout row: TEMP | GEAR | SPEED (big centre) | RPM | FUEL.
+    // Readout row: TEMP | GEAR | SPEED (big centre) | RPM. Fuel is the arc below.
     s_temp_v = readout(scr, "TEMP", &jbm_bold_33, VROD_TEXT, -250, MAP_H + 62, MAP_H + 88);
     s_gear_v = readout(scr, "GEAR", &jbm_bold_45, VROD_ORANGE, -140, MAP_H + 62, MAP_H + 82);
-    s_rpm_v  = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, 140, MAP_H + 62, MAP_H + 88);
-    s_fuel_v = readout(scr, "FUEL", &jbm_bold_33, VROD_TEXT, 250, MAP_H + 62, MAP_H + 88);
+    s_rpm_v  = readout(scr, "RPM", &jbm_bold_33, VROD_TEXT, 250, MAP_H + 62, MAP_H + 88);
 
     s_speed_v = lv_label_create(scr);
     lv_obj_set_style_text_font(s_speed_v, &jbm_bold_72, 0);
@@ -223,23 +221,10 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_label_set_text(s_speed_u, "MPH");
     lv_obj_align(s_speed_u, LV_ALIGN_TOP_MID, 0, MAP_H + 142);
 
-    // RPM bar hugging the bottom bezel: dark track, orange fill, red redline zone.
-    lv_obj_t *redzone = lv_obj_create(scr);
-    lv_obj_remove_style_all(redzone);
-    lv_obj_set_size(redzone, 44, 14);
-    lv_obj_set_style_bg_color(redzone, lv_color_hex(VROD_RED), 0);
-    lv_obj_set_style_bg_opa(redzone, LV_OPA_40, 0);
-    lv_obj_set_style_radius(redzone, 3, 0);
-    lv_obj_align(redzone, LV_ALIGN_TOP_MID, 340 / 2 - 44 / 2, MAP_H + 200);
-
-    s_rpm_bar = lv_bar_create(scr);
-    lv_obj_set_size(s_rpm_bar, 340, 14);
-    lv_obj_align(s_rpm_bar, LV_ALIGN_TOP_MID, 0, MAP_H + 200);
-    lv_bar_set_range(s_rpm_bar, 0, 100);
-    lv_obj_set_style_bg_color(s_rpm_bar, lv_color_hex(0x232A34), LV_PART_MAIN);
-    lv_obj_set_style_bg_opa(s_rpm_bar, LV_OPA_TRANSP, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(s_rpm_bar, lv_color_hex(VROD_ORANGE), LV_PART_INDICATOR);
-    lv_obj_set_style_radius(s_rpm_bar, 3, LV_PART_INDICATOR);
+    // Fuel arc hugging the bottom bezel - the same segmented E..F arc as the
+    // full gauge (concentric with the round display), for a consistent look.
+    s_fuel_arc = fuel_arc_create(scr);
+    lv_obj_align(s_fuel_arc, LV_ALIGN_BOTTOM_MID, 0, -8);
 
     return scr;
 }
@@ -358,10 +343,7 @@ void screen_map_commit(const vehicle_data_t *data, const settings_t *settings)
     lv_label_set_text_fmt(s_speed_v, "%d", units_speed_display(data->speed_mph, settings->units));
     lv_label_set_text(s_speed_u, units_speed_label(settings->units));
     lv_label_set_text_fmt(s_rpm_v, "%d", data->rpm);
-    lv_label_set_text_fmt(s_fuel_v, "%d%%", data->fuel_level * 100 / 6);
-
-    int rpm_pct = (int)((uint32_t)data->rpm * 100u / RPM_MAX);
-    lv_bar_set_value(s_rpm_bar, rpm_pct > 100 ? 100 : rpm_pct, LV_ANIM_OFF);
+    fuel_arc_set_level(s_fuel_arc, data->fuel_level);
 
     warning_lights_update(s_warn, data);
 }
