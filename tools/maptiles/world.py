@@ -72,11 +72,17 @@ def cell_lon_name(lon_idx):
 
 
 def source_bbox(pbf):
-    """The data bounding box of a pbf via `osmium fileinfo -e -j`."""
+    """The data bounding box of a pbf. Prefer the PBF header box (instant - it is
+    stored in the OSMHeader); only fall back to a full `-e` scan if the header has
+    none (a 32 GB continent extract takes hours to scan, seconds to read the box)."""
+    out = subprocess.run(["osmium", "fileinfo", "-j", pbf],
+                         check=True, capture_output=True, text=True).stdout
+    boxes = json.loads(out).get("header", {}).get("boxes") or []
+    if boxes and len(boxes[0]) == 4:
+        return tuple(boxes[0])  # [minlon, minlat, maxlon, maxlat]
     out = subprocess.run(["osmium", "fileinfo", "-e", "-j", pbf],
                          check=True, capture_output=True, text=True).stdout
-    bb = json.loads(out)["data"]["bbox"]  # [minlon, minlat, maxlon, maxlat]
-    return tuple(bb)
+    return tuple(json.loads(out)["data"]["bbox"])
 
 
 def cells_in_bbox(minlon, minlat, maxlon, maxlat, cell_size_256):
