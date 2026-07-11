@@ -130,6 +130,10 @@ Files **deliberately excluded** from the metric:
   it can't reach the 100% branch bar the same way `phone/icon_cache.c` can't.
   `map/map_render.c` (rasteriser) and `map/screen_map.c` (LVGL) are verified in
   the simulator + on device.
+- `map/map_world.c` — the `world.hdr` manifest reader for the GPS-paged cell grid
+  (`tools/maptiles/world.py` writes it). Same story as `map_tile.c`: regression-
+  tested (`test_map_world`, compiled straight in) since it decodes untrusted SD
+  bytes, but it allocates the present-cell set, so it is out of the branch gate.
 
 This list is on purpose. Adding a widget creation path to it would be a
 red flag — write a test for the *helper* the widget uses, not for the

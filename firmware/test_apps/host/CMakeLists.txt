@@ -160,3 +160,10 @@ add_executable(test_map_tile tests/test_map_tile.c tests/test_runner.c
 target_include_directories(test_map_tile PRIVATE ${MAIN_DIR}/map external/unity)
 target_link_libraries(test_map_tile PRIVATE unity m)
 add_test(NAME test_map_tile COMMAND test_map_tile)
+
+# world.hdr manifest reader: also allocates, so regression-only (not in the gate).
+add_executable(test_map_world tests/test_map_world.c tests/test_runner.c
+    ${MAIN_DIR}/map/map_world.c)
+target_include_directories(test_map_world PRIVATE ${MAIN_DIR}/map external/unity)
+target_link_libraries(test_map_world PRIVATE unity)
+add_test(NAME test_map_world COMMAND test_map_world)

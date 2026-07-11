@@ -1,6 +1,8 @@
 # Worldwide map: GPS-paged cell tiles
 
-> **Status: Stage 1 done; index halved as a down-payment.** Goal: put a whole
+> **Status: Stages 1-3 done (seam, cell math, format + build tooling); index
+> halved as a down-payment.** Next: Stage 4 cell manager (`map_source_open_cells`)
+> + a Baltics bake to a card, then the Europe bake. Goal: put a whole
 > continent (Europe first, world later) on the SD card and keep only the tiles
 > near the rider's GPS resident, paged in and out as you move. Builds directly on
 > the streaming SD loader (task #60) and the SD-backed real map (task #57 / PR #34).
@@ -72,16 +74,24 @@ bookkeeping; noted as the alternative, not v1.
 
 ```
 /sdcard/map/
-  world.hdr            # manifest: zoom, cell size (deg), present-cell set, bbox
-  N59/E024.zmt         # one ZMTA archive per 1° cell, subdir per lat degree
+  world.hdr            # manifest: zoom, cell size, present-cell set, bbox
+  N59/E024.zmt         # one ZMTA archive per cell; dir = lat cell, file = lon cell
   N59/E025.zmt         # (subdir keeps any one directory small for FAT)
+  S34/W001.zmt         # letter = hemisphere of the cell INDEX (not the degree)
   ...
 ```
 
-- `world.hdr` — little-endian: magic `ZMTW`, version, zoom (u16), cell-size in
-  1/256° (u16), lat/lon bbox, then a **present-cell set** (sorted `(lat16,lon16)`
-  pairs, a few KB for Europe) so the loader knows coverage without statting the
-  card. This is the only always-resident metadata (~KB).
+- **Path from a cell index** (the runtime rebuilds it, no directory scan):
+  `<dir>/<'N'|'S'><|lat|>/<'E'|'W'><|lon|>.zmt`, where `(lat,lon)` is the integer
+  cell index (SW corner = `idx * cell_size` in 1/256°, per `map_cells.c`). At the
+  1° default the index equals the degree, so `N59/E024` reads naturally; at 0.5°
+  it is a half-degree index (`N118/E049`). The sign letter carries S/W.
+- `world.hdr` — little-endian (see `map/map_world.h` for the authoritative byte
+  layout): magic `ZMTW`, version, zoom (u16), cell-size in 1/256° (u16), cell-index
+  bbox, then a **present-cell set** (sorted `(lat16,lon16)` pairs, a few KB for
+  Europe) so the loader knows coverage without statting the card. This is the only
+  always-resident metadata (~KB). Written by `world_hdr.py`, read by
+  `map_world_parse`.
 - Each `.zmt` is a normal ZMTA (same bytes `pack.py` writes today), covering one
   cell's tiles. `u32` offsets are fine — a 1° cell is at most tens of MB.
 - Cell size is a build parameter. **1° default** (≈ up to ~180 tiles/side at z16;
@@ -180,8 +190,15 @@ GeoJSON explosion. Never stage the whole continent as GeoJSON on the Mac.
    16-B streaming index (`map_sidx_t`) also landed here.
 2. **`map_cells.c` pure logic** — cell math + working-set/LRU/prefetch, host-tested
    to 100 %. No SD yet.
-3. **`world.py` build + `world.hdr` format** — bake a small multi-cell area (the
-   three Baltics) to a card dir; round-trip test; preview in the sim.
+3. **`world.py` build + `world.hdr` format** — DONE (July 2026, format + tooling).
+   `world.hdr` layout defined and implemented both ways: the C reader
+   (`map/map_world.c`, `map_world_parse`/`covers`/`load_file`) and the Python
+   writer (`tools/maptiles/world_hdr.py`), with a byte-level round-trip regression
+   (`test_map_world`, out of the branch gate like `map_tile`) and a writer/reader
+   parity check. `tools/maptiles/world.py` bakes an OSM extract into the cell grid
+   (`<lat>/<lon>.zmt` + `world.hdr`) with one filter pass + batched single-pass
+   multi-extract. Still to run: an actual Baltics bake to a card dir + sim preview
+   (folds into Stage 4 bring-up, which needs the cell manager to read the tree).
 4. **Cell manager wiring** — `map_source_open_cells`, loader task, prefetch,
    `max_files` bump; sim + device bring-up on the Baltics tree.
 5. **Europe bake** — run the full pipeline to the 58 GB card; record real

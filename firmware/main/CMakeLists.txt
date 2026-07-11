@@ -98,6 +98,7 @@ if(CONFIG_VROD_MAP_DEMO OR CONFIG_VROD_MAP_SD)
         map/map_render.c
         map/map_source.c
         map/map_cells.c
+        map/map_world.c
         display/screen_map.c)
 endif()
 if(CONFIG_VROD_MAP_DEMO)
