@@ -66,9 +66,35 @@ UART bytes ─▶ nmea_framer_push ─▶ nmea_parse_rmc ─▶ gps_source_set
 5. To sanity-check the stream without the UI: temporarily log in
    `gps_uart_task` (`ESP_LOGI` the parsed `rmc.lat_e7/lon_e7/valid`).
 
+## Bring-up findings (July 2026)
+
+First on-hardware bring-up on the NEO-6M, then a NEO-M8 + external antenna:
+
+- **Wiring/UART confirmed first.** With the module's TX on GPIO 21, UART1 sees a
+  clean 9600-baud NMEA stream (~6 sentences/s: GGA/GSV/GSA/RMC/VTG/GLL) — so
+  "no fix" is never a wiring problem; it's reception.
+- **The onboard patch is desensed by the board.** Sat-in-view sentences (`GSV`)
+  showed only 2-3 GPS satellites at **SNR 6-18 dB-Hz** (a fix needs ≥4 at ~30+),
+  and it never locked even on a balcony. The ESP32-P4 + C6 radio + MIPI display
+  radiate right next to the antenna. **The fix is an external active antenna**
+  (built-in LNA amplifies the sky signal before the board noise gets to it) — or
+  at minimum move the patch well away from the board, flat/face-up, open sky.
+  With an external active antenna the same spot went to **6-7 sats, solid fix**.
+- **The map is dual-source with visible status.** `screen_map` shows a corner
+  **nav-source badge** — `SAT n` (module, red<4 / amber 4-5 / green≥6) or `BT`
+  (phone GPS) depending on which is currently driving — and a **blue dot** in the
+  readout strip when a phone is connected over BLE. Fusion: module preferred
+  while its fix is < `GPS_MODULE_STALE_MS` (3 s) old, else the phone if < 5 s old.
+- **Heading needs motion.** Course-over-ground (module) and Android bearing
+  (phone) both only exist while moving, so a stationary map stays north-up from
+  either source; it rotates once under way.
+- **Companion feed cadence.** The phone `LocationSender` dropped its 2 m
+  displacement filter to 0 so the fallback stays fresh at ~1 Hz even at a crawl
+  (a distance filter used to leave it stale and slow the `SAT ⇄ BT` handover).
+
 ## Antenna placement (Phase 6)
 
-The one real constraint is **sky view**. The round cluster is metal-adjacent;
-the patch antenna wants to face up/out. This is an enclosure decision for
-Phase 6 — the ceramic patch can sit on top of the module or move to a small
-external puck if the case blocks it.
+The one real constraint is **sky view + distance from the board** (see the
+desense finding above). The round cluster is metal-adjacent and RF-noisy; plan
+for an **external active antenna** on the enclosure with a clear up/out view, not
+the bare patch buried next to the electronics.
