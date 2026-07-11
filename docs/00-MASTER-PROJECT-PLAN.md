@@ -562,7 +562,22 @@ See `02-PHASE2.5-OFFBIKE-PLAN.md` for the full plan + ordering.
     - Out of scope for the link-bring-up bisect; flagged here so it
       isn't forgotten once BLE is fully wired in. See
       `firmware/docs/ble-bringup-bisect.md` for the build-blocker history.
-- Vector map rendering (future)
+- **Moving vector map + onboard GPS** — largely built (July 2026; PR #35 on
+  `feat/gps-module`). A compact map view reached by double-tapping off the
+  gauge: SD-streamed vector tiles, heading-up rotation, and the real
+  gear/RPM/temp/speed/turn strip below. Position is **dual-source** — an
+  optional onboard NEO-6M/M8N GPS module (`CONFIG_VROD_GPS_UART`, off by
+  default; needs an external active antenna, the bare patch is desensed by the
+  board — see `firmware/docs/gps-module.md`) preferred, the phone's GPS over
+  BLE as fallback; a corner `SAT n` / `BT` badge shows which source is driving,
+  plus a blue phone-link dot. Render is PPA-accelerated (LVGL) with a
+  fixed-point rotozoom at ~30 fps.
+  - **Status:** on-device bring-up complete; **on-bike verification is Ride 3**
+    (task #58, `firmware/docs/ride-3-plan.md`).
+  - **Future — whole-continent coverage:** a single `.zmta` caps at roughly a
+    country (u32 archive offsets + the PSRAM-resident index), so Europe/world
+    needs **GPS-paged per-cell tiles** — see `firmware/docs/map-worldwide-plan.md`
+    (Stage 1, the source seam + a 16-B compact index, already landed).
 - Voice commands via P4's onboard mics (future)
 
 ---

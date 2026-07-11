@@ -124,6 +124,18 @@ harley/
   Remaining: the on-bike **GPS calibration ride** to lock the speed divisor
   (Ride 2, `firmware/docs/ride-2-calibration-plan.md`); **Stage 4 TX + IM
   replay** (gated on the 2N2907A PNP); and DTC read/clear (needs TX).
+- ⏳ **Moving map + onboard GPS** — built this cycle (July 2026, PR #35 on
+  `feat/gps-module`). A compact map view reached by double-tapping off the
+  gauge: SD-streamed vector tiles, heading-up rotation, and the real
+  gear/RPM/speed/temp/turn strip below. Position is **dual-source** — an
+  optional onboard NEO-6M/M8N GPS module (opt-in, needs an external active
+  antenna) preferred, the phone's GPS over BLE the fallback; a corner
+  `SAT n` / `BT` badge shows which is driving, plus a blue phone-link dot.
+  PPA-accelerated render + fixed-point rotozoom at ~30 fps. On-device bring-up
+  is done; **on-bike verification is Ride 3** (`firmware/docs/ride-3-plan.md`).
+  Whole-continent coverage needs the GPS-paged cell tiles in
+  `firmware/docs/map-worldwide-plan.md` (Stage 1 already landed). See also
+  `firmware/docs/gps-module.md`.
 
 Phase 2 deliverable summary (as redesigned at the end of Phase 2.5,
 BMW-EfficientDynamics styling): working 800×800 round gauge running
