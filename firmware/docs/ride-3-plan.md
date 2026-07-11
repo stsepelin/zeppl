@@ -17,7 +17,7 @@ Carried over from `ride-1-findings.md` / `ride-2-findings.md`, still open:
 | **Neutral** | Confirmed NOT on the bus (`48 3B 40` disproven); is it truly discrete? | Part A1 test 6: hold N vs 1st, look for any *steady* frame |
 | **Oil pressure lamp** | On the bus or discrete (pin 9)? Untestable so far (engine-off capture was empty) | Part A0 test 2: key-on engine-OFF (lamp on) → start → diff |
 | **Immobiliser / security** | The key-on handshake frames | Part A0 test 1: key off→on, capture the settle |
-| **Fuel level + low-fuel** | Level not seen on bus; low-fuel bit not yet decoded | Part C: decode from the **Ride 2 low-tank window** (lamp was on pre-fuel-stop); Part A8 for the level candidate |
+| **Fuel level + low-fuel** | RESOLVED — not on the bus (Ride 2 low-vs-full bracket, `ride-2-findings.md`). Discrete sender tap (Phase 6). | done; no Ride 3 capture needed |
 | **Speed-cal wizard** (Ride 2 action #2) | Never completed on Ride 2 (sampled ~3 s); fixed in PR #28 | Part B: re-run the wizard, write the divisor to NVS, record divisor/RMS/n |
 | **Lean / bank angle** | Any TSSM frame track lean? | Part A1 test 7 (off the stand, rock L/R) |
 | **Turn signals** | Re-confirm `48 DA 40 39` bit1=L / bit0=R | Part A1 test 3 |
@@ -83,9 +83,8 @@ ambiguous, kill the engine, wait, and repeat the whole OFF→ON→start once.
    discrete pin-10 tap for Phase 6).
 7. **Lean**: off the stand, rock the bike L/R past ~10-20°, a few times each side.
    Any `…40` (TSSM) byte that tracks lean?
-8. **Fuel level** (best-effort): hard stationary, note candidates `A8 83 61 12` /
-   anything level-shaped. Low-fuel itself is decoded from the **existing Ride 2
-   low-tank window** (Part C), not here.
+(Fuel level was on this list but is **resolved — not on the bus** (Part C); no
+fuel test on Ride 3.)
 
 ## Part B — the ride (GPS map + speed/gear)
 
@@ -116,18 +115,15 @@ a radar sign).
   and sample count for the write-up; expect ~188. This is a hands-free rerun, so also
   possible on a calm parking-lot loop rather than the open road.
 
-## Part C — low-fuel (mine Ride 2 first)
+## Part C — low-fuel: RESOLVED (not on the bus)
 
-- **Low-fuel lamp — already recorded on Ride 2.** Ride 2 bracketed a fuel stop, so
-  the leg **before** the stop ran on a low tank with the low-fuel lamp on; that
-  window is in the raw Ride 2 sniffer log. **Decode it from there first**: slice the
-  Ride 2 log at the pre-fuel-stop timestamp and diff the low-tank window against a
-  full-tank baseline for the bit that holds while the lamp is on. (Also watch whether
-  the fuel-gauge frame `A8 83 61 12` even appears — it's likely IM-originated and may
-  vanish with the stock IM later.)
-- **Only if that's inconclusive** (lamp window too short, or the bit is ambiguous),
-  capture a fresh low-fuel stretch on Ride 3: ride the tank down until the lamp lights
-  and note the clock.
+Done before Ride 3 by mining the Ride 2 fuel-stop bracket (leg 2a low tank vs leg
+2b full): **no J1850 frame changes between low and full** — fuel level and the
+low-fuel lamp are not broadcast; the only fuel traffic is the `A8 83 10`
+consumption accumulator. Full method + evidence in `ride-2-findings.md`
+("Fuel level / low-fuel — resolved"). So the fuel gauge + low-fuel telltale become
+a **discrete fuel-sender tap** (Phase 6), not a decode. **No Ride 3 fuel capture
+is needed.**
 
 ## Post-ride analysis
 
@@ -151,5 +147,5 @@ a radar sign).
 - **Speed calibration recorded** (closes Ride 2 action #2): the wizard-solved divisor
   written to NVS, plus divisor/RMS/sample-count in `ride-3-findings.md`; if it lands
   off 188, update `SETTINGS_SPEED_DIVISOR_DEFAULT` / `J1850_SPEED_DIVISOR`.
-- **Low-fuel**: the bit located from the Ride 2 low-tank window (or a fresh Ride 3
-  capture if that was inconclusive), decoded in `j1850_parse.c` if it's on the bus.
+- **Low-fuel**: RESOLVED before the ride — not on the bus (`ride-2-findings.md`);
+  becomes a Phase 6 discrete fuel-sender tap, no decode.
