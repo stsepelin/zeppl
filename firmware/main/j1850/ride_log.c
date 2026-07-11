@@ -1,15 +1,12 @@
 #include "ride_log.h"
 #include "ride_log_format.h"
 
-#include "driver/sdmmc_host.h"
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "esp_vfs_fat.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/stream_buffer.h"
 #include "freertos/task.h"
-#include "sd_pwr_ctrl_by_on_chip_ldo.h"
-#include "sdmmc_cmd.h"
+#include "sd_mount.h"
 
 #include <dirent.h>
 #include <stdio.h>
@@ -25,18 +22,9 @@
 
 static const char *TAG = "ridelog";
 
-// Board microSD wiring (Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C): the card sits
-// on SDMMC slot 0 at the fixed IO_MUX pins CLK43/CMD44/D0-3=39..42 (4-bit),
-// powered from the P4's internal LDO channel 4. Slot 1 is the C6 radio's SDIO
-// link (see mount_card). These are fixed board constants, not user pins.
-#define MOUNT_POINT "/sdcard"
-#define SD_LDO_CHAN 4
-#define SD_PIN_CLK  43
-#define SD_PIN_CMD  44
-#define SD_PIN_D0   39
-#define SD_PIN_D1   40
-#define SD_PIN_D2   41
-#define SD_PIN_D3   42
+// The card mount (LDO + slot-0 attach to esp_hosted's controller) lives in the
+// shared storage/sd_mount.c, so the ride log and the SD map share one mount.
+#define MOUNT_POINT SD_MOUNT_POINT
 
 // One VPW line worst case is ~150 chars; round up with room for the newline.
 #define RL_LINE_MAX 176
@@ -53,8 +41,6 @@ static volatile ride_log_state_t s_state = RIDE_LOG_UNINIT;
 static volatile cmd_t            s_cmd;
 static StreamBufferHandle_t      s_stream;
 static FILE                     *s_file;
-static sdmmc_card_t             *s_card;
-static sd_pwr_ctrl_handle_t      s_pwr;
 
 static portMUX_TYPE     s_mux = portMUX_INITIALIZER_UNLOCKED;
 static ride_log_stats_t s_stats;  // mirror read by the bench UI, guarded by s_mux
@@ -66,20 +52,6 @@ static void set_state(ride_log_state_t st)
     s_stats.state = st;
     portEXIT_CRITICAL(&s_mux);
 }
-
-#if CONFIG_ESP_HOSTED_SDIO_HOST_INTERFACE
-// The mount reuses the controller esp_hosted already created (see mount_card);
-// these stubs replace the driver's init/deinit so it does not try to create a
-// second one. Workaround for esp-idf#16233.
-static esp_err_t sdmmc_host_init_stub(void)
-{
-    return ESP_OK;
-}
-static esp_err_t sdmmc_host_deinit_stub(void)
-{
-    return ESP_OK;
-}
-#endif
 
 // Boot-time durability check: log every persisted ride_NNN.log with its byte
 // size so a bench power-off test can be verified from the serial log, without
@@ -108,7 +80,7 @@ static void log_existing_sessions(void)
 
 int ride_log_purge(void)
 {
-    if (s_state == RIDE_LOG_RECORDING || !s_card)
+    if (s_state == RIDE_LOG_RECORDING || !sd_is_mounted())
         return -1;  // don't delete under an open file, or with no card
     DIR *d = opendir(MOUNT_POINT);
     if (!d)
@@ -173,54 +145,14 @@ static void ride_log_dump_all(void)
 
 static bool mount_card(void)
 {
-    if (s_card)
-        return true;
-
-    // The P4 feeds SD IO power from an on-chip LDO; bring it up before the host.
-    sd_pwr_ctrl_ldo_config_t ldo = {.ldo_chan_id = SD_LDO_CHAN};
-    if (!s_pwr && sd_pwr_ctrl_new_on_chip_ldo(&ldo, &s_pwr) != ESP_OK) {
-        ESP_LOGE(TAG, "SD LDO init failed");
+    if (sd_mount() != ESP_OK)
         return false;
+    // One-shot boot durability check, on the first successful mount.
+    static bool logged;
+    if (!logged) {
+        log_existing_sessions();
+        logged = true;
     }
-
-    // The P4 has ONE SD/MMC controller (SDMMC_LL_HOST_CTLR_NUMS == 1) shared by
-    // two slots: the C6 radio's SDIO link on slot 1 and this microSD on slot 0.
-    // esp_hosted creates and owns that controller very early at boot, and the
-    // IDF >= 6.0 driver refuses a second creation ("no available sd host
-    // controller"). Mounting on slot 0 with init/deinit stubbed makes the driver
-    // reuse the live controller and just attach slot 0, so the ride log and BLE
-    // coexist. Mirrors the esp_hosted host_sdcard_with_hosted example.
-    sdmmc_host_t host    = SDMMC_HOST_DEFAULT();
-    host.slot            = SDMMC_HOST_SLOT_0;
-    host.pwr_ctrl_handle = s_pwr;
-#if CONFIG_ESP_HOSTED_SDIO_HOST_INTERFACE
-    host.init   = sdmmc_host_init_stub;
-    host.deinit = sdmmc_host_deinit_stub;
-#endif
-
-    sdmmc_slot_config_t slot = SDMMC_SLOT_CONFIG_DEFAULT();
-    slot.width               = 4;
-    slot.clk                 = SD_PIN_CLK;
-    slot.cmd                 = SD_PIN_CMD;
-    slot.d0                  = SD_PIN_D0;
-    slot.d1                  = SD_PIN_D1;
-    slot.d2                  = SD_PIN_D2;
-    slot.d3                  = SD_PIN_D3;
-    slot.flags |= SDMMC_SLOT_FLAG_INTERNAL_PULLUP;
-
-    esp_vfs_fat_sdmmc_mount_config_t mcfg = {
-        .format_if_mount_failed = false,  // never reformat the owner's card
-        .max_files              = 4,
-        .allocation_unit_size   = 16 * 1024,
-    };
-    esp_err_t err = esp_vfs_fat_sdmmc_mount(MOUNT_POINT, &host, &slot, &mcfg, &s_card);
-    if (err != ESP_OK) {
-        ESP_LOGW(TAG, "SD mount failed (%s) - no card?", esp_err_to_name(err));
-        s_card = NULL;
-        return false;
-    }
-    ESP_LOGI(TAG, "SD mounted at %s", MOUNT_POINT);
-    log_existing_sessions();
     return true;
 }
 
@@ -304,7 +236,7 @@ static void do_stop(void)
         ESP_LOGI(TAG, "session closed (%lu frames, %lu dropped)", (unsigned long)s_stats.frames,
                  (unsigned long)s_stats.dropped);
     }
-    set_state(s_card ? RIDE_LOG_IDLE : RIDE_LOG_NO_CARD);
+    set_state(sd_is_mounted() ? RIDE_LOG_IDLE : RIDE_LOG_NO_CARD);
 }
 
 static void flush_task(void *arg)
@@ -353,7 +285,7 @@ void ride_log_init(void)
 #if CONFIG_VROD_RIDE_LOG_DUMP
     // Retrieval build: stream the stored logs out the console, then leave the
     // gauge running normally (recording still works if a REC is pressed).
-    if (s_card)
+    if (sd_is_mounted())
         ride_log_dump_all();
 #endif
     // Low priority: SD writes must yield to the sniffer, producer, and audio.

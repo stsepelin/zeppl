@@ -1,5 +1,4 @@
 #include "screen_map.h"
-#include "map_render.h"
 #include "esp_heap_caps.h"
 
 #include "fuel_arc.h"
@@ -51,7 +50,9 @@ static lv_obj_t      *s_fuel_arc;
 static lv_obj_t      *s_turn_l;
 static lv_obj_t      *s_turn_r;
 static lv_obj_t      *s_no_map;  // "off area" overlay, shown when position has no tiles
-static map_tileset_t *s_ts;
+static lv_obj_t      *s_sat;     // corner GPS satellite badge (module reception)
+static lv_obj_t      *s_bt;      // corner phone-link (BLE) badge
+static map_source_t  *s_src;
 
 // Double buffer: the map composites into the back buffer OFF the LVGL lock, then
 // the commit swaps the canvas to it under the lock.
@@ -72,6 +73,7 @@ static uint32_t  s_cache_tx[CACHE_N], s_cache_ty[CACHE_N];
 static bool      s_cache_valid[CACHE_N];
 static uint32_t  s_cache_lru[CACHE_N];
 static uint32_t  s_lru_clock;
+static uint16_t *s_bg_tile;  // background-filled fallback when a tile alloc fails
 
 // Return the cached bitmap for tile (tx,ty), rasterising it on a miss (evicting
 // the least-recently-used slot). Only misses do CPU work; hits are free.
@@ -92,22 +94,19 @@ static const uint16_t *cache_get(uint32_t tx, uint32_t ty)
         if (s_cache_lru[i] < s_cache_lru[victim])
             victim = i;
     }
-    if (!s_cache_buf[victim])
+    if (!s_cache_buf[victim]) {
         s_cache_buf[victim] =
             heap_caps_malloc((size_t)TILE_PX * TILE_PX * sizeof(uint16_t), MALLOC_CAP_SPIRAM);
-    if (s_ts->fp) {
-        // Streaming: read + parse this one tile off SD, rasterise, free. Only
-        // the cache miss touches the card; hits are pure blits.
-        map_tile_t tile;
-        if (map_tileset_read_tile(s_ts, tx, ty, &tile)) {
-            map_render_tile_data(s_cache_buf[victim], TILE_PX, &tile);
-            map_tile_free(&tile);
-        } else {
-            map_render_tile_data(s_cache_buf[victim], TILE_PX, NULL);  // gap / off-area
-        }
-    } else {
-        map_render_tile(s_cache_buf[victim], TILE_PX, s_ts, tx, ty);
+        // PSRAM momentarily exhausted (e.g. the alloc burst when the first fix
+        // jumps the view into a fresh area): paint clean background here via the
+        // shared fallback tile (not a NULL write, not an uninitialised-scratch
+        // rainbow band) and retry next frame once memory frees.
+        if (!s_cache_buf[victim])
+            return s_bg_tile;
     }
+    // The source hides in-memory vs streaming-off-SD; only a cache miss does the
+    // work (a read + rasterise), hits are pure blits.
+    map_source_render_tile(s_src, s_cache_buf[victim], TILE_PX, tx, ty);
     s_cache_tx[victim]    = tx;
     s_cache_ty[victim]    = ty;
     s_cache_valid[victim] = true;
@@ -270,11 +269,11 @@ static lv_obj_t *edge_chip(lv_obj_t *p, const lv_font_t *font, uint32_t color, f
     return chip(p, font, color, x, y, buf, dsc, ang - 90.0f, cap);
 }
 
-lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
+lv_obj_t *screen_map_create(map_source_t *src, int w, int h)
 {
     (void)w;
     (void)h;
-    s_ts         = ts;
+    s_src        = src;
     s_front      = 0;
     s_back_ready = -1;
     s_have_last  = false;
@@ -290,6 +289,18 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
         for (int p = 0; p < SCR_W * MAP_H; p++)
             s_buf[i][p] = 0x1082;  // MAP_BG565
     }
+    // Shared background tile: the fallback cache_get returns when a tile buffer
+    // can't be allocated, so a momentary PSRAM shortage paints background rather
+    // than uninitialised noise. Allocated once, read-only after.
+    // Shared background tile the cache falls back to when a tile buffer can't be
+    // allocated: a momentary PSRAM shortage then paints clean background rather
+    // than an uninitialised-scratch rainbow band or a NULL write. Tiles + the
+    // rotation scratch stay lazily allocated (only the ~16 visible tiles, not the
+    // full cache) so the map keeps a healthy PSRAM headroom to render in.
+    s_bg_tile = heap_caps_malloc((size_t)TILE_PX * TILE_PX * sizeof(uint16_t), MALLOC_CAP_SPIRAM);
+    if (s_bg_tile)
+        for (int p = 0; p < TILE_PX * TILE_PX; p++)
+            s_bg_tile[p] = 0x1082;  // MAP_BG565
     s_canvas = lv_canvas_create(scr);
     lv_canvas_set_buffer(s_canvas, s_buf[s_front], SCR_W, MAP_H, LV_COLOR_FORMAT_RGB565);
     lv_obj_align(s_canvas, LV_ALIGN_TOP_MID, 0, 0);
@@ -318,6 +329,33 @@ lv_obj_t *screen_map_create(map_tileset_t *ts, int w, int h)
     lv_label_set_text(s_no_map, "NO MAP\nFOR THIS AREA");
     lv_obj_align(s_no_map, LV_ALIGN_TOP_MID, 0, MAP_H / 2 - 90);
     lv_obj_add_flag(s_no_map, LV_OBJ_FLAG_HIDDEN);
+
+    // GPS satellite badge, bottom-left of the map (near the chord, inside the
+    // bezel). Hidden until a module reports; a rounded dark pill keeps it legible
+    // over the map.
+    s_sat = lv_label_create(scr);
+    lv_obj_set_style_text_font(s_sat, &jbm_bold_26, 0);
+    lv_obj_set_style_text_color(s_sat, lv_color_hex(VROD_TEXT), 0);
+    lv_obj_set_style_bg_color(s_sat, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(s_sat, LV_OPA_70, 0);
+    lv_obj_set_style_pad_hor(s_sat, 10, 0);
+    lv_obj_set_style_pad_ver(s_sat, 4, 0);
+    lv_obj_set_style_radius(s_sat, 12, 0);
+    lv_label_set_text(s_sat, "SAT --");
+    lv_obj_align(s_sat, LV_ALIGN_TOP_LEFT, 16, MAP_H - 46);  // bottom-left, inside the bezel
+    lv_obj_add_flag(s_sat, LV_OBJ_FLAG_HIDDEN);
+
+    // Phone-link dot in the readout strip (between fuel and temp): a small blue
+    // disc shown while a phone is connected over BLE. Hidden until told.
+    s_bt = lv_obj_create(scr);
+    lv_obj_remove_style_all(s_bt);
+    lv_obj_set_size(s_bt, 18, 18);
+    lv_obj_set_style_radius(s_bt, LV_RADIUS_CIRCLE, 0);
+    lv_obj_set_style_bg_color(s_bt, lv_color_hex(VROD_BLUE_HIGH_BEAM), 0);
+    lv_obj_set_style_bg_opa(s_bt, LV_OPA_COVER, 0);
+    lv_obj_align(s_bt, LV_ALIGN_BOTTOM_MID, 170,
+                 -63);  // mirrors the fuel pump icon (E end) on the F side
+    lv_obj_add_flag(s_bt, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_t *div = lv_obj_create(scr);
     lv_obj_remove_style_all(div);
@@ -395,8 +433,10 @@ static void composite_tiles(uint16_t *dst, int dw, int dh, double cx, double cy,
     for (int ty = minty; ty <= maxty; ty++) {
         for (int tx = mintx; tx <= maxtx; tx++) {
             const uint16_t *tbuf = cache_get((uint32_t)tx, (uint32_t)ty);
-            int             ox   = (int)lrint(dw / 2.0 + ((double)tx - cx) * ppt);
-            int             oy   = (int)lrint(dh / 2.0 + ((double)ty - cy) * ppt);
+            if (!tbuf)
+                continue;  // tile buffer alloc failed this frame; leave background
+            int ox = (int)lrint(dw / 2.0 + ((double)tx - cx) * ppt);
+            int oy = (int)lrint(dh / 2.0 + ((double)ty - cy) * ppt);
             blit_tile(dst, dw, dh, tbuf, ox, oy);
         }
     }
@@ -405,21 +445,31 @@ static void composite_tiles(uint16_t *dst, int dw, int dh, double cx, double cy,
 // Rotated resample of the square scratch into the canvas so `heading_deg` (0 =
 // north, clockwise) points up: an ahead-in-travel point lands above the marker.
 // Nearest-neighbour; out-of-scratch pixels fall back to background.
+//
+// Fixed-point (Q16) rotozoom: cos/sin are computed once, then each source coord
+// advances by a constant per output pixel - integer add + shift, no per-pixel
+// float. The P4 has no double FPU, so the old per-pixel double math (2 muls +
+// lrint x each of 361k pixels) was what made the rotation choppy.
+#define ROT_Q 16
 static void rotate_blit(uint16_t *dst, const uint16_t *src, double heading_deg)
 {
-    double a  = heading_deg * M_PI / 180.0;
-    double ca = cos(a), sa = sin(a);
-    double dcx = SCR_W / 2.0, dcy = MAP_H / 2.0;
-    double sc = SCRATCH_SZ / 2.0;
+    double        a   = heading_deg * M_PI / 180.0;
+    int32_t       ca  = (int32_t)lrint(cos(a) * (1 << ROT_Q));
+    int32_t       sa  = (int32_t)lrint(sin(a) * (1 << ROT_Q));
+    const int32_t dcx = SCR_W / 2, dcy = MAP_H / 2, sc = SCRATCH_SZ / 2;
+    const int32_t bias = 1 << (ROT_Q - 1);  // +0.5 so the >>Q floor rounds to nearest
     for (int y = 0; y < MAP_H; y++) {
-        double ry = y - dcy;
+        int32_t   ry   = y - dcy;
+        int32_t   sx   = (sc << ROT_Q) - dcx * ca - ry * sa + bias;
+        int32_t   sy   = (sc << ROT_Q) - dcx * sa + ry * ca + bias;
+        uint16_t *drow = &dst[y * SCR_W];
         for (int x = 0; x < SCR_W; x++) {
-            double rx          = x - dcx;
-            int    sx          = (int)lrint(sc + rx * ca - ry * sa);
-            int    sy          = (int)lrint(sc + rx * sa + ry * ca);
-            dst[y * SCR_W + x] = ((unsigned)sx < SCRATCH_SZ && (unsigned)sy < SCRATCH_SZ)
-                                     ? src[sy * SCRATCH_SZ + sx]
-                                     : 0x1082;  // MAP_BG565
+            int32_t ix = sx >> ROT_Q, iy = sy >> ROT_Q;
+            drow[x] = ((uint32_t)ix < SCRATCH_SZ && (uint32_t)iy < SCRATCH_SZ)
+                          ? src[iy * SCRATCH_SZ + ix]
+                          : 0x1082;  // MAP_BG565
+            sx += ca;
+            sy += sa;
         }
     }
 }
@@ -446,7 +496,7 @@ bool screen_map_render(double center_tx, double center_ty, double ppt, double he
                 d -= 360.0;
             while (d < -180.0)
                 d += 360.0;
-            s_render_heading += 0.14 * d;  // ~converges in ~0.5 s at 30 FPS
+            s_render_heading += 0.08 * d;  // finer per-frame step at ~30 FPS -> smoother glide
             if (s_render_heading < 0.0)
                 s_render_heading += 360.0;
             else if (s_render_heading >= 360.0)
@@ -500,6 +550,43 @@ void screen_map_set_no_coverage(bool off_area)
         lv_obj_remove_flag(s_no_map, LV_OBJ_FLAG_HIDDEN);
     else
         lv_obj_add_flag(s_no_map, LV_OBJ_FLAG_HIDDEN);
+}
+
+void screen_map_set_nav_source(map_nav_source_t src, int sats, bool fix)
+{
+    static int last_src = -1, last_sats = -2, last_fix = -1;
+    if (last_src == (int)src && last_sats == sats && last_fix == (int)fix)
+        return;
+    last_src  = (int)src;
+    last_sats = sats;
+    last_fix  = (int)fix;
+
+    lv_obj_remove_flag(s_sat, LV_OBJ_FLAG_HIDDEN);
+    uint32_t c;
+    if (src == MAP_NAV_PHONE) {
+        lv_label_set_text(s_sat, "BT");
+        c = VROD_BLUE_HIGH_BEAM;
+    } else if (src == MAP_NAV_MODULE) {
+        // <4 can't fix (red), 4-5 marginal (amber), >=6 / any fix good (green).
+        lv_label_set_text_fmt(s_sat, "SAT %d", sats);
+        c = (fix || sats >= 6) ? VROD_GREEN_SIGNAL : (sats >= 4) ? VROD_ORANGE : VROD_RED;
+    } else {
+        lv_label_set_text(s_sat, "no fix");
+        c = VROD_TEXT_DIM;
+    }
+    lv_obj_set_style_text_color(s_sat, lv_color_hex(c), 0);
+}
+
+void screen_map_set_phone_link(bool connected)
+{
+    static int last = -1;
+    if (last == (int)connected)
+        return;
+    last = (int)connected;
+    if (connected)
+        lv_obj_remove_flag(s_bt, LV_OBJ_FLAG_HIDDEN);
+    else
+        lv_obj_add_flag(s_bt, LV_OBJ_FLAG_HIDDEN);
 }
 
 void screen_map_commit(const vehicle_data_t *data, const settings_t *settings)

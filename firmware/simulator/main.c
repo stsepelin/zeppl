@@ -21,6 +21,7 @@
 #include "phone_data.h"
 #include "test_bridge.h"
 #include "emoji_font.h"
+#include "map_source.h"
 #include "map_tile.h"
 #include "screen_map.h"
 
@@ -323,6 +324,7 @@ static vehicle_data_t sim_map_vd(int mph)
 #define DEMO_MAX_PTS 1024
 static lv_obj_t      *s_demo_map;
 static map_tileset_t *s_demo_ts;
+static map_source_t  *s_demo_src;
 static double         s_demo_lat[DEMO_MAX_PTS], s_demo_lon[DEMO_MAX_PTS];
 static int            s_demo_npts;
 static double         s_demo_pos;
@@ -351,7 +353,8 @@ static void sim_demo_map_build(void)
         }
         fclose(tf);
     }
-    s_demo_map = screen_map_create(s_demo_ts, DISPLAY_W, DISPLAY_H);
+    s_demo_src = map_source_from_tileset(s_demo_ts, true);
+    s_demo_map = screen_map_create(s_demo_src, DISPLAY_W, DISPLAY_H);
     ui_manager_set_map_screen(s_demo_map);
 }
 
@@ -465,7 +468,7 @@ int main(void)
         int    speed = getenv("VROD_MAP_SPEED") ? atoi(getenv("VROD_MAP_SPEED")) : 52;
         fprintf(stderr, "map: %d tiles z%d, center (%.3f,%.3f), ppt %.0f\n", ts->ntiles, ts->zoom,
                 ctx, cty, ppt);
-        lv_screen_load(screen_map_create(ts, DISPLAY_W, DISPLAY_H));
+        lv_screen_load(screen_map_create(map_source_from_tileset(ts, true), DISPLAY_W, DISPLAY_H));
 
         // Route animation: VROD_TRACK=<file> (lines "lat lon speed_mph") drives
         // the map centre. With VROD_TRACK_OUT set, each frame is dumped to

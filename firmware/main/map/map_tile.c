@@ -117,10 +117,14 @@ static void compute_bbox(map_tileset_t *ts)
 {
     if (ts->ntiles <= 0)
         return;
-    ts->min_tx = ts->max_tx = ts->tiles[0].tx;
-    ts->min_ty = ts->max_ty = ts->tiles[0].ty;
+    // Streaming sets keep positions in the compact sidx; whole-loaded sets in
+    // the parsed tiles[].
+    const map_sidx_t *sidx = ts->sidx;
+    ts->min_tx = ts->max_tx = sidx ? sidx[0].tx : ts->tiles[0].tx;
+    ts->min_ty = ts->max_ty = sidx ? sidx[0].ty : ts->tiles[0].ty;
     for (int i = 1; i < ts->ntiles; i++) {
-        uint32_t tx = ts->tiles[i].tx, ty = ts->tiles[i].ty;
+        uint32_t tx = sidx ? sidx[i].tx : ts->tiles[i].tx;
+        uint32_t ty = sidx ? sidx[i].ty : ts->tiles[i].ty;
         if (tx < ts->min_tx)
             ts->min_tx = tx;
         if (tx > ts->max_tx)
@@ -152,12 +156,24 @@ static int tile_cmp(const void *a, const void *b)
     return 0;
 }
 
+static int sidx_cmp(const void *a, const void *b)
+{
+    const map_sidx_t *x = a, *y = b;
+    if (x->tx != y->tx)
+        return x->tx < y->tx ? -1 : 1;
+    if (x->ty != y->ty)
+        return x->ty < y->ty ? -1 : 1;
+    return 0;
+}
+
+// Binary search the streaming index (sidx) for (tx,ty). Streaming-only: the
+// caller is map_tileset_read_tile, which the whole-loaded path never reaches.
 static int find_index(const map_tileset_t *ts, uint32_t tx, uint32_t ty)
 {
     int lo = 0, hi = ts->ntiles - 1;
     while (lo <= hi) {
         int      mid = (lo + hi) / 2;
-        uint32_t mtx = ts->tiles[mid].tx, mty = ts->tiles[mid].ty;
+        uint32_t mtx = ts->sidx[mid].tx, mty = ts->sidx[mid].ty;
         if (mtx == tx && mty == ty)
             return mid;
         if (mtx < tx || (mtx == tx && mty < ty))
@@ -298,9 +314,14 @@ void map_tileset_free(map_tileset_t *ts)
 {
     if (!ts)
         return;
-    for (int i = 0; i < ts->ntiles; i++)
-        map_tile_free(&ts->tiles[i]);
-    free(ts->tiles);
+    // Whole-loaded sets own parsed tiles[]; streaming sets own only the compact
+    // sidx (geometry is transient, read + freed per map_tileset_read_tile).
+    if (ts->tiles) {
+        for (int i = 0; i < ts->ntiles; i++)
+            map_tile_free(&ts->tiles[i]);
+        free(ts->tiles);
+    }
+    free(ts->sidx);
     free(ts->owned);
     if (ts->fp)
         fclose((FILE *)ts->fp);
@@ -325,31 +346,34 @@ map_tileset_t *map_tileset_open_file(const char *path)
         fclose(f);
         return NULL;
     }
-    ts->zoom  = zoom;
-    ts->fp    = f;
-    ts->tiles = count ? calloc(count, sizeof(map_tile_t)) : NULL;
-    if (count && !ts->tiles) {
+    ts->zoom = zoom;
+    ts->fp   = f;
+    // Compact 16-B-per-tile index (not the 28-B parsed map_tile_t): a
+    // country-sized set costs ~half the RAM, and geometry is read off the card
+    // on demand anyway.
+    ts->sidx = count ? calloc(count, sizeof(map_sidx_t)) : NULL;
+    if (count && !ts->sidx) {
         fclose(f);
         free(ts);
         return NULL;
     }
 
-    // Read the whole index in one go (count * 16 bytes) - far fewer syscalls
-    // than per-entry reads for a big set. Only tx/ty/offset/len; no geometry.
+    // Read the whole on-disk index in one go (count * 16 bytes) - far fewer
+    // syscalls than per-entry reads for a big set. Only tx/ty/offset/len.
     size_t   idx_sz = (size_t)count * 16;
     uint8_t *idx    = idx_sz ? malloc(idx_sz) : NULL;
     if (idx && fread(idx, 1, idx_sz, f) == idx_sz) {
         for (uint32_t i = 0; i < count; i++) {
-            const uint8_t *e           = idx + (size_t)i * 16;
-            ts->tiles[ts->ntiles].tx   = rd32(e);
-            ts->tiles[ts->ntiles].ty   = rd32(e + 4);
-            ts->tiles[ts->ntiles].foff = rd32(e + 8);
-            ts->tiles[ts->ntiles].flen = rd32(e + 12);
+            const uint8_t *e          = idx + (size_t)i * 16;
+            ts->sidx[ts->ntiles].tx   = rd32(e);
+            ts->sidx[ts->ntiles].ty   = rd32(e + 4);
+            ts->sidx[ts->ntiles].foff = rd32(e + 8);
+            ts->sidx[ts->ntiles].flen = rd32(e + 12);
             ts->ntiles++;
         }
     }
     free(idx);
-    qsort(ts->tiles, ts->ntiles, sizeof(map_tile_t), tile_cmp);
+    qsort(ts->sidx, ts->ntiles, sizeof(map_sidx_t), sidx_cmp);
     compute_bbox(ts);
     return ts;
 }
@@ -361,7 +385,7 @@ bool map_tileset_read_tile(map_tileset_t *ts, uint32_t tx, uint32_t ty, map_tile
     int i = find_index(ts, tx, ty);
     if (i < 0)
         return false;
-    uint32_t off = ts->tiles[i].foff, len = ts->tiles[i].flen;
+    uint32_t off = ts->sidx[i].foff, len = ts->sidx[i].flen;
     uint8_t *buf = malloc(len ? len : 1);
     if (!buf)
         return false;

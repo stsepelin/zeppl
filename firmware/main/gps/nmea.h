@@ -38,3 +38,9 @@ typedef struct {
 // malformed fields; true otherwise (including a structurally-sound
 // no-fix sentence, which comes back zeroed with valid=false).
 bool nmea_parse_rmc(const char *sentence, nmea_rmc_t *out);
+
+// Parse the satellites-in-view count from a GSV sentence (any talker:
+// $GPGSV, $GLGSV, $GNGSV, ...). The count is field 3 and is constant
+// across a GSV set, so the caller just keeps the latest. Returns false
+// for non-GSV sentences, checksum mismatches, or a malformed count.
+bool nmea_parse_gsv(const char *sentence, uint8_t *sats_in_view);

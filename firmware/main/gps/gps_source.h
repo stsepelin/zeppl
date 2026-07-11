@@ -18,6 +18,7 @@ typedef struct {
     uint16_t speed_mph;    // ground speed, mph-canonical (see vehicle_data.h)
     uint16_t heading_deg;  // 0..359 from true north
     bool     fix_ok;       // false until first valid fix
+    uint8_t  sats_in_view;  // GSV satellites in view (module reception; 0 = none)
     uint32_t time_ms;      // monotonic since boot; NMEA time after Phase 5
 } gps_source_t;
 

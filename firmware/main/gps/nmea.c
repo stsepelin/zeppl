@@ -226,3 +226,51 @@ bool nmea_parse_rmc(const char *sentence, nmea_rmc_t *out)
     out->valid = true;
     return true;
 }
+
+// --- GSV -------------------------------------------------------------
+
+#define GSV_MIN_FIELDS 4  // type, total msgs, msg num, sats-in-view
+
+bool nmea_parse_gsv(const char *sentence, uint8_t *out)
+{
+    if (sentence[0] != '$')
+        return false;
+
+    uint8_t     sum = 0;
+    const char *p   = sentence + 1;
+    for (; *p != '\0' && *p != '*'; p++)
+        sum ^= (uint8_t)*p;
+    if (*p != '*')
+        return false;
+    uint8_t hi, lo;
+    if (!hex_nibble(p[1], &hi) || !hex_nibble(p[2], &lo) || p[3] != '\0')
+        return false;
+    if (sum != (uint8_t)((hi << 4) | lo))
+        return false;
+
+    field_t     f[GSV_MIN_FIELDS];
+    size_t      nf = 0;
+    const char *b  = sentence + 1;
+    while (nf < GSV_MIN_FIELDS) {
+        const char *e = b;
+        while (e < p && *e != ',')
+            e++;
+        f[nf].s   = b;
+        f[nf].len = (size_t)(e - b);
+        nf++;
+        if (e == p)
+            break;
+        b = e + 1;
+    }
+    if (nf < GSV_MIN_FIELDS)
+        return false;
+
+    if (f[0].len != 5 || memcmp(f[0].s + 2, "GSV", 3) != 0)
+        return false;
+
+    int64_t sv;
+    if (!parse_fixed(f[3].s, f[3].len, 0, &sv))
+        return false;
+    *out = (sv > 255) ? 255 : (uint8_t)sv;
+    return true;
+}

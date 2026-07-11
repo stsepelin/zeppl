@@ -273,6 +273,49 @@ static void test_parse_rejects_bad_speed_and_course(void)
     }
 }
 
+// --- GSV (satellites in view) ----------------------------------------
+
+static void test_parse_gsv_counts_satellites(void)
+{
+    char    s[128];
+    uint8_t sats = 0xFF;
+    // 11 in view, first of a 3-message set; any talker.
+    mk(s, sizeof(s), "GPGSV,3,1,11,05,10,20,30,07,15,50,25");
+    TEST_ASSERT_TRUE(nmea_parse_gsv(s, &sats));
+    TEST_ASSERT_EQUAL_UINT8(11, sats);
+
+    mk(s, sizeof(s), "GNGSV,1,1,00");  // cold: nothing in view
+    TEST_ASSERT_TRUE(nmea_parse_gsv(s, &sats));
+    TEST_ASSERT_EQUAL_UINT8(0, sats);
+
+    mk(s, sizeof(s), "GLGSV,1,1,300");  // absurd count clamps to 255
+    TEST_ASSERT_TRUE(nmea_parse_gsv(s, &sats));
+    TEST_ASSERT_EQUAL_UINT8(255, sats);
+}
+
+static void test_parse_gsv_rejects(void)
+{
+    char    s[128];
+    uint8_t sats;
+    TEST_ASSERT_FALSE(nmea_parse_gsv("GPGSV,1,1,05*4E", &sats));    // no '$'
+    TEST_ASSERT_FALSE(nmea_parse_gsv("$GPGSV,1,1,05", &sats));      // no '*'
+    TEST_ASSERT_FALSE(nmea_parse_gsv("$GPGSV,1,1,05*ZZ", &sats));   // bad hex hi
+    TEST_ASSERT_FALSE(nmea_parse_gsv("$GPGSV,1,1,05*4Z", &sats));   // good hi, bad lo
+    TEST_ASSERT_FALSE(nmea_parse_gsv("$GPGSV,1,1,05*4EX", &sats));  // trailing junk
+    TEST_ASSERT_FALSE(nmea_parse_gsv("$GPGSV,1,1,05*00", &sats));   // wrong checksum
+
+    mk(s, sizeof(s), "GPGSV,1,1");  // too few fields
+    TEST_ASSERT_FALSE(nmea_parse_gsv(s, &sats));
+    mk(s, sizeof(s), "XGSV,1,1,05");  // 4-char type
+    TEST_ASSERT_FALSE(nmea_parse_gsv(s, &sats));
+    mk(s, sizeof(s), "GPGGA,1,1,05");  // 5-char, not GSV
+    TEST_ASSERT_FALSE(nmea_parse_gsv(s, &sats));
+    mk(s, sizeof(s), "GPGSV,1,1,");  // empty count
+    TEST_ASSERT_FALSE(nmea_parse_gsv(s, &sats));
+    mk(s, sizeof(s), "GPGSV,1,1,1A");  // non-digit count
+    TEST_ASSERT_FALSE(nmea_parse_gsv(s, &sats));
+}
+
 void RunTests(void)
 {
     RUN_TEST(test_framer_assembles_sentence_and_strips_crlf);
@@ -293,4 +336,6 @@ void RunTests(void)
     RUN_TEST(test_parse_rejects_bad_time);
     RUN_TEST(test_parse_rejects_bad_coordinates);
     RUN_TEST(test_parse_rejects_bad_speed_and_course);
+    RUN_TEST(test_parse_gsv_counts_satellites);
+    RUN_TEST(test_parse_gsv_rejects);
 }

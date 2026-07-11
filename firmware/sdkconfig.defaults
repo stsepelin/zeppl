@@ -45,10 +45,19 @@ CONFIG_LV_DRAW_SW_DRAW_UNIT_CNT=1
 # we patch MAX_WIDTH up to 800 to match the panel width.
 CONFIG_LV_USE_GIF=y
 
-# PPA hardware accelerator was tried for the cooked-GIF blit but causes
-# horizontal banding on this BSP's DSI tear-avoid triple-buffer setup, so
-# it's off. Re-enable only with a known-good buffer alignment story.
-# CONFIG_LV_USE_PPA is not set
+# PPA hardware 2D accelerator for LVGL's fills / blends / image draws. The old
+# banding was purely an alignment bug: the PPA draw unit requires the LVGL
+# draw-buffer alignment to EQUAL the L2 cache line (128 on the P4, was 4). With
+# that set it's stable and accelerates the UI. (It doesn't touch the compact
+# map's own composite/rotate, which are raw buffer math, not LVGL draws.)
+CONFIG_LV_USE_PPA=y
+CONFIG_LV_DRAW_BUF_ALIGN=128
+
+# Core dump to flash: on a panic, save task / backtrace / registers to the
+# coredump partition (see partitions.csv) so a field crash survives the reboot
+# and reads back with `idf.py coredump-info`. Cheap insurance on a headless dash.
+CONFIG_ESP_COREDUMP_ENABLE_TO_FLASH=y
+CONFIG_ESP_COREDUMP_DATA_FORMAT_ELF=y
 
 # Pin pthreads to core 1 so any LVGL draw worker stays off the sim core.
 CONFIG_PTHREAD_DEFAULT_CORE_1=y

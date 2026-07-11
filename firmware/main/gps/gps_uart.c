@@ -22,6 +22,7 @@ static void gps_uart_task(void *arg)
     nmea_framer_t framer;
     nmea_framer_init(&framer);
     uint8_t chunk[GPS_READ_CHUNK];
+    uint8_t sats = 0;  // latest GSV satellites-in-view, carried onto each fix
 
     for (;;) {
         // 200 ms poll matches the 5 Hz M8N max fix rate; the NEO-6M's
@@ -30,15 +31,21 @@ static void gps_uart_task(void *arg)
         for (int i = 0; i < n; i++) {
             if (!nmea_framer_push(&framer, (char)chunk[i]))
                 continue;
+            uint8_t sv;
+            if (nmea_parse_gsv(framer.buf, &sv)) {
+                sats = sv;  // reception indicator, updated even before a fix
+                continue;
+            }
             nmea_rmc_t rmc;
             if (!nmea_parse_rmc(framer.buf, &rmc))
                 continue;
             gps_source_t g = {
-                .lat_e7      = rmc.lat_e7,
-                .lon_e7      = rmc.lon_e7,
-                .speed_mph   = rmc.speed_mph,
-                .heading_deg = rmc.heading_deg,
-                .fix_ok      = rmc.valid,
+                .lat_e7       = rmc.lat_e7,
+                .lon_e7       = rmc.lon_e7,
+                .speed_mph    = rmc.speed_mph,
+                .heading_deg  = rmc.heading_deg,
+                .fix_ok       = rmc.valid,
+                .sats_in_view = sats,
                 // Monotonic receive time (not the NMEA UTC-of-day), so the map
                 // fusion can age it out against esp_timer if the module goes silent.
                 .time_ms = (uint32_t)(esp_timer_get_time() / 1000),

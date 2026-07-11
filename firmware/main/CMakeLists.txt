@@ -74,6 +74,7 @@ idf_component_register(
         display/widgets
         display/fonts
         map
+        storage
     EMBED_FILES
         assets/boot.gif
         assets/emoji.ttf
@@ -95,6 +96,7 @@ if(CONFIG_VROD_MAP_DEMO OR CONFIG_VROD_MAP_SD)
     target_sources(${COMPONENT_LIB} PRIVATE
         map/map_tile.c
         map/map_render.c
+        map/map_source.c
         display/screen_map.c)
 endif()
 if(CONFIG_VROD_MAP_DEMO)
@@ -104,6 +106,10 @@ if(CONFIG_VROD_MAP_DEMO)
 endif()
 if(CONFIG_VROD_MAP_SD)
     target_sources(${COMPONENT_LIB} PRIVATE map/map_sd.c)
+endif()
+# Shared microSD mount, used by the ride log and the SD map (whichever is on).
+if(CONFIG_VROD_RIDE_LOG OR CONFIG_VROD_MAP_SD)
+    target_sources(${COMPONENT_LIB} PRIVATE storage/sd_mount.c)
 endif()
 
 # Synthetic driving-cycle simulator. Pulled in by default for bench

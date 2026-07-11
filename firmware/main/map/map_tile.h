@@ -26,10 +26,21 @@ typedef struct {
     uint32_t       foff, flen;  // byte offset + length in the archive (streaming mode)
 } map_tile_t;
 
+// Compact streaming index entry: a tile's grid position + its byte range in the
+// archive, nothing else. 16 B vs the full map_tile_t (~28 B on the P4), so a
+// country-sized index (hundreds of k tiles) costs roughly half the RAM. Used
+// only by the streaming loader (map_tileset_open_file); whole-loaded sets keep
+// parsed map_tile_t entries in `tiles` instead.
+typedef struct {
+    uint32_t tx, ty;
+    uint32_t foff, flen;
+} map_sidx_t;
+
 typedef struct {
     int         zoom;
     int         ntiles;
-    map_tile_t *tiles;
+    map_tile_t *tiles;  // parsed tiles (whole-loaded sets); NULL when streaming
+    map_sidx_t *sidx;   // compact index (streaming sets); NULL when whole-loaded
     uint8_t    *owned;  // backing archive buffer to free with the set, or NULL
     void       *fp;     // open FILE* when streaming from disk, else NULL
     // Tile-coordinate bounding box of the baked area (inclusive). Used to tell
