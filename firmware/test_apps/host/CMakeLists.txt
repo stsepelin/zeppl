@@ -51,6 +51,9 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/j1850/j1850_edge.c
     ${MAIN_DIR}/j1850/ride_log_format.c
     ${MAIN_DIR}/ble/ble_visibility.c
+    ${MAIN_DIR}/gps/nmea.c
+    ${MAIN_DIR}/gps/gps_source.c
+    ${MAIN_DIR}/map/map_cells.c
     external/freertos_stub/freertos_stub.c
     external/lvgl_tick_stub/lv_tick_stub.c
 )
@@ -63,6 +66,8 @@ target_include_directories(vrod_pure PUBLIC
     ${MAIN_DIR}/vehicle
     ${MAIN_DIR}/j1850
     ${MAIN_DIR}/ble
+    ${MAIN_DIR}/gps
+    ${MAIN_DIR}/map
     external/freertos_stub
     external/lvgl_tick_stub
 )
@@ -133,6 +138,9 @@ add_unit_test(test_j1850_driver)
 add_unit_test(test_j1850_edge)
 add_unit_test(test_ride_log_format)
 add_unit_test(test_ble_visibility)
+add_unit_test(test_nmea)
+add_unit_test(test_gps_source)
+add_unit_test(test_map_cells)
 
 # Widget cache-regression tests link against the LVGL stub.
 function(add_widget_test name)
@@ -152,3 +160,10 @@ add_executable(test_map_tile tests/test_map_tile.c tests/test_runner.c
 target_include_directories(test_map_tile PRIVATE ${MAIN_DIR}/map external/unity)
 target_link_libraries(test_map_tile PRIVATE unity m)
 add_test(NAME test_map_tile COMMAND test_map_tile)
+
+# world.hdr manifest reader: also allocates, so regression-only (not in the gate).
+add_executable(test_map_world tests/test_map_world.c tests/test_runner.c
+    ${MAIN_DIR}/map/map_world.c)
+target_include_directories(test_map_world PRIVATE ${MAIN_DIR}/map external/unity)
+target_link_libraries(test_map_world PRIVATE unity)
+add_test(NAME test_map_world COMMAND test_map_world)

@@ -167,6 +167,9 @@ def main():
                         maxx, maxy = max(maxx, tx), max(maxy, ty)
                         _emit(tiles, tx, ty, pts, is_poly, style)
 
+    # An empty cell (ocean / no roads) produces no tile subdirs, so make sure the
+    # out dir exists before writing the manifest - the caller reads tiles==0 and skips.
+    os.makedirs(args.out_dir, exist_ok=True)
     _write(tiles, args.out_dir, z)
     manifest = dict(zoom=z, extent=EXTENT,
                     min_x=minx, min_y=miny, max_x=maxx, max_y=maxy,

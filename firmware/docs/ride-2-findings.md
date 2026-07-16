@@ -101,6 +101,37 @@ pin-10 tap (Phase 6).
 To split brake vs clutch and finish mapping the other unknowns, run the
 controlled capture in `signal-mapping-capture.md` (one input at a time).
 
+## Fuel level / low-fuel — resolved: NOT on the bus (low-vs-full bracket)
+
+Ride 2 straddled a fuel stop, which is a natural controlled experiment for the
+fuel signals: **`2026-07-09-ride-2a.log`** is the leg *before* the stop (~39 min,
+the tank draining to its lowest right before the fill — low-fuel lamp on per the
+rider), **`2026-07-09-ride-2b.log`** is *after* the fill (full tank, lamp off). If
+level or the low-fuel telltale were on J1850, filling the tank would shift some
+frame between the two. Three tests, all negative:
+
+1. **Every frame common to both logs, byte by byte** (late-2a low vs 2b full): the
+   only bytes that differ are rolling counters — odometer `A8 69 10`, consumption
+   `A8 83 10`, speed `48 29 10` — and engine temp `A8 49 10` (~98 °C at the end of
+   the long 2a leg vs ~91 °C on the short 2b hop). No analog level-shaped byte.
+2. **Bit-level lamp detector** across three windows (2a-early → 2a-late → 2b-full),
+   looking for a bit that latches on only when low: one apparent hit, `A8 69 10`
+   byte1 bit7 — but that is the odometer tick counter (set-fraction 0.46 over the
+   whole 2a log = a coin flip, a windowing artifact, not a latching lamp).
+3. **Low-only broadcast** (a header present when low, absent when full, or vice
+   versa): none at count ≥ 10 either way. The only fuel-function header is
+   `A8 83 10`, a `0A` + 24-bit consumption **accumulator** (climbs monotonically,
+   resets to zero at each key-on) — identical in structure low vs full, no level or
+   reserve bit.
+
+**Conclusion:** fuel **level** and the **low-fuel lamp** are not broadcast on
+J1850 on this VRSCF — filling the tank changed zero bus frames. The stock cluster
+reads the fuel-level sender directly (discrete analog wire). Ours can only derive
+consumption / economy / range from the `A8 83 10` ticks (`ml_per_tick = 0.309`,
+above). A real fuel gauge + low-fuel telltale needs the fuel sender tapped as a
+**discrete input** (Phase 6), the same class as neutral (pin 10) and oil (pin 9).
+This closes the fuel question — no further ride capture is needed for it.
+
 ## Actions
 
 1. **Divisor → 188.** Reset the cluster's NVS `speed_div` (clear the bench 130)
@@ -111,6 +142,8 @@ controlled capture in `signal-mapping-capture.md` (one input at a time).
 3. **Neutral is a discrete pin-10 tap** (Phase 6), not `48 3B 40` (see above).
    The `48 3B 40` brake/clutch event is worth confirming via the controlled
    capture before any decode.
-4. **Oil / fuel-level / immobiliser** — decode via the controlled capture
+4. **Oil / immobiliser** — decode via the controlled capture
    (`signal-mapping-capture.md`): a bench signal isn't identifiable from a
    moving ride, only from toggling one input at a time.
+5. **Fuel level / low-fuel is a discrete sender tap** (Phase 6), not on the bus
+   — resolved by the low-vs-full bracket above, no further capture needed.

@@ -1,4 +1,5 @@
 #include "map_demo.h"
+#include "map_source.h"
 #include "map_tile.h"
 #include "phone_data.h"
 #include "screen_map.h"
@@ -32,6 +33,7 @@ static const char *TAG = "map_demo";
 #define MAX_ROUTE_PTS     512
 
 static map_tileset_t *s_ts;
+static map_source_t  *s_src;
 static lv_obj_t      *s_screen;  // the map screen; rendered only while it's active
 
 // The embedded track, parsed to route geometry only (the speed column is
@@ -152,7 +154,7 @@ static void anim_task(void *arg)
         }
 
         double tx, ty;
-        map_lonlat_to_tilef(lon, lat, s_ts->zoom, &tx, &ty);
+        map_lonlat_to_tilef(lon, lat, map_source_zoom(s_src), &tx, &ty);
         // Heavy rasterise off the lock AND on core 0, so it never competes with
         // the LVGL renderer (core 1) for CPU; only the swap + strip run under
         // the lock.
@@ -161,7 +163,7 @@ static void anim_task(void *arg)
         int64_t us = esp_timer_get_time() - t0;
         bsp_display_lock(-1);
         screen_map_commit(&vd, settings_store_current());
-        screen_map_set_no_coverage(!map_tileset_covers(s_ts, (uint32_t)tx, (uint32_t)ty));
+        screen_map_set_no_coverage(!map_source_covers(s_src, (uint32_t)tx, (uint32_t)ty));
         bsp_display_unlock();
 
         static int frame = 0;
@@ -182,6 +184,7 @@ void map_demo_load(void)
         return;
     }
     ESP_LOGI(TAG, "loaded %d tiles z%d (%zu KB embedded)", s_ts->ntiles, s_ts->zoom, len / 1024);
+    s_src = map_source_from_tileset(s_ts, false);  // borrow: the flash blob lives forever
 
     parse_route();
     ESP_LOGI(TAG, "route: %d points, %.1f km", s_npts, s_total_m / 1000.0);
@@ -189,7 +192,7 @@ void map_demo_load(void)
     // Build the screen and hand it to ui_manager; it stays off-screen until a
     // double-tap toggles to it (the gauge is the default view).
     bsp_display_lock(-1);
-    s_screen = screen_map_create(s_ts, 800, 800);
+    s_screen = screen_map_create(s_src, 800, 800);
     ui_manager_set_map_screen(s_screen);
     bsp_display_unlock();
 

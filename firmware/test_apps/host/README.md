@@ -73,6 +73,9 @@ Today that's:
 | `main/vehicle/trip_meter.c` | Rolling 16-bit bus counter (odometer/fuel ticks) -> per-frame delta, wrap-safe + reset-clamp. |
 | `main/vehicle/odo_meter.c` | Odometer + dual-trip totals: add distance/fuel, reset a trip, set the odometer. Pure (odo_store owns NVS). |
 | `main/ble/ble_visibility.c` | Pure decision: `(has_bond, override) → adv_mode`. Stage 8. |
+| `main/gps/nmea.c` | NMEA 0183 sentence framing + RMC parse (NEO-6M) → lat/lon/speed/heading |
+| `main/gps/gps_source.c` | Mutex-guarded latest-fix store (module producer, map consumer) |
+| `main/map/map_cells.c` | Cell-paging decision logic: which lat/lon cell a position is in (floor division), the working-set window, heading-ahead prefetch. Pure (cell manager owns the SD open/close). |
 | `main/j1850/j1850_vpw.c` | J1850 VPW symbol codec: pulse-width decoder + encoder + CRC-8/SAE-J1850. Round-trip tested. |
 | `main/j1850/j1850_parse.c` | J1850 message decoder: frame -> vehicle_data (RPM/temp/speed/turns/CEL), calibrated against real captures. Gear is not on the bus (see gear_calc). |
 | `main/j1850/j1850_driver.c` | J1850 producer glue: decoded frame -> j1850_parse (+ gear_calc, + odometer/fuel tick accumulation) -> vehicle_data_set (running aggregate). |
@@ -127,6 +130,10 @@ Files **deliberately excluded** from the metric:
   it can't reach the 100% branch bar the same way `phone/icon_cache.c` can't.
   `map/map_render.c` (rasteriser) and `map/screen_map.c` (LVGL) are verified in
   the simulator + on device.
+- `map/map_world.c` — the `world.hdr` manifest reader for the GPS-paged cell grid
+  (`tools/maptiles/world.py` writes it). Same story as `map_tile.c`: regression-
+  tested (`test_map_world`, compiled straight in) since it decodes untrusted SD
+  bytes, but it allocates the present-cell set, so it is out of the branch gate.
 
 This list is on purpose. Adding a widget creation path to it would be a
 red flag — write a test for the *helper* the widget uses, not for the

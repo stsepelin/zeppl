@@ -26,6 +26,12 @@ Background:
     (fuse / reverse-polarity / load-dump TVS / mini560 / output
     reverse-block) into the header 5V; parts list + bench test.
     Prerequisite for powering the cluster on the bike.
+  - `docs/gps-module.md` — optional NEO-6M map-position module (UART on
+    GPIO 21, `CONFIG_VROD_GPS_UART`); wiring schematic + bench bring-up.
+    Map is dual-source: module preferred, phone GPS fallback.
+  - `docs/map-worldwide-plan.md` — planned: GPS-paged per-cell map tiles
+    so a whole continent lives on the SD card with only the tiles near
+    the rider resident. Builds on the streaming loader (task #60).
   - `docs/live-gauge-bench-test.md` — build config (`CONFIG_VROD_J1850=y`)
     + stationary checklist to show real bus data on the gauge, laptop USB
     powered, before a ride.
@@ -122,9 +128,16 @@ One-liners — see `docs/ARCHITECTURE.md` for the why.
   `managed_components/` fetch. Don't manually edit the patched file. The
   path in the CMake patch must match the current LVGL layout
   (`src/libs/gif/AnimatedGIF.h` — *not* the older `gif/AnimatedGIF/src/`).
-- **PPA is off** (`CONFIG_LV_USE_PPA` unset, `CONFIG_LV_DRAW_BUF_ALIGN=4`).
-  Caused horizontal banding on this BSP. Re-enable only with a
-  known-good alignment story.
+- **PPA is on** (`CONFIG_LV_USE_PPA=y`, `CONFIG_LV_DRAW_BUF_ALIGN=128`).
+  The old banding was purely an alignment bug: the LVGL PPA draw unit
+  requires `CONFIG_LV_DRAW_BUF_ALIGN` to EQUAL
+  `CONFIG_CACHE_L2_CACHE_LINE_SIZE` (128 on the P4). It was 4, which
+  desynced the accelerator's DMA and banded the display. At 128 the PPA
+  drives LVGL's fills / blends / image draws with no banding. It does NOT
+  touch the compact map's own composite/rotate — those are raw RGB565
+  buffer math (see `display/screen_map.c`), not LVGL draw calls, so the
+  map rotation smoothness comes from the fixed-point rotozoom + frame
+  rate, not the PPA.
 - **GT911 touch** sometimes fails on cold boot; the BSP retries with a
   100 ms delay. First-boot serial logs aren't always clean.
 - **LVGL press events don't reach the ride screen** on this BSP — hover

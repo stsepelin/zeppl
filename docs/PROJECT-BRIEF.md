@@ -11,7 +11,12 @@
 > feature were dropped.** Speed comes from the J1850 bus, so onboard GPS
 > was a large separate effort (module, UART producer, NMEA parsing,
 > antenna) for little benefit, and the speed-camera alerts depended on
-> GPS position. Both were removed from the firmware and the plans. Speed
+> GPS position. Both were removed from the firmware and the plans.
+> **Later (map work): a map-position-only NEO-6M was revived** — an
+> opt-in onboard module (`CONFIG_VROD_GPS_UART`, off by default, GPIO 21)
+> that feeds *only* the moving-map position, dual-sourced with the phone
+> GPS. Speed, speed-cameras, POI and turn-by-turn stay dropped (speed is
+> the J1850 bus). See `firmware/docs/gps-module.md`. Speed
 > is calibrated against the **stock speedometer** — read in its native
 > MILES (it runs ~5-10% optimistic), mechanically driven off the same
 > J1850 bus (see `03-PHASE3-J1850-PLAN.md`). The **phone GPS over the
@@ -119,6 +124,18 @@ harley/
   Remaining: the on-bike **GPS calibration ride** to lock the speed divisor
   (Ride 2, `firmware/docs/ride-2-calibration-plan.md`); **Stage 4 TX + IM
   replay** (gated on the 2N2907A PNP); and DTC read/clear (needs TX).
+- ⏳ **Moving map + onboard GPS** — built this cycle (July 2026, PR #35 on
+  `feat/gps-module`). A compact map view reached by double-tapping off the
+  gauge: SD-streamed vector tiles, heading-up rotation, and the real
+  gear/RPM/speed/temp/turn strip below. Position is **dual-source** — an
+  optional onboard NEO-6M/M8N GPS module (opt-in, needs an external active
+  antenna) preferred, the phone's GPS over BLE the fallback; a corner
+  `SAT n` / `BT` badge shows which is driving, plus a blue phone-link dot.
+  PPA-accelerated render + fixed-point rotozoom at ~30 fps. On-device bring-up
+  is done; **on-bike verification is Ride 3** (`firmware/docs/ride-3-plan.md`).
+  Whole-continent coverage needs the GPS-paged cell tiles in
+  `firmware/docs/map-worldwide-plan.md` (Stage 1 already landed). See also
+  `firmware/docs/gps-module.md`.
 
 Phase 2 deliverable summary (as redesigned at the end of Phase 2.5,
 BMW-EfficientDynamics styling): working 800×800 round gauge running
@@ -178,7 +195,7 @@ the UI.
 
 - **Phase 3**: J1850 bus integration + IM simulation
 - **Phase 4**: BLE phone integration (iOS ANCS/AMS + Android companion app)
-- **Phase 5**: (removed — GPS + speed cameras dropped July 2026; numbering kept)
+- **Phase 5**: (removed — speed cameras + GPS-for-speed dropped July 2026; numbering kept. A **map-position-only** NEO-6M was revived separately as an opt-in module — see the changelog above / `firmware/docs/gps-module.md`.)
 - **Phase 6**: Full cluster replacement + 3D-printed enclosure + conformal coating. Enclosure design started early (`hardware/enclosure/`): parametric OpenSCAD case, rear-bolt board fixation, gusseted bosses, single bottom cable exit for the temp/test build. Designed + rendered, not yet printed.
 - **Phase 7**: Polish — auto-brightness, themes, handlebar button, ride logging, OTA updates with on-screen progress (USB flashing impractical once the cluster is housed)
 
