@@ -95,7 +95,7 @@ inductance so no overshoot, and the steady node_B (2.49V) is the P4-safe value.
 The P4 drives the TX gate line and the whole high-side cascade follows:
 GPIO HIGH -> gate 3.0V -> Q1/Q2 on -> BUS 7.9V; GPIO LOW -> BUS 0V.
 
-### Step 2 — TX watchdog self-test + loopback self-sniff — PENDING (awaiting bench confirmation, 2026-07-17)
+### Step 2 — TX watchdog self-test + loopback self-sniff — PASS (breadboard 2026-07-17; fabricated PCB 2026-07-19)
 
 Build config (TEMPORARY, local sdkconfig only — not committed):
 - `CONFIG_VROD_J1850_TX=y`, `CONFIG_VROD_J1850_TX_GPIO=24`
@@ -203,6 +203,26 @@ attached (no DTCs), then the stock-cluster-removal / U1255 / TSSM checks.
 
 The temporary diagnostics have been reverted; the `j1850_tx_reset()` fix is
 committed on its own (see the `fix(j1850)` commit on this branch).
+
+#### PCB re-test (2026-07-19) — Step 2 GREEN on the fabricated board
+
+Re-ran Step 2 on the **fabricated PCB** (replacing the breadboard) — same
+selftest firmware (`j1850_tx_reset()` fix in), fresh hard-reset, verbatim:
+```
+I (3273) j1850tx: watchdog trigger test: PASS (faulted=1, line=LOW)
+I (3441) j1850tx: self-sniff PASS: rx [68 FF 40 03 D8 ] CRC OK
+I (4028) j1850tx: self-sniff PASS: rx [68 FF 60 03 AD ] CRC OK
+I (4562) j1850tx: self-sniff PASS: rx [29 FE 40 01 64 ] CRC OK
+I (5096) j1850tx: self-sniff PASS: rx [29 FE 60 01 11 ] CRC OK
+I (5596) j1850tx: self-sniff tally: 4 pass, 0 fail
+   ... all-pass ... tally 32 pass, 0 fail
+```
+
+- Watchdog trigger test PASS; all four IM keep-alive frames round-trip CRC OK;
+  100% pass (tally 4/0 -> 32/0). The PCB reproduces the breadboard result.
+- Because decode is clean, the **recessive level is defined on the PCB** — the
+  no-Rpd loopback caveat was handled (bench pull-down tacked on, or the board
+  driven with the recessive reference present).
 
 ## Config restore note (on command, after Test C)
 
