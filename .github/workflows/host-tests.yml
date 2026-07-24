@@ -57,6 +57,7 @@ jobs:
                '*/firmware/main/j1850/j1850_vpw.c' \
                '*/firmware/main/j1850/j1850_tx_logic.c' \
                '*/firmware/main/j1850/j1850_parse.c' \
+               '*/firmware/main/j1850/dtc.c' \
                '*/firmware/main/j1850/j1850_driver.c' \
                '*/firmware/main/j1850/j1850_edge.c' \
                '*/firmware/main/j1850/ride_log_format.c' \

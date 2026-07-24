@@ -323,6 +323,35 @@ menu "V-Rod cluster"
             bench recessive-LOW termination (see the Stage 4 section of
             docs/03-PHASE3-J1850-PLAN.md). Bench only.
 
+    config VROD_J1850_TX_BIKE_REPLAY
+        bool "TX live-bus IM keep-alive replay (Stage 4 on-bike step 3)"
+        depends on VROD_J1850_TX && VROD_J1850_SNIFFER
+        default n
+        help
+            On-bike replay build for Stage 4 step (3): emits the IM
+            keep-alive set on the real J1850 bus at ~2 s cadence and logs
+            each send, WITHOUT the bench self-sniff PASS/FAIL compare (a
+            live bus carries the stock IM's own traffic, which would flap
+            that verdict). The RX sniffer still logs every frame with its
+            CRC verdict + 10 s stats — read that to judge bus health while
+            the stock cluster is attached. Runs the watchdog trigger test
+            once at boot before keying the bus. Takes precedence over
+            VROD_J1850_TX_SELFTEST when both are set. On-bike only.
+
+    config VROD_J1850_DTC_PROBE
+        bool "TX DTC read probe (Stage 5 diagnostic-code readout)"
+        depends on VROD_J1850_TX && VROD_J1850_SNIFFER
+        default n
+        help
+            Stage 5 diagnostic-trouble-code readout. Keys the HD "read
+            stored codes" request (service 19 52, from HarleyDroid) to the
+            ECM (10), TSM/TSSM (40) and other (60) modules in turn, collects
+            the 6C F1 xx 59 responses off the RX sniffer, and logs each
+            decoded J2012 code (e.g. "U1255"), re-reading every ~8 s. Run
+            key-on / engine-off, where the diagnostic session is answered
+            and TX is clean. Takes precedence over the replay/self-test
+            builds when set. On-bike (or bench with a responding module).
+
     config VROD_BLE_INSECURE
         bool "Skip BLE pairing — any central can connect"
         default n

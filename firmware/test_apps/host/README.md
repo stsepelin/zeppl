@@ -77,7 +77,8 @@ Today that's:
 | `main/gps/gps_source.c` | Mutex-guarded latest-fix store (module producer, map consumer) |
 | `main/map/map_cells.c` | Cell-paging decision logic: which lat/lon cell a position is in (floor division), the working-set window, heading-ahead prefetch. Pure (cell manager owns the SD open/close). |
 | `main/j1850/j1850_vpw.c` | J1850 VPW symbol codec: pulse-width decoder + encoder + CRC-8/SAE-J1850. Round-trip tested. |
-| `main/j1850/j1850_parse.c` | J1850 message decoder: frame -> vehicle_data (RPM/temp/speed/turns/CEL), calibrated against real captures. Gear is not on the bus (see gear_calc). |
+| `main/j1850/j1850_parse.c` | J1850 message decoder: frame -> vehicle_data (RPM/temp/speed/turns/CEL/immobiliser), calibrated against real captures. Gear is not on the bus (see gear_calc). |
+| `main/j1850/dtc.c` | SAE J2012 DTC codec: text formatting (raw 2 bytes -> "U1255") + the HD J1850 read/clear request framing and the response-frame decode (ported from HarleyDroid). The `dtc_probe.c` task that keys them onto the bus is driver glue, out of the gate. |
 | `main/j1850/j1850_driver.c` | J1850 producer glue: decoded frame -> j1850_parse (+ gear_calc, + odometer/fuel tick accumulation) -> vehicle_data_set (running aggregate). |
 | `main/j1850/j1850_edge.c` | Toggling edge->level tracker (no pin read): toggle + recessive-idle re-sync anchor; a missed/spurious edge self-limits to one frame. |
 | `main/j1850/j1850_tx_logic.c` | J1850 TX pure logic: CRC frame build (round-tripped through encode→decode) + the watchdog dominant-length guard + on-air duration. |

@@ -36,3 +36,11 @@ bool j1850_tx_reset(void);
 // per-frame PASS/FAIL + bytes + CRC. Requires CONFIG_VROD_J1850_SNIFFER.
 void j1850_tx_selftest_start(void);
 #endif
+
+#if CONFIG_VROD_J1850_TX_BIKE_REPLAY
+// Live-bus IM keep-alive replay for the Stage-4 on-bike step (3): emit the
+// keep-alive set at ~2 s cadence with NO self-sniff compare (the live bus
+// carries the stock IM's traffic). The RX sniffer logs the whole bus; judge
+// from that + CRC stats. Requires CONFIG_VROD_J1850_SNIFFER.
+void j1850_tx_bike_replay_start(void);
+#endif

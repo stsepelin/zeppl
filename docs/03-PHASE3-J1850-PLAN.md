@@ -329,10 +329,17 @@ and brings a GPS. Builds on the existing NimBLE peripheral + Android central.
   divisor`) and persists it to NVS so it survives a power cycle. Bench-verified
   live + across a reboot.
 - ⏳ **Fault codes (DTCs).** Read stored `P/C/B/U####` codes per module and show
-  them on the phone, with a clear-codes action. **Not built** — needs **TX**
-  (Stage 4: request/response), so it lands after the TX path is bench-validated.
-  The MIL lamp bit is already available passively (`68 88 10`). The app has a
-  per-cluster Diagnostics placeholder.
+  them on the phone, with a clear-codes action. **Firmware read path built**
+  (`CONFIG_VROD_J1850_DTC_PROBE`): the HD J1850 request/response protocol is
+  ported from HarleyDroid — request `6C <module> F1 19 52 FF 00`, response
+  `6C F1 <module> 59 <hi> <lo>` (one code per frame), decoded by the
+  host-tested `dtc.c` codec (`dtc_request` / `dtc_response` / `dtc_format`,
+  32/32 tests, 100% gate). The `dtc_probe.c` task keys the request to the ECM
+  (10), TSM/TSSM (40) and other (60) modules and logs each decoded code. See
+  `firmware/docs/dtc-read-probe.md`. **Pending:** an on-bike run where a module
+  answers the request (key-on / engine-off, TX clean); then the clear-codes
+  action (service `14`) and the phone-side Diagnostics view. The MIL lamp bit is
+  already available passively (`68 88 10`).
 - ✅ **Fuel economy / range.** Brick 4 — `FuelEconomy` (pure, unit-tested):
   fill-up mL/tick calibration, trip economy (mpg / L/100km), and range-to-empty
   (tank 18.9 L) from the per-trip fuel-tick counter. A Ride-screen Fuel card +

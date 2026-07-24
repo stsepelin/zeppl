@@ -91,6 +91,10 @@ static const uint32_t SWEEP_NS[] = {0, 400, 800, 1200, 1600};
 static portMUX_TYPE          s_stats_mux = portMUX_INITIALIZER_UNLOCKED;
 static j1850_sniffer_stats_t s_stats;
 
+// Optional per-frame observer (DTC probe). Set from another task; a plain
+// aligned pointer load in the sniffer task is a benign race.
+static j1850_frame_observer_t s_observer;
+
 static void IRAM_ATTR edge_isr(void *arg)
 {
     (void)arg;
@@ -170,6 +174,10 @@ static void publish_frame(const j1850_frame_t *f, uint32_t frames, uint32_t crc_
     s_stats.last_len    = f->len;
     s_stats.last_crc_ok = f->crc_ok;
     portEXIT_CRITICAL(&s_stats_mux);
+
+    j1850_frame_observer_t obs = s_observer;
+    if (obs)
+        obs(f->data, f->len, f->crc_ok);
 }
 
 static void sniffer_task(void *arg)
@@ -362,6 +370,11 @@ void j1850_sniffer_start(void)
     // pulse-queue backpressure is the one deadline in this build.
     xTaskCreatePinnedToCore(sniffer_task, "j1850_sniff", 4096, NULL, 7, NULL, 0);
     ESP_LOGI(TAG, "passive sniffer on GPIO%d (read-only build)", CONFIG_VROD_J1850_RX_GPIO);
+}
+
+void j1850_sniffer_set_observer(j1850_frame_observer_t cb)
+{
+    s_observer = cb;
 }
 
 void j1850_sniffer_get_stats(j1850_sniffer_stats_t *out)

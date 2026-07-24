@@ -194,6 +194,16 @@ if(CONFIG_VROD_J1850_TX)
     )
 endif()
 
+# DTC read probe (Stage 5): TX the HD read-codes request + collect responses
+# off the sniffer. dtc.c is the host-tested request/response/format codec; the
+# probe glue is the task that drives it. Only this build compiles them in.
+if(CONFIG_VROD_J1850_DTC_PROBE)
+    target_sources(${COMPONENT_LIB} PRIVATE
+        j1850/dtc.c
+        j1850/dtc_probe.c
+    )
+endif()
+
 # Bus-amplitude ADC probe (Stage 4 TX prep) — dedicated ADC pin, see
 # main/j1850/j1850_adc_probe.c. VROD_J1850_ADC_GPIO only exists when the
 # sniffer is on (it depends on it), so gate on the sniffer too — an
