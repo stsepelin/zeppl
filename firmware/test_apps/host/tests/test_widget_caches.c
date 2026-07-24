@@ -35,6 +35,23 @@ void lv_tick_stub_set(uint32_t tick);  // test hook from lvgl_tick_stub
 
 // --- speed_display ---------------------------------------------------------
 
+// Speed/temp now run a damped-hysteresis anti-jitter filter (display_filter),
+// so a value change is adopted only after it persists for a few frames (this is
+// what stops a true 50.5 strobing 50/51). The ride loop calls the setter every
+// frame, so these helpers feed a value long enough for the filter to settle;
+// the *number* of renders for a real change is unchanged, just delayed.
+#define SETTLE 24
+static void feed_speed(lv_obj_t *w, uint16_t mph, display_units_t u, int n)
+{
+    for (int i = 0; i < n; i++)
+        speed_display_set_value(w, mph, u);
+}
+static void feed_temp(lv_obj_t *w, int8_t c, temp_units_t u, int n)
+{
+    for (int i = 0; i < n; i++)
+        temp_display_set_value(w, c, u);
+}
+
 static void test_speed_cache_skips_unchanged(void)
 {
     lv_obj_t *w = speed_display_create(NULL);
@@ -50,8 +67,21 @@ static void test_speed_cache_fires_on_change(void)
     lv_obj_t *w = speed_display_create(NULL);
     speed_display_set_value(w, 50, UNITS_KPH);
     lv_stub_reset();
-    speed_display_set_value(w, 51, UNITS_KPH);
+    feed_speed(w, 51, UNITS_KPH, SETTLE);  // sustained change -> adopted once
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
+}
+
+// The anti-jitter contract: a value alternating between two adjacent integers
+// (a true 50.5 whose source dithers) must NOT re-render — it holds steady.
+static void test_speed_dither_holds(void)
+{
+    lv_obj_t *w = speed_display_create(NULL);
+    speed_display_set_value(w, 50, UNITS_MPH);
+    lv_stub_reset();
+    for (int i = 0; i < 200; i++)
+        speed_display_set_value(w, (i & 1) ? 51 : 50, UNITS_MPH);
+    TEST_ASSERT_EQUAL_INT_MESSAGE(0, g_lv_label_set_text_calls,
+                                  "dithering speed must hold, not strobe");
 }
 
 // Switching the displayed unit must repaint both the value digits and
@@ -77,10 +107,10 @@ static void test_speed_digit_count_shrink_and_grow(void)
     lv_obj_t *w = speed_display_create(NULL);
     speed_display_set_value(w, 100, UNITS_MPH);
     lv_stub_reset();
-    speed_display_set_value(w, 99, UNITS_MPH);
+    feed_speed(w, 99, UNITS_MPH, SETTLE);
     TEST_ASSERT_EQUAL_INT(2, g_lv_label_set_text_calls);  // slots: hide, '9', '9'
     lv_stub_reset();
-    speed_display_set_value(w, 100, UNITS_MPH);
+    feed_speed(w, 100, UNITS_MPH, SETTLE);
     TEST_ASSERT_EQUAL_INT(3, g_lv_label_set_text_calls);  // '1' re-shown, '0', '0'
 }
 
@@ -250,8 +280,21 @@ static void test_temp_cache_value_change_no_color(void)
     lv_obj_t *w = temp_display_create(NULL);
     temp_display_set_value(w, 92, UNITS_CELSIUS);
     lv_stub_reset();
-    temp_display_set_value(w, 93, UNITS_CELSIUS);
+    feed_temp(w, 93, UNITS_CELSIUS, SETTLE);
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
+    TEST_ASSERT_EQUAL_INT(0, g_lv_obj_set_style_text_color_calls);
+}
+
+// A temperature dithering across a °C edge (and across the hot threshold) holds
+// steady — no text strobe and no colour flicker.
+static void test_temp_dither_holds(void)
+{
+    lv_obj_t *w = temp_display_create(NULL);
+    temp_display_set_value(w, 109, UNITS_CELSIUS);
+    lv_stub_reset();
+    for (int i = 0; i < 200; i++)
+        temp_display_set_value(w, (i & 1) ? 110 : 109, UNITS_CELSIUS);
+    TEST_ASSERT_EQUAL_INT(0, g_lv_label_set_text_calls);
     TEST_ASSERT_EQUAL_INT(0, g_lv_obj_set_style_text_color_calls);
 }
 
@@ -274,11 +317,11 @@ static void test_temp_cache_hot_transition(void)
     lv_obj_t *w = temp_display_create(NULL);
     temp_display_set_value(w, 109, UNITS_CELSIUS);
     lv_stub_reset();
-    temp_display_set_value(w, 110, UNITS_CELSIUS);
+    feed_temp(w, 110, UNITS_CELSIUS, SETTLE);  // ticks once across the threshold
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
     TEST_ASSERT_EQUAL_INT(2, g_lv_obj_set_style_text_color_calls);  // icon + value
     lv_stub_reset();
-    temp_display_set_value(w, 109, UNITS_CELSIUS);
+    feed_temp(w, 109, UNITS_CELSIUS, SETTLE);  // ticks once back under
     TEST_ASSERT_EQUAL_INT(1, g_lv_label_set_text_calls);
     TEST_ASSERT_EQUAL_INT(2, g_lv_obj_set_style_text_color_calls);
 }
@@ -974,6 +1017,7 @@ void RunTests(void)
 {
     RUN_TEST(test_speed_cache_skips_unchanged);
     RUN_TEST(test_speed_cache_fires_on_change);
+    RUN_TEST(test_speed_dither_holds);
     RUN_TEST(test_speed_cache_fires_on_units_change);
     RUN_TEST(test_speed_pegs_at_999);
     RUN_TEST(test_speed_digit_count_shrink_and_grow);
@@ -988,6 +1032,7 @@ void RunTests(void)
     RUN_TEST(test_gear_warning_fires_on_edge);
     RUN_TEST(test_temp_cache_skips_unchanged);
     RUN_TEST(test_temp_cache_value_change_no_color);
+    RUN_TEST(test_temp_dither_holds);
     RUN_TEST(test_temp_cache_units_change);
     RUN_TEST(test_temp_cache_hot_transition);
     RUN_TEST(test_turn_signals_cache_skips_unchanged);

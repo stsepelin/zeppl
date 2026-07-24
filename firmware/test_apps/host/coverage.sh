@@ -40,6 +40,7 @@ SCOPED=(
     '*/main/display/gesture.c'
     '*/main/display/units.c'
     '*/main/display/widgets/smooth.c'
+    '*/main/display/widgets/display_filter.c'
     '*/main/display/widgets/fuel_scale.c'
     '*/main/display/widgets/rpm_scale.c'
     '*/main/phone/phone_data.c'

@@ -89,6 +89,7 @@ add_executable(vrod_sim
     ${MAIN_DIR}/display/widgets/now_playing_display.c
     ${MAIN_DIR}/display/widgets/media_banner.c
     ${MAIN_DIR}/display/widgets/smooth.c
+    ${MAIN_DIR}/display/widgets/display_filter.c
 
     ${MAIN_DIR}/phone/phone_data.c
     ${MAIN_DIR}/phone/phone_protocol.c

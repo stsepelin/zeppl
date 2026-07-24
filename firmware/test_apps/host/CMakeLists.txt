@@ -34,6 +34,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/display/gesture.c
     ${MAIN_DIR}/display/units.c
     ${MAIN_DIR}/display/widgets/smooth.c
+    ${MAIN_DIR}/display/widgets/display_filter.c
     ${MAIN_DIR}/display/widgets/fuel_scale.c
     ${MAIN_DIR}/display/widgets/rpm_scale.c
     ${MAIN_DIR}/phone/phone_data.c
@@ -120,6 +121,7 @@ add_unit_test(test_gear_table)
 add_unit_test(test_sim_math)
 add_unit_test(test_format)
 add_unit_test(test_smooth)
+add_unit_test(test_display_filter)
 add_unit_test(test_fuel_scale)
 add_unit_test(test_rpm_scale)
 add_unit_test(test_vehicle_data)

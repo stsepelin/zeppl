@@ -32,6 +32,7 @@ idf_component_register(
         display/widget_util.c
         display/widgets/tach_arc.c
         display/widgets/smooth.c
+        display/widgets/display_filter.c
         display/widgets/speed_display.c
         display/widgets/gear_indicator.c
         display/widgets/fuel_arc.c

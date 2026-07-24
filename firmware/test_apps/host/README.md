@@ -62,6 +62,7 @@ Today that's:
 | `main/display/gesture.c` | Long-press + swipe state machine shared by firmware and sim |
 | `main/display/units.c` | Pure math: km/h ↔ mph and metre ↔ km/mi conversions |
 | `main/display/widgets/smooth.c` | Pure math: single-pole step with snap |
+| `main/display/widgets/display_filter.c` | Damped-hysteresis anti-jitter filter: kills last-digit dither on a readout parked on a rounding edge (speed/temp) |
 | `main/display/widgets/fuel_scale.c` | Fuel band grid quantization + gap-split segments |
 | `main/display/widgets/rpm_scale.c` | RPM -> lit-segment count + redline segment for the shift-light bar |
 | `main/phone/phone_data.c` | Mutex-guarded latest-value store + notification queue. FreeRTOS-stubbed. |

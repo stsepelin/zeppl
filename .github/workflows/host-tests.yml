@@ -40,6 +40,7 @@ jobs:
                '*/firmware/main/display/gesture.c' \
                '*/firmware/main/display/units.c' \
                '*/firmware/main/display/widgets/smooth.c' \
+               '*/firmware/main/display/widgets/display_filter.c' \
                '*/firmware/main/display/widgets/fuel_scale.c' \
                '*/firmware/main/display/widgets/rpm_scale.c' \
                '*/firmware/main/phone/phone_data.c' \
