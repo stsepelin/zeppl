@@ -32,7 +32,10 @@ ESP-IDF v6.0.1 + LVGL 9.4 on the 800×800 round display. Full widget set (tach,
 speed, gear, fuel, temp, turn signals, 7 warning lamps, clock + odo + dual
 trips), driven by `vehicle_data_t` off a synthetic driving cycle, 30 fps with
 skip-if-unchanged caches, sim/UI core-pinned. Later redesigned BMW-style in
-Phase 2.5. Detail: [`firmware/docs/01-PHASE2-DISPLAY-PLAN.md`](../firmware/docs/01-PHASE2-DISPLAY-PLAN.md).
+Phase 2.5. Real renders (gauge + map): [`screens/`](screens/README.md).
+Detail: [`firmware/docs/01-PHASE2-DISPLAY-PLAN.md`](../firmware/docs/01-PHASE2-DISPLAY-PLAN.md).
+
+![Ride gauge screen](screens/gauge.png)
 
 ## Phase 2.5 — Off-bike feature work ✅
 Bench-time work on the board we already had: touch + screen-switching (GT911 →
@@ -135,6 +138,7 @@ onboard GPS. Both dropped; numbering kept to avoid breaking cross-references.
   PPA-accelerated ~30 fps. On-device bring-up complete; on-bike verify is Ride 3.
   Whole-continent coverage needs GPS-paged per-cell tiles
   ([`firmware/docs/map-worldwide-plan.md`](../firmware/docs/map-worldwide-plan.md)).
+  Render (map + compact cluster): [`screens/map.png`](screens/map.png).
 - Voice commands via the P4's onboard mics (future).
 
 ## Near-term open follow-ups
@@ -162,7 +166,8 @@ locked, so it's a cross-check, not a blocker). See
   [`phases/phase2.5-offbike.md`](phases/phase2.5-offbike.md) ·
   [`phases/phase3-j1850.md`](phases/phase3-j1850.md)
 - **Reference:** [`reference/HARDWARE.md`](reference/HARDWARE.md) ·
-  [`reference/J1850-BUS.md`](reference/J1850-BUS.md) · [`schematics/`](schematics/)
+  [`reference/J1850-BUS.md`](reference/J1850-BUS.md) · [`schematics/`](schematics/) ·
+  [`screens/`](screens/README.md) (UI renders)
 - **Firmware engineering:** [`firmware/docs/ARCHITECTURE.md`](../firmware/docs/ARCHITECTURE.md) ·
   [`firmware/docs/DISPLAY-PERF-AND-MEMORY.md`](../firmware/docs/DISPLAY-PERF-AND-MEMORY.md) ·
   [`firmware/docs/PINS.md`](../firmware/docs/PINS.md) ·

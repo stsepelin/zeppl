@@ -588,6 +588,24 @@ int main(void)
     // so screens behind a couple of taps can be screenshotted without driving.
     if (getenv("VROD_SETTINGS"))
         ui_manager_show_settings_general();
+    // VROD_SCREEN=<name> jumps to a specific screen for headless capture
+    // (VROD_SHOT): settings, settings-general, settings-trip, settings-odoset,
+    // settings-bluetooth. (ride = default; map = VROD_LAYOUT_MAP / VROD_MAP.)
+    const char *scr = getenv("VROD_SCREEN");
+    if (scr) {
+        if (!strcmp(scr, "settings"))
+            ui_manager_show_settings();
+        else if (!strcmp(scr, "settings-general"))
+            ui_manager_show_settings_general();
+        else if (!strcmp(scr, "settings-trip"))
+            ui_manager_show_settings_trip();
+        else if (!strcmp(scr, "settings-odoset"))
+            ui_manager_show_settings_odoset();
+        else if (!strcmp(scr, "settings-bluetooth"))
+            ui_manager_show_settings_bluetooth();
+        else
+            fprintf(stderr, "[screen] unknown VROD_SCREEN=%s\n", scr);
+    }
     // VROD_LAYOUT_MAP=1 boots straight into the map layout (the same path the
     // Settings toggle takes), for a headless check of the map view.
     if (getenv("VROD_LAYOUT_MAP")) {

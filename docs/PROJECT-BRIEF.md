@@ -33,6 +33,11 @@
 
 Custom digital instrument cluster replacement for a **2009 Harley-Davidson VRSCF Muscle** based on the **Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C** development board (3.4" round 800×800 IPS touch display, ESP32-P4 RISC-V + ESP32-C6 for WiFi6/BLE5).
 
+![Ride gauge screen](screens/gauge.png)
+
+Real render of the gauge screen (from the desktop simulator). More UI layouts —
+idle state + the moving-map screen — in [`screens/`](screens/README.md).
+
 ## Hardware Status
 
 - ✅ **Display board acquired and working** — Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C
@@ -57,6 +62,7 @@ harley/
 │   ├── ROADMAP.md                     # All phases/stages, status + links
 │   ├── reference/                     # HARDWARE.md (BOM/circuits) + J1850-BUS.md
 │   ├── phases/                        # phase2.5-offbike.md, phase3-j1850.md
+│   ├── screens/                       # Real UI renders (gauge + map) from the sim
 │   └── schematics/                    # schemdraw sources + rendered SVGs
 ├── firmware/                          # ESP-IDF cluster firmware
 │   ├── CLAUDE.md                      # Firmware-specific working notes

@@ -211,20 +211,15 @@ Lifecycle: **Dev** — Bike → Proxy → Stock cluster (rides normally) + P4 on
 
 ## Display layout (800×800 round)
 
-```
-          ╭────────────────────────────╮
-        ╱          ╭─────────╮           ╲
-      ╱           │  147     │   ┌───┐     ╲
-     │            │  km/h    │   │ 4 │      │
-     │             ╰─────────╯   └───┘      │
-     │   92°C   ⛽████░░   ⏱12,847km        │
-     │  ┌──────────────────────────────┐    │
-     │  │ ↰ 200m  Pärnu mnt    14:32  │    │
-     │  └──────────────────────────────┘    │
-      ╲  ♫ Smells Like Teen Spirit         ╱
-        ╲   N   phone  beam  warn  wrench ╱
-          ╰────────────────────────────╯
-```
+Real render from the simulator (the same widget code that runs on the P4):
+
+![Ride gauge screen](../screens/gauge.png)
+
+270° tach arc + redline around the rim, large centre speed with turn arrows, a
+two-chevron warning-lamp cluster (oil / check-engine / ABS / battery /
+immobiliser / beam), clock + odo + dual trips in a shared slot, temperature,
+the gear selector, and a bottom fuel arc. Full gallery (idle state + the
+moving-map screen) with regen commands: [`../screens/`](../screens/).
 
 ## Critical warnings
 
