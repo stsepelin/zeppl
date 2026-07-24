@@ -596,10 +596,17 @@ HEADER             DATA          MEANING
                                  counts/km-h). speed_mph = speed_raw / 188
                                  (LOCKED Ride 2 — physics + radar, PR #27).
                                  The old /128 was an early bad guess.
-48 3B 40 XX         XX           TSSM status (NOT neutral/clutch — disproven
-                                 Ride 2): bit5 = brake/deceleration event,
-                                 bit7 = heartbeat. Neutral is NOT on the bus —
-                                 it is a discrete pin-10 tap (active-low), Ph.6.
+48 3B 40 XX         XX           TSSM lever/shift EVENT frame (edge-driven, not
+                                 periodic). Mapped in the stationary bike
+                                 session 2026-07-24 (one-lever-at-a-time):
+                                   bit7 (0x80) = CLUTCH  (toggles with the lever)
+                                   bit5 (0x20) = GEAR-SHIFT event (shifter moved)
+                                   bit1 (0x02) = clutch-idle / heartbeat marker
+                                 Front brake and neutral are NOT on the bus —
+                                 both are discrete (brake = lamp switch; neutral
+                                 = pin-10 tap, active-low, Ph.6). SUPERSEDES the
+                                 earlier "bit5 = brake / bit7 = heartbeat" guess
+                                 (that bit5 was the clutch/shift, not the brake).
 48 DA 40 39 XX      XX           Turn signals: bitfield, 3=both. On the
                                  2009 VRSCF (verified 2026-07-04):
                                  2=LEFT, 1=RIGHT (swapped vs HarleyDroid)
@@ -619,6 +626,16 @@ A8 83 10 0A HH LL  HH LL        Fuel consumption ticks: ~0.000309 L/tick
 A8 83 61 12 DX      DX           Fuel gauge 0-6 — IM-ORIGINATED. Fuel LEVEL +
                                  low-fuel are NOT bus-decoded and likely
                                  disappear with the stock IM.
+48 92 40 XX XX XX   XX XX XX     UNIDENTIFIED — first seen key-on (stationary
+68 93 60 XX XX XX   XX XX XX     session 2026-07-24). Paired 40/60 sources; both
+                                 boot as "AA FF FF" (not-ready/invalid) then
+                                 settle to "2A 00 00" a few seconds after key-on
+                                 and go quiet. One-shot init/status, NOT a live
+                                 control signal. CANDIDATE for the immobiliser /
+                                 security (key) lamp: the ~4 s not-ready window
+                                 fits a key-on key-lamp. TBD: correlate the
+                                 AA FF FF -> 2A 00 00 timing with the stock
+                                 cluster's key icon.
 ```
 
 ---
