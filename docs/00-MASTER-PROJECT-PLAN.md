@@ -314,7 +314,14 @@ FINAL:        Bike ──► DIY display directly (proxy → toolbox drawer as b
 The V-Rod ECM expects the stock IM to respond on the J1850 bus. Without it: U1255 DTC (missing response), possible TSSM security lockout.
 
 ### How it works
-The P4 firmware periodically sends the same J1850 messages the stock IM sends, via the IRLZ44N MOSFET TX circuit. The ECM sees a "live" IM and stays happy.
+The P4 firmware periodically sends the same J1850 messages the stock IM sends, via the high-side transceiver (IRLZ44N low-side driver → 2N2907A PNP sourcing the bus HIGH for dominant). The ECM sees a "live" IM and stays happy.
+
+> **Status (2026-07-24): Steps 1-3 done, on-bike validated.** Capture (Step 1)
+> and Replay (Step 2) are live: the fabricated PCB keys the IM keep-alive set on
+> the real bus with **0 watchdog faults over 312 sends** (engine-off/on +
+> cold-start), stock cluster still attached, **no DTCs** (`03-PHASE3` Stage 4 +
+> `firmware/docs/stage4-tx-bench-log.md`). Step 3's stock-cluster **removal** /
+> U1255 / TSSM checks (below) are the open follow-up.
 
 ### Implementation steps
 
@@ -455,9 +462,12 @@ See `02-PHASE2.5-OFFBIKE-PLAN.md` for the full plan + ordering.
   over BLE; ✅ **GPS speed calibration** (phone GPS vs `speed_raw` counts →
   exact speed divisor, replacing the provisional value); ✅ config write-back
   to cluster NVS; ✅ fuel economy / range — all built + bench-validated, on-bike
-  lock pending (Ride 2). ⏳ **fault-code (DTC) readout + clear** still needs the
-  Stage 4 TX path. The app was also restructured per-cluster and rebranded to
-  **Zeppl** (`ee.zeppl.companion`).
+  lock pending (Ride 2). **fault-code (DTC) readout**: ✅ firmware read path
+  built + on-bike validated (`dtc.c` codec + `CONFIG_VROD_J1850_DTC_PROBE`,
+  Stage 4 TX now landed; bike reads clean 2026-07-24) — ⏳ remaining is the
+  **clear-codes action** (service `14`, built + host-tested, not yet wired) and
+  the **phone Diagnostics view**. The app was also restructured per-cluster and
+  rebranded to **Zeppl** (`ee.zeppl.companion`).
 
 ### Phase 5: (removed — GPS + speed cameras dropped)
 

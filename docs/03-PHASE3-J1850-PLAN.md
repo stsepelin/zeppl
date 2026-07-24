@@ -3,10 +3,18 @@
 > **Status: ⏳ active** (kicked off July 2026 — parts arrived June 2026).
 > Stages 1-3 (RX transceiver, passive sniff, decode → `vehicle_data`), Stage
 > 3.5 (ride log), and **Stage 5** (companion telemetry / GPS calibration /
-> config write-back / fuel economy) are done and bench-validated. Remaining:
-> the on-bike **GPS calibration ride** to lock the divisor
-> (`firmware/docs/ride-2-calibration-plan.md`), **Stage 4** TX + IM replay
-> (gated on the 2N2907A PNP), and DTC read/clear (needs TX).
+> config write-back / fuel economy) are done and bench-validated. **Stage 4
+> (TX + IM replay) is now on-bike validated (2026-07-24):** the fabricated
+> transceiver PCB does full bidirectional J1850 on the live bike — TX ran
+> **312 consecutive clean sends, 0 watchdog faults** across engine-off,
+> engine-on, and two cold-start off→on cranks (`firmware/docs/stage4-tx-bench-log.md`).
+> The **DTC read** firmware is also built and validated live (`dtc.c` codec +
+> `CONFIG_VROD_J1850_DTC_PROBE`, `firmware/docs/dtc-read-probe.md`) — the bike
+> reads clean (zero stored codes). Remaining: the on-bike **GPS calibration
+> ride** to lock the divisor (`firmware/docs/ride-2-calibration-plan.md`); the
+> **DTC follow-ups** (real non-zero code test, clear-codes action, phone
+> Diagnostics view); and the **stock-cluster-removal** U1255 / TSSM checks.
+> See the follow-up list at the end of Stage 4/5.
 >
 > First phase that touches the bike. The gauge UI (Phase 2), all
 > off-bike features (Phase 2.5), and the loose ends from both are done;
@@ -47,10 +55,11 @@ throughout (stock cluster keeps working until Stage 4 testing).
 > PASS); 12V through a 330Ω series protection resistor → **7.63V** at
 > the bus node (expect ~7.5V, PASS).
 >
-> TX half (Stage 4) waits on the 2N2907A on order — the kit's 2N2222
-> is NPN and cannot serve as Q2. RX stays on the breadboard until the
-> full transceiver is validated; permanent perfboard build is deferred
-> to Phase 6.
+> TX half (Stage 4) has since been built and the **full transceiver
+> fabricated on a PCB** — bidirectional J1850 is validated on the live
+> bike (2026-07-24). The signal-board / power-board layouts are under
+> `docs/schematics/`. Enclosure + permanent harness integration stay in
+> Phase 6.
 
 Breadboard the corrected transceiver — rendered schematics in
 [`schematics/`](schematics/): [RX front end](schematics/j1850_rx.svg)
@@ -229,9 +238,16 @@ later if ever desired.
 > **TX firmware landed (2026-07): driver + watchdog + self-sniff loop.**
 > `CONFIG_VROD_J1850_TX` compiles `j1850_tx.c` (RMT-timed VPW from the
 > host-tested `j1850_vpw.c` encoder) + `j1850_tx_logic.c` (pure: CRC
-> frame build + the dominant-time guard, host tests at 100%). No TX
-> hardware is built yet — build the transistor stage
-> (`schematics/j1850_tx.svg`) only after the self-sniff loop below passes.
+> frame build + the dominant-time guard, host tests at 100%).
+>
+> **✅ TX ON-BIKE VALIDATED (2026-07-24).** Bench self-sniff PASS (32/0 on
+> the fabricated PCB), then live-bike replay (`CONFIG_VROD_J1850_TX_BIKE_REPLAY`):
+> **312 consecutive clean sends, 0 watchdog faults** across engine-off,
+> engine-on, and two cold-start off→on cranks. An earlier heavy-fault run was
+> traced to a dying-Mac USB brownout (not the bus). Full record +
+> per-phase tally in `firmware/docs/stage4-tx-bench-log.md`. RX bad-CRC under
+> engine EMI (RX-side corruption, distinct from the clean TX path) is the
+> remaining margin item, deferred to the Phase-6 Schmitt/comparator front end.
 
 **Polarity (settled): standard VPW, high-side.** TX GPIO **HIGH = bus
 dominant** (Q1 → Q2 sources ~7V); **LOW = recessive** (released). This is
@@ -285,19 +301,35 @@ PASS before the bike.**
 
 - Replay the Stage 2 IM message set at captured intervals (the same
   keep-alive set the self-sniff emits).
-- Test ladder: **(1)** watchdog trigger test — on boot the selftest build
+- Test ladder: **(1) ✅** watchdog trigger test — on boot the selftest build
   runs `wd_selftest()`, which drives the pad dominant BYPASSING RMT + the
   pre-transmit guard and confirms layer 2 (the gptimer ISR) detaches the
-  pad and drives it LOW; must log `watchdog trigger test: PASS` (this is
-  also the acceptance test for the P4 pad readback, so a FAIL means the
-  watchdog is blind — stop) → **(2)** bench self-sniff — emit → own
-  sniffer decodes, CRC-valid, every frame PASS → **(3)** bike with stock
-  cluster still attached (no DTCs while both talk) → **(4)** later,
-  separately: disconnect stock cluster → U1255 / TSSM lockout checks →
-  full key fob unlock → start → ride → stop. One variable at a time; (1)
-  and (2) gate the bike.
+  pad and drives it LOW; logs `watchdog trigger test: PASS` (also the
+  acceptance test for the P4 pad readback) → **(2) ✅** bench self-sniff —
+  emit → own sniffer decodes, CRC-valid, every frame PASS (32/0 on the PCB)
+  → **(3) ✅** bike with stock cluster still attached — no DTCs while both
+  talk; 312 clean sends through engine-off/on + cold-start cranks
+  (2026-07-24) → **(4) ⏳** later, separately: disconnect stock cluster →
+  U1255 / TSSM lockout checks → full key fob unlock → start → ride → stop.
+  Steps (1)-(3) are done; (4) is the stock-cluster-removal follow-up.
 - Fallback if TSSM security fails without the stock IM: keep the stock
   IM wired in parallel under the airbox (master plan option C).
+
+**Stage 4/5 follow-ups (open):**
+1. **DTC — real non-zero code.** The read path is validated but every module
+   read clean. Exercise the decode with an actual code (e.g. unplug the IM to
+   provoke `U1255`, or read a bike with a known stored fault) to confirm a
+   real `P/C/B/U####` renders end-to-end.
+2. **DTC — clear-codes action.** `dtc_clear_request` (service `14`) is built +
+   host-tested but not yet wired to a trigger. Add a bench/phone "clear codes"
+   action and verify the `6C F1 <mod> 54` ack.
+3. **DTC — phone Diagnostics view.** Surface the decoded codes (and the clear
+   action) in the companion's per-cluster Diagnostics screen (placeholder
+   exists). This closes the Stage 5 DTC brick.
+4. **Stock-cluster removal (step 4 above).** U1255 / TSSM lockout checks with
+   the stock IM disconnected; fall back to option C if security fails.
+5. **Phase-6 RX front end.** Schmitt/comparator input stage to cut the
+   engine-EMI RX bad-CRC rate (TX is already clean). Tracked in Phase 6.
 
 ### Stage 5 — Companion app: telemetry, GPS calibration, fault codes
 
@@ -305,9 +337,14 @@ PASS before the bike.**
 > config write-back, fuel economy) are built, host/JVM-tested, and validated
 > end-to-end on the bench (a synthetic-SPEED-frame firmware build drove the
 > divisor recompute + NVS persistence). Bench-verified, not yet ridden — the
-> on-bike lock is Ride 2 (`firmware/docs/ride-2-calibration-plan.md`). Only DTC
-> read/clear remains, gated on the Stage 4 TX path. The companion was also
-> restructured around per-cluster detail screens and rebranded to **Zeppl**
+> on-bike lock is Ride 2 (`firmware/docs/ride-2-calibration-plan.md`). The
+> **DTC read firmware is now built + on-bike validated** (Stage 4 TX landed):
+> `dtc.c` codec (HD J1850 read/clear framing + response decode + J2012 format,
+> ported from HarleyDroid, host-tested at 100%) + the `CONFIG_VROD_J1850_DTC_PROBE`
+> task read all three modules clean on the bike (2026-07-24). Remaining DTC
+> work is the **clear-codes action, the phone Diagnostics view, and a real
+> non-zero-code test** (see the Stage 4/5 follow-ups above). The companion was
+> also restructured around per-cluster detail screens and rebranded to **Zeppl**
 > (`ee.zeppl.companion`).
 
 Ride 1 (`firmware/docs/ride-1-findings.md`) showed the companion app is the

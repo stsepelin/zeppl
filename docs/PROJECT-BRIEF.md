@@ -121,9 +121,17 @@ harley/
   on-board ride log, and **companion Stage 5** — telemetry stream, GPS speed
   calibration wizard, config write-back to NVS, and fuel economy/range (the
   four "bricks"), plus a per-cluster app restructure and the **Zeppl** rebrand.
+  **Stage 4 TX + IM replay is on-bike validated (2026-07-24):** the fabricated
+  transceiver PCB does full bidirectional J1850 on the live bike — 312
+  consecutive clean TX sends, 0 watchdog faults across engine-off/on + two
+  cold-start cranks (`firmware/docs/stage4-tx-bench-log.md`). **DTC read** is
+  built + validated live (`dtc.c` codec ported from HarleyDroid +
+  `CONFIG_VROD_J1850_DTC_PROBE`; bike reads clean).
   Remaining: the on-bike **GPS calibration ride** to lock the speed divisor
-  (Ride 2, `firmware/docs/ride-2-calibration-plan.md`); **Stage 4 TX + IM
-  replay** (gated on the 2N2907A PNP); and DTC read/clear (needs TX).
+  (Ride 2, `firmware/docs/ride-2-calibration-plan.md`); the **DTC follow-ups**
+  (real non-zero-code test, clear-codes action, phone Diagnostics view); the
+  **stock-cluster-removal** U1255 / TSSM checks; and the Phase-6 RX front-end
+  hardening for the engine-EMI bad-CRC margin.
 - ⏳ **Moving map + onboard GPS** — built this cycle (July 2026, PR #35 on
   `feat/gps-module`). A compact map view reached by double-tapping off the
   gauge: SD-streamed vector tiles, heading-up rotation, and the real

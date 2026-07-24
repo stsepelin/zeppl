@@ -183,11 +183,11 @@ Full policy in `test_apps/host/README.md`. Short version:
   `smooth.c`, `fuel_scale.c`, `phone_data.c`, `phone_protocol.c`,
   `settings.c`, `vehicle_data.c`, `ble_visibility.c`, `j1850_vpw.c`,
   `j1850_parse.c`, `j1850_driver.c`, `j1850_edge.c`, `j1850_tx_logic.c`,
-  `ride_log_format.c` — **plus all the widgets** (including `tach_arc.c`),
+  `dtc.c`, `ride_log_format.c` — **plus all the widgets** (including `tach_arc.c`),
   which run against the LVGL stub and sit inside the same gate.
 - **Out of scope:** fonts (generated), boot/screen wiring (BSP glue),
   `sim_engine.c`'s task body, and the `j1850_sniffer.c` / `j1850_tx.c` /
-  `ride_log.c` producers and capture/driver glue.
+  `dtc_probe.c` / `ride_log.c` producers and capture/driver glue.
 
 When you add code:
 
