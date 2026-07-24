@@ -321,7 +321,7 @@ menu "V-Rod cluster"
             each frame is logged PASS/FAIL with the decoded bytes + CRC
             verdict. Needs the TX output tied to the RX bus node with the
             bench recessive-LOW termination (see the Stage 4 section of
-            docs/03-PHASE3-J1850-PLAN.md). Bench only.
+            docs/phases/phase3-j1850.md). Bench only.
 
     config VROD_J1850_TX_BIKE_REPLAY
         bool "TX live-bus IM keep-alive replay (Stage 4 on-bike step 3)"

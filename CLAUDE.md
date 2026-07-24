@@ -16,10 +16,14 @@ Three top-level components, one git tree:
 
 Cross-system docs live at the repo root in `docs/`:
 - `PROJECT-BRIEF.md` — what this project is, current status.
-- `00-MASTER-PROJECT-PLAN.md` — full build plan + phases + budget.
-- `02-PHASE2.5-OFFBIKE-PLAN.md` — completed phase (touch / settings /
+- `ROADMAP.md` — every phase/stage, status + links (the build map).
+- `reference/HARDWARE.md` — BOM, transceiver circuit, proxy box, power,
+  warnings, dev env, external references.
+- `reference/J1850-BUS.md` — 12-pin pinout, VPW decode table, IM
+  simulation, CRC.
+- `phases/phase2.5-offbike.md` — completed phase (touch / settings /
   BLE / phone relay).
-- `03-PHASE3-J1850-PLAN.md` — the active phase (J1850 bus + IM
+- `phases/phase3-j1850.md` — the active phase (J1850 bus + IM
   simulation).
 
 Firmware-internal docs are under `firmware/docs/`:

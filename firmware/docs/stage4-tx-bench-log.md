@@ -2,7 +2,7 @@
 
 Running log for the DC bench bring-up of the TX high-side stage on breadboard.
 **BENCH ONLY — no bike.** This is the canonical record of the Stage 4 TX
-transceiver bench ladder (Phase 3, `../../docs/03-PHASE3-J1850-PLAN.md`).
+transceiver bench ladder (Phase 3, `../../docs/phases/phase3-j1850.md`).
 
 ## Board under test
 

@@ -19,7 +19,7 @@ import statistics
 import sys
 
 # First-bytes prefixes from the master plan's decode table
-# (docs/00-MASTER-PROJECT-PLAN.md, HarleyDroid-derived).
+# (docs/reference/J1850-BUS.md, HarleyDroid-derived).
 KNOWN = {
     "28 1B 10": "RPM = (HH<<8|LL)/4",
     "48 29 10": "speed = km/h-native counts (HH<<8|LL); /~195 -> mph (ride-1)",

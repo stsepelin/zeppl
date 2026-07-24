@@ -47,7 +47,7 @@ usable on the bench:
 | Hardware | Blocks |
 |---|---|
 | NEO-6M/M8N GPS module | Real GPS speed/position → speed-camera validation, GPS time → real RTC. **[Superseded July 2026: speed-camera dropped; a map-position-only NEO-6M returned separately — see `../firmware/docs/gps-module.md`.]** |
-| IRLZ44N + 2N2222 + zener + resistors | J1850 bidirectional transceiver → Phase 3. **[Corrected: the high-side TX needs a 2N2907A **PNP** for Q2 — the kit's 2N2222 is NPN and cannot serve; see the master plan's "J1850 BIDIRECTIONAL TRANSCEIVER CIRCUIT" resolved note.]** |
+| IRLZ44N + 2N2222 + zener + resistors | J1850 bidirectional transceiver → Phase 3. **[Corrected: the high-side TX needs a 2N2907A **PNP** for Q2 — the kit's 2N2222 is NPN and cannot serve; see the transceiver-circuit note in [`../reference/HARDWARE.md`](../reference/HARDWARE.md).]** |
 | GT 12-pin connector + T-taps + buck converter | Wiring to the bike harness |
 
 ## Stage 1 — Touch + screen-switching framework
@@ -246,8 +246,9 @@ Android-companion path:
 
 Three options, ordered by ambition:
 
-- **A. Defer iOS to Phase 4.** Honest. Phase 4 in the master plan
-  already names "iOS ANCS/AMS via ESP32-C6". Leave Stage 3 at
+- **A. Defer iOS to Phase 4.** Honest. Phase 4 in the roadmap
+  ([`../ROADMAP.md`](../ROADMAP.md)) already names "iOS ANCS/AMS via
+  ESP32-C6". Leave Stage 3 at
   Android-only and call it done.
 - **B. Add iOS as Stage 3b in this phase.** Real chunk of work
   (~1 weekend) but lands a polished story end-to-end.

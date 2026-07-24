@@ -193,7 +193,7 @@ time.
 ## Cross-links
 
 - Sweep data + resolution: `captures/SESSION-2026-07-04.md`
-- Phase 6 hardware requirement: `../../docs/00-MASTER-PROJECT-PLAN.md`
+- Phase 6 hardware requirement: `../../docs/ROADMAP.md`
   (Phase 6 — "J1850 RX front end — add hysteresis")
 - Filter default rationale: `CONFIG_VROD_J1850_GLITCH_NS` help in
   `../main/Kconfig.projbuild`

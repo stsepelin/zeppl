@@ -8,8 +8,9 @@ Background:
 
 - Cross-system docs at the monorepo root:
   - `../docs/PROJECT-BRIEF.md` — what we're building
-  - `../docs/00-MASTER-PROJECT-PLAN.md` — phases / roadmap
-  - `../docs/03-PHASE3-J1850-PLAN.md` — current phase
+  - `../docs/ROADMAP.md` — phases / stages / status
+  - `../docs/reference/` — HARDWARE.md + J1850-BUS.md (BOM, circuit, bus map)
+  - `../docs/phases/phase3-j1850.md` — current phase
 - Firmware-internal docs (here in `firmware/docs/`):
   - `docs/01-PHASE2-DISPLAY-PLAN.md` — Phase 2 plan (complete)
   - `docs/ARCHITECTURE.md` — threading, render pipeline, decision history

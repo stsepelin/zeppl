@@ -25,7 +25,7 @@ without any toolchain. (Exceptions: the matplotlib drawings —
 | `discrete_divider.py/.svg` | Phase 6 | 12V discrete-signal divider (10k/2.7k + optional 3.3V zener), ×6 for turns/beam/neutral/oil/ignition. Sized for 14.4V charging voltage. |
 | `bike-power-chain.py/.svg` | Phase 6 (power) | Protected 12V→5V bike-power chain: fuse + reverse-polarity + load-dump TVS (TVS1 P6KE16A) → mini560 → output reverse-block (D4 XL74610 ideal-diode @ 5.0V) → board header 5V, with USB-C data coexisting via the board's own AO3401. Full parts list + bench test in `../../firmware/docs/bike-power-injection.md`; BOM in `bike-power-chain.bom.md`. |
 | `bike_power_perfboard.py/.svg` | Phase 6 (power) — perfboard build | Physical pad-per-hole layout of the `bike-power-chain` circuit: F1 2A → D2 SB560 → TVS1 P6KE16A → mini560 12V→5V → D4 XL74610 ideal-diode → P4 header 5V, with the protected-12V tap feeding the signal board. Separate board from the signal board. Electrical source of truth stays `bike-power-chain.py`. **matplotlib, not schemdraw.** |
-| `im_connector_face.py/.svg` | Phase 6 (harness) | Physical face map of the V-Rod Instrument Module 12-pin connector (**Deutsch DTM06-12S** socket, from the molded housing marking) for building quick-connect mating connectors. 2-row / 6-wide; **bottom row numbering is inverted** — 12,11,10,9,8,7 left→right (pin 12 under pin 1, pin 7 under pin 6), **verified on the bike (2026-07)**, not assumed. Wire-entry side (the mating face mirrors L↔R). Each cavity shows wire colour + signal; the ring colour encodes the destination (signal-board divider / J1850 BUS / power board / GND / Phase 6 / unused). Pin→colour→signal from the connector table in `../00-MASTER-PROJECT-PLAN.md` / `../PROJECT-BRIEF.md`. **matplotlib, not schemdraw.** |
+| `im_connector_face.py/.svg` | Phase 6 (harness) | Physical face map of the V-Rod Instrument Module 12-pin connector (**Deutsch DTM06-12S** socket, from the molded housing marking) for building quick-connect mating connectors. 2-row / 6-wide; **bottom row numbering is inverted** — 12,11,10,9,8,7 left→right (pin 12 under pin 1, pin 7 under pin 6), **verified on the bike (2026-07)**, not assumed. Wire-entry side (the mating face mirrors L↔R). Each cavity shows wire colour + signal; the ring colour encodes the destination (signal-board divider / J1850 BUS / power board / GND / Phase 6 / unused). Pin→colour→signal from the connector table in `../reference/J1850-BUS.md` / `../PROJECT-BRIEF.md`. **matplotlib, not schemdraw.** |
 | `gps_module.py/.svg` | Map (optional) | NEO-6M / GY-NEO6MV2 map-position module: 5V/GND + module TX → GPIO 21 (3.3V TTL, no level shift), RX-only. Wiring + bring-up in `../../firmware/docs/gps-module.md`. |
 
 ## Regenerate
@@ -46,7 +46,7 @@ and a `.png`; only the `.py` + `.svg` are committed, the `.png` is gitignored
 ## Conventions
 
 - Component designators (R1, Q2, D1…) are stable across drawings and
-  match the prose in `../00-MASTER-PROJECT-PLAN.md`.
+  match the prose in `../reference/J1850-BUS.md`.
 - Values that came out of analysis carry their reasoning as a caption
   inside the drawing (e.g. the 14.4V charging-voltage math), so a
   printout taken to the bench is self-contained.

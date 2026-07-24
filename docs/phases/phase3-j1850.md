@@ -10,11 +10,12 @@
 > engine-on, and two cold-start off→on cranks (`firmware/docs/stage4-tx-bench-log.md`).
 > The **DTC read** firmware is also built and validated live (`dtc.c` codec +
 > `CONFIG_VROD_J1850_DTC_PROBE`, `firmware/docs/dtc-read-probe.md`) — the bike
-> reads clean (zero stored codes). Remaining: the on-bike **GPS calibration
-> ride** to lock the divisor (`firmware/docs/ride-2-calibration-plan.md`); the
-> **DTC follow-ups** (real non-zero code test, clear-codes action, phone
-> Diagnostics view); and the **stock-cluster-removal** U1255 / TSSM checks.
-> See the follow-up list at the end of Stage 4/5.
+> reads clean (zero stored codes). The **speed divisor is locked at 188**
+> (Ride 2, 2026-07-09, PR #27; `firmware/docs/ride-2-findings.md`) and fuel
+> economy is calibrated. Remaining: the **DTC follow-ups** (real non-zero code
+> test, clear-codes action, phone Diagnostics view); and the
+> **stock-cluster-removal** U1255 / TSSM checks. See the follow-up list at the
+> end of Stage 4/5.
 >
 > First phase that touches the bike. The gauge UI (Phase 2), all
 > off-bike features (Phase 2.5), and the loose ends from both are done;
@@ -24,8 +25,11 @@
 > **GPS-for-speed was dropped (July 2026):** an *onboard* GPS added a large
 > separate effort for little benefit against the J1850 speed, so the
 > speed-camera / POI feature that depended on GPS position was removed. The
-> **phone** GPS over the BLE link is now built and is the primary divisor-lock
-> (Stage 5 / Ride 2) — no new hardware.
+> **phone** GPS over the BLE link is built as the intended divisor-calibration
+> source (Stage 5) — no new hardware. (In practice the divisor was locked at
+> 188 by Ride 2's gear-ratio physics + radar, not GPS; the GPS wizard's on-bike
+> sampling was only fixed after that ride, so a GPS calibration is still
+> unexercised.)
 >
 > **Later (map work): the NEO-6M came back in a NARROW form — map position
 > only.** An opt-in onboard module (`CONFIG_VROD_GPS_UART`, off by default)
@@ -48,7 +52,7 @@ throughout (stock cluster keeps working until Stage 4 testing).
 
 ### Stage 1 — Bench transceiver build (hardware) — ✅ RX half complete (July 2026)
 
-> Built on breadboard per `schematics/j1850_rx.svg`: R1=10k, R2=4.7k,
+> Built on breadboard per `../schematics/j1850_rx.svg`: R1=10k, R2=4.7k,
 > D1=1N4737A (7.5V 1W), cathode to the bus node. No Q1/Q2 populated.
 > Bench-verified (KUAIQU PSU in CV @ 50 mA limit, UNI-T UT125C DMM,
 > common ground): 7.00V in → **2.285V** at the GPIO node (expect ~2.2V,
@@ -62,10 +66,11 @@ throughout (stock cluster keeps working until Stage 4 testing).
 > Phase 6.
 
 Breadboard the corrected transceiver — rendered schematics in
-[`schematics/`](schematics/): [RX front end](schematics/j1850_rx.svg)
-(this stage) and [TX stage](schematics/j1850_tx.svg) (Stage 4). The
-master plan's "J1850 BIDIRECTIONAL TRANSCEIVER CIRCUIT" section has
-the same drawings plus the design notes; the schematic was fixed at
+[`../schematics/`](../schematics/): [RX front end](../schematics/j1850_rx.svg)
+(this stage) and [TX stage](../schematics/j1850_tx.svg) (Stage 4). The
+hardware reference's "J1850 bidirectional transceiver circuit" section
+([`../reference/HARDWARE.md`](../reference/HARDWARE.md)) has the same
+drawings plus the design notes; the schematic was fixed at
 Phase 3 kickoff — the old drawing would jam the bus:
 
 - **Populate RX only first**: 10kΩ/4.7kΩ divider + 7.5V zener. No Q1/Q2
@@ -73,7 +78,7 @@ Phase 3 kickoff — the old drawing would jam the bus:
 - Bench-check with a PSU: 7V on the bus node must read ~2.2V at the
   GPIO node; 12V injected must clamp at ~7.5V.
 - The 6× discrete-signal dividers are 10kΩ/**2.7kΩ** (sized for 14.4V
-  charging voltage, not nameplate 12V — see the master plan note).
+  charging voltage, not nameplate 12V — see [`../reference/HARDWARE.md`](../reference/HARDWARE.md)).
 
 ### Stage 2 — Passive sniff (bike + proxy box, stock cluster in place)
 
@@ -86,7 +91,7 @@ Phase 3 kickoff — the old drawing would jam the bus:
 >   reading was the 500 ns glitch filter dropping the recessive edge;
 >   with the filter off, decode is clean with no invert flag (546
 >   frames, 0 bad CRC). `RX_INVERT` removed, glitch filter defaults off.
->   See the master plan transceiver section + session notes.
+>   See [`../reference/HARDWARE.md`](../reference/HARDWARE.md) + session notes.
 > - Decoded live: **RPM** (tracked idle→4125), gear, check-engine,
 >   fuel-consumption ticks, turn signals (L/R swapped vs the table),
 >   **temp** (raw byte climbs — units PROVISIONAL, see below), **speed**
@@ -141,13 +146,15 @@ Phase 3 kickoff — the old drawing would jam the bus:
   what the ECM expects to keep hearing. Specifically confirm whether
   the fuel-gauge broadcast (`A8 83 61 12`) is IM-originated: the 2009
   fuel sender is ultrasonic and wired to the IM, so that message
-  likely dies with the stock cluster (see the master plan's Phase 6
-  fuel-sender caveat for the fallback strategies).
+  likely dies with the stock cluster (see the roadmap's Phase 6
+  fuel-sender caveat, [`../ROADMAP.md`](../ROADMAP.md), for the fallback
+  strategies).
 
 ### Stage 3 — Decode → vehicle_data producer
 
-- Pure-logic message parser (`j1850_parse.c`): decode table from the
-  master plan (HarleyDroid-derived). Host tests against real captured
+- Pure-logic message parser (`j1850_parse.c`): decode table from
+  [`../reference/J1850-BUS.md`](../reference/J1850-BUS.md) (HarleyDroid-derived).
+  Host tests against real captured
   frames from Stage 2 — same fixture pattern as `phone_protocol`.
 - **Decode calibrated on ride 1** (full analysis in
   `firmware/docs/ride-1-findings.md`; `j1850_parse.c` updated):
@@ -276,7 +283,7 @@ before soldering.
 **Bench self-sniff wiring (recessive = LOW).** With no vehicle, nothing
 else defines the recessive state, so the bench must:
 - Tie the **TX collector output (after R5) to the RX bus node** — the
-  same node the RX divider taps (`schematics/j1850_rx.svg`).
+  same node the RX divider taps (`../schematics/j1850_rx.svg`).
 - Add a **bus pull-down to GND** (≈10 kΩ) at that node so the line rests
   **LOW = recessive** when Q2 is off; Q2 turning on pulls it **HIGH =
   dominant**. (On the bike the other nodes hold recessive; the bench
@@ -313,7 +320,8 @@ PASS before the bike.**
   U1255 / TSSM lockout checks → full key fob unlock → start → ride → stop.
   Steps (1)-(3) are done; (4) is the stock-cluster-removal follow-up.
 - Fallback if TSSM security fails without the stock IM: keep the stock
-  IM wired in parallel under the airbox (master plan option C).
+  IM wired in parallel under the airbox (IM-simulation Step 4 option C,
+  [`../reference/J1850-BUS.md`](../reference/J1850-BUS.md)).
 
 **Stage 4/5 follow-ups (open):**
 1. **DTC — real non-zero code.** The read path is validated but every module
@@ -336,8 +344,8 @@ PASS before the bike.**
 > **Status: mostly done.** The four "bricks" (telemetry, GPS calibration,
 > config write-back, fuel economy) are built, host/JVM-tested, and validated
 > end-to-end on the bench (a synthetic-SPEED-frame firmware build drove the
-> divisor recompute + NVS persistence). Bench-verified, not yet ridden — the
-> on-bike lock is Ride 2 (`firmware/docs/ride-2-calibration-plan.md`). The
+> divisor recompute + NVS persistence), then **locked on-bike at Ride 2**
+> (2026-07-09): the divisor is **188** (PR #27; `firmware/docs/ride-2-findings.md`). The
 > **DTC read firmware is now built + on-bike validated** (Stage 4 TX landed):
 > `dtc.c` codec (HD J1850 read/clear framing + response decode + J2012 format,
 > ported from HarleyDroid, host-tested at 100%) + the `CONFIG_VROD_J1850_DTC_PROBE`
@@ -355,12 +363,16 @@ and brings a GPS. Builds on the existing NimBLE peripheral + Android central.
   the phone at 4 Hz (TLV frame `0x40`, `TelemetryCodec` mirroring the C encoder
   byte-for-byte), including `speed_raw` for calibration. The SD ride log stays
   for high-rate raw capture without a phone.
-- ✅ **GPS speed calibration.** Brick 2 — the `SpeedCalibrator` (pure,
-  unit-tested) least-squares-fits the phone's GPS speed against `speed_raw` to
-  solve the divisor (replaces the provisional 195; locked to 188 in Ride 2,
-  see `firmware/docs/ride-2-findings.md` — no eyeballing, no gear-ratio
-  inference). A Developer-screen wizard collects samples and writes the result
-  back. The on-bike lock is Ride 2.
+- ✅ **GPS speed calibration (built; not the source of the current lock).**
+  Brick 2 — the `SpeedCalibrator` (pure, unit-tested) least-squares-fits the
+  phone's GPS speed against `speed_raw` to solve the divisor; a Developer-screen
+  wizard collects samples and writes the result back to NVS. **The current
+  divisor lock (188) did NOT come from GPS** — it was pinned on Ride 2 by the
+  gear-ratio physics (speed_raw:rpm clustering at the exact overall ratios) plus
+  a roadside-radar point (`firmware/docs/ride-2-findings.md`). The wizard's
+  screen-off sampling bug was only fixed *after* that ride (PR #28), so a
+  GPS-based on-bike calibration is still **unexercised** — a cross-check on the
+  already-locked 188, not a blocker.
 - ✅ **Config (GATT write) → NVS.** Brick 3 — `PHONE_EVT_CONFIG` (0x04) carries
   the speed divisor; the cluster applies it live (`speed_mph = speed_raw /
   divisor`) and persists it to NVS so it survives a power cycle. Bench-verified

@@ -9,7 +9,7 @@ and the 2026-07-24 stationary session). The 3rd header byte is the target/source
 > already decoded (RPM, speed, temp, fuel, turns, CEL, gear-from-ratio, kill
 > switch, immobiliser/key). Oil pressure and neutral are **discrete wires**
 > (pins 9/10, Phase 6), not on the bus. What is left below is inter-module /
-> diagnostic traffic. See the decode table in `../../docs/00-MASTER-PROJECT-PLAN.md`
+> diagnostic traffic. See the decode table in `../../docs/reference/J1850-BUS.md`
 > for the decoded set.
 
 ## How to decode one

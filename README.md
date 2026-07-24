@@ -53,15 +53,16 @@ the full widget set at 30 FPS on the round display. Phase 3 (J1850 bus
 + IM simulation) is well along: the RX sniffer, decode → vehicle_data
 producer, on-board ride log, and the full **companion Stage 5** (live
 telemetry, GPS speed calibration, config write-back to NVS, fuel
-economy/range) are in and bench-validated. Remaining: the on-bike GPS
-calibration ride to lock the speed divisor
-([`firmware/docs/ride-2-calibration-plan.md`](firmware/docs/ride-2-calibration-plan.md)),
-then TX / IM replay on the bench. See
-[`docs/03-PHASE3-J1850-PLAN.md`](docs/03-PHASE3-J1850-PLAN.md).
+economy/range) are in and bench-validated, with the **speed divisor locked
+at 188** (Ride 2, 2026-07-09 — gear-ratio physics + radar, not GPS).
+**Stage 4 TX + IM replay is on-bike validated (2026-07-24)** and the **DTC
+read** firmware is built. Remaining: the DTC follow-ups and the
+stock-cluster-removal checks. See
+[`docs/phases/phase3-j1850.md`](docs/phases/phase3-j1850.md).
 
-See [`docs/00-MASTER-PROJECT-PLAN.md`](docs/00-MASTER-PROJECT-PLAN.md)
-for the full roadmap and [`docs/02-PHASE2.5-OFFBIKE-PLAN.md`](docs/02-PHASE2.5-OFFBIKE-PLAN.md)
-for the active stage breakdown.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full phase/stage roadmap and
+[`docs/phases/phase2.5-offbike.md`](docs/phases/phase2.5-offbike.md) for the
+completed off-bike phase.
 
 ## Hardware
 
