@@ -19,6 +19,7 @@ bool j1850_parse(const j1850_frame_t *f, vehicle_data_t *vd)
     static const uint8_t SPEED[] = {0x48, 0x29, 0x10, 0x02};
     static const uint8_t TURN[]  = {0x48, 0xDA, 0x40, 0x39};
     static const uint8_t CEL[]   = {0x68, 0x88, 0x10};
+    static const uint8_t IMMO[]  = {0x48, 0x92, 0x40};
 
     if (msg(f, RPM, 4, 7)) {
         vd->rpm = (uint16_t)(((f->data[4] << 8) | f->data[5]) / 4);
@@ -57,5 +58,19 @@ bool j1850_parse(const j1850_frame_t *f, vehicle_data_t *vd)
         vd->check_engine = (f->data[3] & 0x80) != 0;  // 68 88 10 83 = on
         return true;
     }
+    if (msg(f, IMMO, 3, 4)) {
+        // Immobiliser / security "key" lamp. At key-on the TSSM broadcasts
+        // 48 92 40 AA FF FF (not-yet-authenticated -> lamp ON), settling to
+        // 48 92 40 2A 00 00 ~4 s later (authenticated -> lamp OFF). State bit
+        // is data[3] bit7 (0xAA on, 0x2A off). Mapped on-bike 2026-07-24 —
+        // the ~4 s window matches the stock cluster's key icon.
+        vd->immobiliser_warning = (f->data[3] & 0x80) != 0;
+        return true;
+    }
+    // 28 FF 10 01 XX is a status bitfield: bit0 = KILL SWITCH (1=STOP, 0=RUN),
+    // confirmed on-bike 2026-07-24 by toggling the switch. Bits 1-2 stay set
+    // while stationary (engine off AND running) — not oil. Oil pressure is a
+    // discrete signal (pin 9), not on the bus. Left undecoded (no kill-switch
+    // indicator on the cluster).
     return false;
 }

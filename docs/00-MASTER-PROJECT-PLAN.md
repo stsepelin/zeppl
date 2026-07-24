@@ -626,16 +626,23 @@ A8 83 10 0A HH LL  HH LL        Fuel consumption ticks: ~0.000309 L/tick
 A8 83 61 12 DX      DX           Fuel gauge 0-6 — IM-ORIGINATED. Fuel LEVEL +
                                  low-fuel are NOT bus-decoded and likely
                                  disappear with the stock IM.
-48 92 40 XX XX XX   XX XX XX     UNIDENTIFIED — first seen key-on (stationary
-68 93 60 XX XX XX   XX XX XX     session 2026-07-24). Paired 40/60 sources; both
-                                 boot as "AA FF FF" (not-ready/invalid) then
-                                 settle to "2A 00 00" a few seconds after key-on
-                                 and go quiet. One-shot init/status, NOT a live
-                                 control signal. CANDIDATE for the immobiliser /
-                                 security (key) lamp: the ~4 s not-ready window
-                                 fits a key-on key-lamp. TBD: correlate the
-                                 AA FF FF -> 2A 00 00 timing with the stock
-                                 cluster's key icon.
+48 92 40 XX YY YY   XX YY YY     IMMOBILISER / security "key" lamp (CONFIRMED
+68 93 60 XX YY YY   XX YY YY     on-bike 2026-07-24; decoded in j1850_parse.c ->
+                                 the P4 key icon, verified against the stock
+                                 cluster). Paired 40/60 sources. At key-on:
+                                 data[3]=0xAA ("AA FF FF", not authenticated ->
+                                 key lamp ON) for ~4 s, then data[3]=0x2A
+                                 ("2A 00 00", authenticated -> lamp OFF).
+                                 State bit = data[3] bit7. 48 92 40 is used.
+28 FF 10 01 XX      XX           STATUS bitfield. bit0 (0x01) = KILL SWITCH
+                                 (1 = STOP, 0 = RUN) — CONFIRMED on-bike
+                                 2026-07-24 by toggling the run/stop switch
+                                 (0x07<->0x06). Bits 1-2 stay set while
+                                 stationary (engine off AND idling) — not oil;
+                                 likely clear only when moving (ABS/road status),
+                                 untested on the stand. OIL PRESSURE is NOT on
+                                 the bus (it's the discrete pin-9 tap, Ph.6).
+                                 Left undecoded (no kill-switch cluster icon).
 ```
 
 ---

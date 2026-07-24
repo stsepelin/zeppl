@@ -130,6 +130,25 @@ static void test_speed_parked_is_zero(void)
     TEST_ASSERT_EQUAL_UINT16(0, vd.speed_mph);
 }
 
+static void test_immobiliser_key_from_real_frames(void)
+{
+    // 48 92 40 XX .. — TSSM security "key" lamp. data[3]=0xAA (not yet
+    // authenticated -> lamp ON) at key-on, settling to 0x2A (authenticated ->
+    // OFF). State bit = data[3] bit7. Real frames from the 2026-07-24 capture.
+    const uint8_t  on[]  = {0x48, 0x92, 0x40, 0xAA, 0xFF, 0xFF, 0x5B};
+    const uint8_t  off[] = {0x48, 0x92, 0x40, 0x2A, 0x00, 0x00, 0x1E};
+    vehicle_data_t vd    = {0};
+    j1850_frame_t  f;
+
+    f = real(on, sizeof(on));
+    TEST_ASSERT_TRUE(j1850_parse(&f, &vd));
+    TEST_ASSERT_TRUE(vd.immobiliser_warning);
+
+    f = real(off, sizeof(off));
+    TEST_ASSERT_TRUE(j1850_parse(&f, &vd));
+    TEST_ASSERT_FALSE(vd.immobiliser_warning);
+}
+
 // --- synthetic frames (speed math) --------------------------------------
 
 static void test_speed_math_nonzero(void)
@@ -185,6 +204,7 @@ void RunTests(void)
     RUN_TEST(test_a83b10_is_not_gear);
     RUN_TEST(test_turn_signals_from_real_frames);
     RUN_TEST(test_check_engine_from_real_frames);
+    RUN_TEST(test_immobiliser_key_from_real_frames);
     RUN_TEST(test_speed_parked_is_zero);
     RUN_TEST(test_speed_math_nonzero);
     RUN_TEST(test_unrecognised_frame_is_ignored);
