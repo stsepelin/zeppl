@@ -1,0 +1,971 @@
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x20f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x1738
+load:0x4ff29ed0,len:0xfa8
+load:0x4ff2cbd0,len:0x368c
+entry 0x4ff29eda
+I (25) boot: ESP-IDF v6.0.1 2nd stage bootloader
+I (26) boot: compile time Jul 11 2026 00:35:18
+I (26) boot: Multicore bootloader
+I (28) boot: chip revision: v1.3
+I (29) boot: efuse block revision: v0.3
+I (32) qio_mode: Enabling default flash chip QIO
+I (37) boot.esp32p4: SPI Speed      : 80MHz
+I (40) boot.esp32p4: SPI Mode       : QIO
+I (44) boot.esp32p4: SPI Flash Size : 16MB
+I (48) boot: Enabling RNG early entropy source...
+I (53) boot: Partition Table:
+I (55) boot: ## Label            Usage          Type ST Offset   Length
+I (61) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (68) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (74) boot:  2 factory          factory app      00 00 00010000 00800000
+I (81) boot:  3 storage          Unknown data     01 82 00810000 00700000
+I (87) boot:  4 coredump         Unknown data     01 03 00f10000 00040000
+I (95) boot: End of partition table
+I (97) esp_image: segment 0: paddr=00010020 vaddr=48160020 size=345dc0h (3431872) map
+I (608) esp_image: segment 1: paddr=00355de8 vaddr=30100000 size=00068h (   104) load
+I (610) esp_image: segment 2: paddr=00355e58 vaddr=4ff00000 size=0a1c0h ( 41408) load
+I (620) esp_image: segment 3: paddr=00360020 vaddr=48000020 size=150560h (1377632) map
+I (823) esp_image: segment 4: paddr=004b0588 vaddr=4ff0a1c0 size=0e86ch ( 59500) load
+I (835) esp_image: segment 5: paddr=004bedfc vaddr=4ff18a80 size=049b8h ( 18872) load
+I (840) esp_image: segment 6: paddr=004c37bc vaddr=50108080 size=00024h (    36) load
+I (847) boot: Loaded app from partition at offset 0x10000
+I (847) boot: Disabling RNG early entropy source...
+I (861) hex_psram: vendor id    : 0x0d (AP)
+I (862) hex_psram: Latency      : 0x01 (Fixed)
+I (862) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (863) hex_psram: dev id       : 0x03 (generation 4)
+I (867) hex_psram: density      : 0x07 (256 Mbit)
+I (872) hex_psram: good-die     : 0x06 (Pass)
+I (876) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (881) hex_psram: BurstType    : 0x00 ( Wrap)
+I (885) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (889) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (894) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (899) hex_psram: DriveStrength: 0x00 (1/1)
+I (903) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1240) mmu_psram: .rodata xip on psram
+I (1308) mmu_psram: .text xip on psram
+I (1309) hex_psram: psram CS IO is dedicated
+I (1309) cpu_start: Multicore app
+I (1714) esp_psram: SPI SRAM memory test OK
+I (1724) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1724) cpu_start: Pro cpu start user code
+I (1724) cpu_start: cpu freq: 360000000 Hz
+I (1726) app_init: Application information:
+I (1730) app_init: Project name:     vrod_gauge
+I (1735) app_init: App version:      ebdac22-dirty
+I (1739) app_init: Compile time:     Jul 24 2026 22:19:38
+I (1744) app_init: ELF file SHA256:  36b936f16...
+I (1749) app_init: ESP-IDF:          v6.0.1
+I (1753) efuse_init: Min chip rev:     v0.1
+I (1757) efuse_init: Max chip rev:     v1.99
+I (1761) efuse_init: Chip rev:         v1.3
+I (1765) heap_init: Initializing. RAM available for dynamic allocation:
+I (1771) heap_init: At 4FF26050 len 00014F70 (83 KiB): RETENT_RAM
+I (1777) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1782) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1787) heap_init: At 501080A4 len 00007F5C (31 KiB): RTCRAM
+I (1793) heap_init: At 30100068 len 00001F98 (7 KiB): SPM
+I (1798) esp_psram: Adding pool of 27968K of PSRAM memory to heap allocator
+I (1804) esp_psram: Adding pool of 62K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1816) esp_psram: Adding pool of 40K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1827) spi_flash: detected chip: generic
+W (1831) spi_flash: Detected flash size > 16 MB, but access beyond 16 MB is not supported for this flash model yet.
+I (1841) spi_flash: flash io: qio
+W (1844) spi_flash: Detected size(32768k) larger than the size in the binary image header(16384k). Using the size in the binary image header.
+I (1856) host_init: ESP Hosted : Host chip_ip[18]
+I (1861) H_API: ESP-Hosted starting. Hosted_Tasks: prio:23, stack: 5120 RPC_task_stack: 5120
+I (1869) H_API: ** add_esp_wifi_remote_channels **
+I (1874) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1880) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1886) esp_core_dump_flash: Init core dump to flash
+I (1891) esp_core_dump_flash: Found partition 'coredump' @ f10000 262144 bytes
+I (1900) H_SDIO_DRV: sdio_data_to_rx_buf_task started
+I (1903) main_task: Started on CPU0
+I (1907) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (1916) main_task: Calling app_main()
+I (1927) esp_lvgl:adapter: LVGL adapter initialized successfully
+W (1929) ledc: GPIO 26 is not usable, maybe conflict with others
+I (1930) esp32_p4_wifi6_touch_lcd_xc: MIPI DSI PHY Powered on
+I (1936) esp32_p4_wifi6_touch_lcd_xc: Install MIPI DSI LCD control panel
+I (1941) esp32_p4_wifi6_touch_lcd_xc: Install Waveshare ESP32-P4-WIFI6-Touch-LCD-XC LCD control panel
+I (1950) jd9365: version: 2.0.2
+I (2114) jd9365: LCD ID: 93 65 04
+I (2266) esp32_p4_wifi6_touch_lcd_xc: Display initialized
+I (2290) esp_lvgl:bridge_v9: Initializing hardware resources
+I (2291) esp_lvgl:bridge_v9: Hardware resources initialized successfully
+I (2395) esp32_p4_wifi6_touch_lcd_xc: Touch 0x14 found
+I (2397) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2419) GT911: TouchPad_ID:0x39,0x32,0x37
+I (2420) GT911: TouchPad_Config_Version:90
+W (2421) esp_lvgl:touch: LV_USE_GESTURE_RECOGNITION is disabled; only single-point pointer events are available
+I (2426) esp_lvgl:touch: Touch input device registered successfully (IRQ mode: disabled)
+I (2434) esp_lvgl:adapter: LVGL task started successfully
+I (2435) esp_lvgl:bridge: Initializing hardware resources
+I (2444) esp_lvgl:bridge: Hardware resources initialized successfully
+I (2750) emoji_font: emoji.ttf embedded: 1982596 bytes
+I (2760) emoji_font: emoji fallback attached: 26=0x4ff3f9ec 33=0x4ff68814
+I (2763) vrod_gauge: speed divisor (NVS) = 188
+I (2771) odo: restored odo=26125m trip1=26125m trip2=26125m
+I (2772) j1850: glitch filter off
+I (2773) j1850: passive sniffer on GPIO20 (read-only build)
+I (2777) gps_uart: NMEA reader on UART1 (RX GPIO21, 9600 baud)
+I (2783) j1850tx: TX ready on GPIO24 (high-side, HIGH=dominant); watchdog cutoff 300 us
+I (2820) j1850: raw  1: low  47556 us
+I (2820) j1850: raw  2: HIGH   153 us
+I (2821) j1850: raw  3: low     67 us
+I (2821) j1850: raw  4: HIGH   133 us
+I (2823) j1850: raw  5: low    128 us
+I (2826) j1850: raw  6: HIGH   119 us
+I (2830) j1850: raw  7: low    145 us
+I (2833) j1850: raw  8: HIGH   120 us
+I (2836) j1850: raw  9: low     80 us
+I (2840) j1850: raw 10: HIGH   119 us
+I (2843) j1850: raw 11: low     81 us
+I (2846) j1850: raw 12: HIGH   120 us
+I (2850) j1850: raw 13: low     80 us
+I (2853) j1850: raw 14: HIGH    55 us
+I (2857) j1850: raw 15: low    145 us
+I (2860) j1850: raw 16: HIGH   119 us
+I (2863) j1850: raw 17: low    145 us
+I (2867) j1850: raw 18: HIGH    55 us
+I (2870) j1850: raw 19: low     81 us
+I (2874) j1850: raw 20: HIGH   120 us
+I (2877) j1850: raw 21: low     80 us
+I (2880) j1850: raw 22: HIGH    55 us
+I (2884) j1850: raw 23: low     81 us
+I (2887) j1850: raw 24: HIGH   119 us
+I (2890) j1850: raw 25: low     81 us
+I (2894) j1850: raw 26: HIGH   120 us
+I (2897) j1850: raw 27: low     80 us
+I (2901) j1850: raw 28: HIGH   120 us
+I (2904) j1850: raw 29: low     80 us
+I (2907) j1850: raw 30: HIGH   120 us
+I (2911) j1850: raw 31: low     80 us
+I (2914) j1850: raw 32: HIGH   120 us
+I (2918) j1850: raw 33: low    144 us
+I (2921) j1850: raw 34: HIGH   120 us
+I (2924) j1850: raw 35: low     80 us
+I (2928) j1850: raw 36: HIGH   120 us
+I (2931) j1850: raw 37: low     80 us
+I (2934) j1850: raw 38: HIGH   120 us
+I (2938) j1850: raw 39: low     80 us
+I (2941) j1850: raw 40: HIGH   120 us
+I (2945) j1850: raw 41: low     80 us
+I (2948) j1850: raw 42: HIGH   120 us
+I (2951) j1850: raw 43: low     80 us
+I (2955) j1850: raw 44: HIGH   120 us
+I (2958) j1850: raw 45: low     80 us
+I (2962) j1850: raw 46: HIGH   120 us
+I (2965) j1850: raw 47: low     80 us
+I (2968) j1850: raw 48: HIGH   120 us
+I (2972) j1850: raw 49: low     80 us
+I (2975) j1850: raw 50: HIGH   120 us
+I (2978) j1850: raw 51: low    144 us
+I (2982) j1850: raw 52: HIGH    55 us
+I (2985) j1850: raw 53: low     81 us
+I (2989) j1850: raw 54: HIGH    55 us
+I (2992) j1850: raw 55: low     81 us
+I (2995) j1850: raw 56: HIGH    55 us
+I (2999) j1850: raw 57: low     81 us
+I (3002) j1850: raw 58: HIGH    56 us
+I (3006) j1850: raw 59: low  59810 us
+I (3009) j1850: raw 60: HIGH   191 us
+I (3012) j1850: raw 61: low     81 us
+I (3016) j1850: raw 62: HIGH   119 us
+I (3019) j1850: raw 63: low    145 us
+I (3022) j1850: raw 64: HIGH   119 us
+I (3026) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (3030) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (3036) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (3156) j1850: 28 1B 30 02 00 00 D5 | CRC BAD
+I (3221) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (3287) j1850: 28 1B 10 02 00 20 D5 | CRC BAD
+I (3483) j1850: 28 1B 90 02 00 00 D5 | CRC BAD
+I (3531) j1850: 68 FF 10 03 86 | CRC OK
+I (3539) j1850: 68 88 10 03 44 | CRC OK
+I (3549) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (3556) j1850: C8 88 10 0E BA | CRC OK
+I (3565) j1850: CA 89 60 03 9F | CRC BAD
+I (3571) j1850: E8 89 60 0E 54 | CRC OK
+I (3588) dtc: DTC probe: reading stored codes (run key-on, engine-off)
+W (3591) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+W (3595) dtc: ECM (10): TX fault on request -> reset OK re-armed
+W (3601) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (3614) j1850: 28 1B 10 02 08 02 DF | CRC BAD
+I (3633) ES8311: Work in Slave mode
+I (3680) j1850: 28 1B 10 02 00 00 D4 | CRC BAD
+I (3682) I2S_IF: Paired data: 0x4ff70004, current mode: playback, paired in_enable: 0, paired out_enable: 0
+W (3684) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (3692) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
+I (3725) j1850: 6C 10 F1 19 52 FF 00 F3 | CRC OK
+I (3730) I2S_IF: STD: TX, sample_rate_hz: 22050, mclk_multiple: 256, clk_src: 0
+I (3733) j1850: D5 4A | CRC BAD
+I (3754) j1850: 2B 1F 10 32 00 00 D5 | CRC BAD
+I (3811) j1850: 28 1B 3C 02 00 08 F5 | CRC BAD
+I (3876) Adev_Codec: Open codec device OK
+I (3885) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (3942) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4008) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4139) j1850: 28 1B 10 02 40 10 D5 | CRC BAD
+I (4180) dtc: ECM (10): no codes (0 response frames)
+I (4185) j1850: 7B | CRC BAD
+I (4188) j1850: 33 | CRC BAD
+I (4192) transport: Attempt connection with slave: retry[0]
+W (4193) H_SDIO_DRV: Reset slave using GPIO[54]
+I (4193) os_wrapper_esp: GPIO [54] configured
+I (4204) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4213) j1850: 6C F1 40 59 00 00 93 69 | CRC OK
+I (4220) j1850: A8 3B 10 03 00 00 | CRC OK
+I (4220) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (4270) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4315) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (4322) j1850: 68 FF 40 03 D8 | CRC OK
+I (4335) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4401) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4441) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (4465) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4473) j1850: 6C F1 40 59 00 00 93 69 | CRC OK
+I (4532) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4539) j1850: 68 88 10 03 44 | CRC OK
+I (4547) j1850: C8 88 10 0E BA | CRC OK
+I (4561) j1850: C8 89 60 03 9F | CRC OK
+I (4568) j1850: E8 89 60 0E 54 | CRC OK
+I (4597) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4663) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4712) j1850: A8 3B 10 03 00 00 | CRC OK
+I (4712) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (4729) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4759) dtc: TSM/TSSM (40): no codes (2 response frames)
+I (4767) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (4794) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4860) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4894) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (4925) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (4991) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5022) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (5056) j1850: 28 1B 10 02 00 00 DD | CRC BAD
+I (5084) j1850: 6C F1 60 59 00 00 13 8E | CRC OK
+I (5122) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5187) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5203) j1850: A8 3B 10 03 00 00 | CRC OK
+I (5203) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (5253) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5318) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5342) dtc: other (60): no codes (1 response frame)
+I (5342) dtc: DTC probe: cycle done; re-reading in 8 s
+I (5384) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5449) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5515) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5530) j1850: 68 FF 10 03 86 | CRC OK
+I (5538) j1850: 68 88 10 03 44 | CRC OK
+I (5547) j1850: C8 88 10 0E BA | CRC OK
+I (5556) j1850: C8 89 60 03 9F | CRC OK
+I (5562) j1850: E8 89 60 0E 54 | CRC OK
+I (5581) j1850: 28 1B 10 02 00 00 D7 | CRC BAD
+I (5646) j1850: 28 1B 90 02 00 00 D5 | CRC BAD
+I (5695) j1850: A8 3B 10 03 00 00 | CRC OK
+I (5695) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (5712) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5715) sdio_wrapper: SDIO master: Slot 1, Data-Lines: 4-bit Freq(KHz)[40000 KHz]
+I (5756) sdio_wrapper: GPIOs: CLK[18] CMD[19] D0[14] D1[15] D2[16] D3[17] Slave_Reset[54]
+I (5758) sdio_wrapper: Queues: Tx[6] Rx[6] SDIO-Rx-Mode[1]
+I (5776) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5782) j1850: 68 FF 60 03 AD | CRC OK
+I (5803) sdio_wrapper: Function 0 Blocksize: 512
+I (5805) sdio_wrapper: Function 1 Blocksize: 512
+I (5843) j1850: 28 1B 10 82 00 00 D5 | CRC BAD
+I (5908) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (5934) H_SDIO_DRV: Card init success, TRANSPORT_RX_ACTIVE
+I (5935) transport: set_transport_state: 1
+I (5937) transport: Waiting for esp_hosted slave to be ready
+I (5974) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6000) H_SDIO_DRV: SDIO Host operating in STREAMING MODE
+I (6000) H_SDIO_DRV: Starting SDIO process rx task
+I (6000) H_SDIO_DRV: Open data path at slave
+I (6003) H_SDIO_DRV: Received ESP_PRIV_IF type message
+I (6007) transport: Received INIT event from ESP32 peripheral
+I (6013) transport: EVENT: 12
+I (6015) transport: Identified slave [esp32c6]
+I (6019) transport: EVENT: 11
+I (6022) transport: capabilities: 0xd
+I (6026) transport: Features supported are:
+I (6029) transport: 	 * WLAN
+I (6032) transport: 	   - HCI over SDIO
+I (6036) transport: 	   - BLE only
+I (6039) transport: EVENT: 13
+W (6041) transport: Version mismatch: Host [2.12.0] > Co-proc [0.0.0] ==> Upgrade co-proc to avoid RPC timeouts
+I (6051) transport: ESP board type is : 13
+
+I (6055) transport: Base transport is set-up, TRANSPORT_TX_ACTIVE
+I (6061) H_API: Transport active
+I (6064) transport: Slave chip Id[12]
+I (6068) transport: raw_tp_dir[-], flow_ctrl: low[60] high[80]
+I (6073) transport: transport_delayed_init
+I (6077) esp_cli: Registering command: crash
+I (6081) esp_cli: Registering command: reboot
+I (6085) esp_cli: Registering command: mem-dump
+I (6089) esp_cli: Registering command: task-dump
+I (6094) esp_cli: Registering command: cpu-dump
+I (6098) esp_cli: Registering command: heap-trace
+I (6102) esp_cli: Registering command: sock-dump
+I (6107) esp_cli: Registering command: host-power-save
+I (6111) vhci_drv: Host BT Support: Enabled
+I (6115) vhci_drv: 	BT Transport Type: VHCI
+I (6119) H_SDIO_DRV: Received INIT event
+I (6123) H_SDIO_DRV: Event type: 0x22
+I (6126) H_SDIO_DRV: Write thread started
+I (6131) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6136) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6141) vrod_gauge: boot complete
+I (6142) main_task: Returned from app_main()
+I (6161) NimBLE: GAP procedure initiated: stop advertising.
+
+I (6164) NimBLE: GAP procedure initiated: stop advertising.
+
+I (6168) NimBLE: GAP procedure initiated: advertise;
+I (6168) NimBLE: disc_mode=2
+I (6169) NimBLE:  adv_channel_map=0 own_addr_type=0 adv_filter_policy=0 adv_itvl_min=0 adv_itvl_max=0
+I (6178) NimBLE:
+
+I (6181) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6182) ble_peripheral: advertising as 'Zeppl' (undirected, override-on)
+I (6192) j1850: A8 3B 10 03 00 00 | CRC OK
+I (6194) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (6236) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6301) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6342) j1850: 68 FF 40 03 D8 | CRC OK
+I (6367) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6433) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6498) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6529) j1850: 68 88 10 03 44 | CRC OK
+I (6538) j1850: C8 88 10 0E BA | CRC OK
+I (6553) j1850: C8 89 60 03 9F | CRC OK
+I (6562) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6568) j1850: E8 89 60 0E 54 | CRC OK
+I (6629) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6678) j1850: A8 3B 10 03 00 00 | CRC OK
+I (6678) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (6695) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6760) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6826) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6891) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (6900) RPC_WRAP: Coprocessor Boot-up
+I (6957) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7022) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7088) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7153) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7169) j1850: A8 3B 10 03 00 00 | CRC OK
+I (7169) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (7219) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7285) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7350) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7416) j1850: 28 1B 10 02 00 03 D5 | CRC BAD
+I (7481) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7529) j1850: 68 FF 10 03 86 | CRC OK
+I (7537) j1850: 68 88 10 03 44 | CRC OK
+I (7545) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7549) j1850: C8 89 60 03 9F | CRC OK
+I (7556) j1850: C8 88 10 0E BA | CRC OK
+I (7574) j1850: E8 89 60 0E 54 | CRC OK
+I (7612) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7661) j1850: A8 3B 10 03 00 00 | CRC OK
+I (7661) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (7678) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7743) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7802) j1850: 68 FF 60 43 AD | CRC BAD
+I (7809) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7874) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (7940) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8005) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8071) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8137) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8152) j1850: A8 3B 10 03 00 00 | CRC OK
+I (8152) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (8202) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8268) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8333) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8372) j1850: 68 FF 40 03 D8 | CRC OK
+I (8399) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8464) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8530) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8536) j1850: 68 88 10 03 44 | CRC OK
+I (8543) j1850: C8 88 10 0E BA | CRC OK
+I (8549) j1850: C8 89 60 03 9F | CRC OK
+I (8569) j1850: E8 89 60 0E 54 | CRC OK
+I (8595) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8644) j1850: A8 3B 10 03 00 00 | CRC OK
+I (8644) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (8661) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8726) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8792) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8857) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8923) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (8989) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9054) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9120) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9135) j1850: A8 3B 10 03 00 00 | CRC OK
+I (9135) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (9185) j1850: 28 1B 10 02 00 20 D5 | CRC BAD
+I (9251) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9316) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9382) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9513) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9528) j1850: 68 FF 10 03 86 | CRC OK
+I (9536) j1850: 68 88 10 03 44 | CRC OK
+I (9544) j1850: C8 88 10 0E BA | CRC OK
+I (9568) j1850: C8 89 60 03 9F | CRC OK
+I (9573) j1850: E8 89 60 0E 54 | CRC OK
+I (9580) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9627) j1850: A8 3B 10 03 00 00 | CRC OK
+I (9627) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (9644) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9709) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9775) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9813) j1850: 68 FF 60 03 AD | CRC OK
+I (9841) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9906) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (9972) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10037) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10103) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10119) j1850: A8 3B 10 03 00 00 | CRC OK
+I (10119) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (10168) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10234) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10299) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10365) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10402) j1850: 68 FF 40 03 D8 | CRC OK
+I (10430) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10496) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10527) j1850: 68 88 10 03 44 | CRC OK
+I (10534) j1850: C8 88 10 0E BA | CRC OK
+I (10540) j1850: C8 89 60 03 9F | CRC OK
+I (10560) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10566) j1850: E8 89 60 0E 54 | CRC OK
+I (10610) j1850: A8 3B 10 03 00 00 | CRC OK
+I (10610) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (10627) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10693) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10758) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10824) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10889) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (10955) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11020) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11086) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11102) j1850: A8 3B 10 03 00 00 | CRC OK
+I (11102) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (11151) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11217) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11282) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11348) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11413) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11479) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11527) j1850: 68 FF 10 03 86 | CRC OK
+I (11535) j1850: 68 88 10 03 44 | CRC OK
+I (11545) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11552) j1850: C8 88 10 0E BA | CRC OK
+I (11559) j1850: C8 89 60 03 9F | CRC OK
+I (11565) j1850: E8 89 60 0E 54 | CRC OK
+I (11593) j1850: A8 3B 10 03 00 00 | CRC OK
+I (11593) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (11610) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11676) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11741) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11807) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11831) j1850: 68 FF 60 03 AD | CRC OK
+I (11872) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (11938) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12003) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12069) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12085) j1850: A8 3B 10 03 00 00 | CRC OK
+I (12085) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (12134) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12200) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12265) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12331) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12397) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12432) j1850: 68 FF 40 03 D8 | CRC OK
+I (12462) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12528) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12534) j1850: 68 88 10 03 44 | CRC OK
+I (12543) j1850: C8 88 10 0E BA | CRC OK
+I (12555) j1850: C8 89 60 03 9F | CRC OK
+I (12568) j1850: E8 89 60 0E 54 | CRC OK
+I (12576) j1850: A8 3B 10 03 00 00 | CRC OK
+I (12576) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (12593) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12659) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12724) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12774) j1850: stats: 230 frames, 19 bad CRC, 0 overruns, 12985 edges, 17 same-level
+I (12790) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12855) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12921) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (12986) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13052) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13068) j1850: A8 3B 10 03 00 00 | CRC OK
+I (13068) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (13117) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13183) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13249) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13314) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13350) j1850: 6C 10 F1 19 52 FF 00 F3 | CRC OK
+I (13364) j1850: 6C F1 10 59 00 00 13 3E | CRC OK
+I (13380) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13445) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13476) j1850: 6C 10 F1 19 52 FF 00 F3 | CRC OK
+I (13487) j1850: 6C F1 10 59 00 00 13 3E | CRC OK
+I (13511) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13526) j1850: 68 FF 10 03 86 | CRC OK
+I (13534) j1850: 68 88 10 03 44 | CRC OK
+I (13542) j1850: C8 88 10 0E BA | CRC OK
+I (13550) j1850: C8 89 60 03 9F | CRC OK
+I (13555) j1850: E8 89 60 0E 54 | CRC OK
+I (13562) j1850: A8 3B 10 03 00 00 | CRC OK
+I (13562) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (13576) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13602) j1850: 6C 10 F1 19 52 FF 00 F3 | CRC OK
+I (13618) j1850: 6C F1 10 59 00 00 13 3E | CRC OK
+I (13642) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13707) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13773) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13838) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13848) j1850: 68 FF 60 03 AD | CRC OK
+I (13904) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (13920) dtc: ECM (10): no codes (3 response frames)
+I (13928) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (13946) j1850: 6C F1 40 59 00 00 93 69 | CRC OK
+I (13969) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14035) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14052) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (14059) j1850: A8 3B 10 03 00 00 | CRC OK
+I (14059) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (14101) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14166) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14180) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (14200) j1850: 6C F1 40 59 00 00 93 69 | CRC OK
+I (14232) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14297) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14363) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14428) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14462) j1850: 68 FF 40 03 D8 | CRC OK
+I (14494) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14498) dtc: TSM/TSSM (40): no codes (2 response frames)
+I (14506) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (14525) j1850: 68 88 10 03 44 | CRC OK
+I (14534) j1850: C8 88 10 0E BA | CRC OK
+I (14541) j1850: A8 3B 10 03 00 00 | CRC OK
+I (14541) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (14547) j1850: C8 89 60 03 9F | CRC OK
+I (14553) j1850: E8 89 60 0E 54 | CRC OK
+I (14561) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14624) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14632) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (14690) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14756) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (14764) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14819) j1850: 6C F1 60 59 00 00 13 8E | CRC OK
+I (14827) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14887) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (14952) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15018) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15034) j1850: A8 3B 10 03 00 00 | CRC OK
+I (15034) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (15076) dtc: other (60): no codes (1 response frame)
+I (15076) dtc: DTC probe: cycle done; re-reading in 8 s
+I (15084) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15149) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15215) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15280) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15346) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15411) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15477) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15524) j1850: 68 FF 10 03 86 | CRC OK
+I (15533) j1850: 68 88 10 03 44 | CRC OK
+I (15541) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15545) j1850: C8 89 60 03 9F | CRC OK
+I (15551) j1850: C8 88 10 0E BA | CRC OK
+I (15558) j1850: A8 3B 10 03 00 00 | CRC OK
+I (15558) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (15574) j1850: E8 89 60 0E 54 | CRC OK
+I (15608) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15673) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15739) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15804) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15863) j1850: 68 FF 60 03 AD | CRC OK
+I (15871) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (15936) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16001) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16017) j1850: A8 3B 10 03 00 00 | CRC OK
+I (16017) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (16067) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16132) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16198) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16263) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16329) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16394) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16460) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16492) j1850: 68 FF 40 03 D8 | CRC OK
+I (16508) j1850: A8 3B 10 03 00 00 | CRC OK
+I (16508) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (16525) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16532) j1850: 68 88 10 03 44 | CRC OK
+I (16537) j1850: C8 89 60 03 9F | CRC OK
+I (16544) j1850: C8 88 10 0E BA | CRC OK
+I (16563) j1850: E8 89 60 0E 54 | CRC OK
+I (16591) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16656) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16722) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16788) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16853) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16919) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (16984) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17000) j1850: A8 3B 10 03 00 00 | CRC OK
+I (17000) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (17050) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17115) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17181) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17246) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17312) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17377) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17443) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17492) j1850: A8 3B 10 03 00 00 | CRC OK
+I (17492) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (17508) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17523) j1850: 68 FF 10 03 86 | CRC OK
+I (17532) j1850: 68 88 10 03 44 | CRC OK
+I (17540) j1850: C8 88 10 0E BA | CRC OK
+I (17560) j1850: C8 89 60 03 9F | CRC OK
+I (17566) j1850: E8 89 60 0E 54 | CRC OK
+I (17574) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17640) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17705) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17771) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17836) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17885) j1850: 68 FF 60 03 AD | CRC OK
+I (17902) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17967) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (17983) j1850: A8 3B 10 03 00 00 | CRC OK
+I (17983) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (18033) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18098) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18164) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18229) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18295) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18360) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18426) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18475) j1850: A8 3B 10 03 00 00 | CRC OK
+I (18475) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (18492) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18520) j1850: 68 FF 40 03 D8 | CRC OK
+I (18525) j1850: 68 88 10 03 44 | CRC OK
+I (18531) j1850: C8 88 10 0E BA | CRC OK
+I (18555) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18561) j1850: C8 89 60 03 9F | CRC OK
+I (18574) j1850: E8 89 60 0E 54 | CRC OK
+I (18623) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18688) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18754) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18819) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18885) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18950) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (18966) j1850: A8 3B 10 03 00 00 | CRC OK
+I (18966) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (19016) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19081) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19147) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19212) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19278) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19344) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19409) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19458) j1850: A8 3B 10 03 00 00 | CRC OK
+I (19458) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (19475) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19522) j1850: 68 FF 10 03 86 | CRC OK
+I (19530) j1850: 68 88 10 03 44 | CRC OK
+I (19540) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19547) j1850: C8 88 10 0E BA | CRC OK
+I (19557) j1850: C8 89 60 03 9F | CRC OK
+I (19562) j1850: E8 89 60 0E 54 | CRC OK
+I (19606) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19671) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19737) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19802) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19868) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19899) j1850: 68 FF 60 03 AD | CRC OK
+I (19933) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (19949) j1850: A8 3B 10 03 00 00 | CRC OK
+I (19949) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (19999) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20064) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20130) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20196) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20261) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20327) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20392) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20441) j1850: A8 3B 10 03 00 00 | CRC OK
+I (20441) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (20458) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20523) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20530) j1850: 68 88 10 03 44 | CRC OK
+I (20538) j1850: C8 88 10 0E BA | CRC OK
+I (20547) j1850: C8 89 60 03 9F | CRC OK
+I (20552) j1850: 68 FF 40 03 D8 | CRC OK
+I (20557) j1850: E8 89 60 0E 54 | CRC OK
+I (20589) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20654) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20720) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20785) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20851) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20916) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (20932) j1850: A8 3B 10 03 00 00 | CRC OK
+I (20932) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (20982) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21048) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21113) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21179) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21244) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21310) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21375) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21424) j1850: A8 3B 10 03 00 00 | CRC OK
+I (21424) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (21441) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21506) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21521) j1850: 68 FF 10 03 86 | CRC OK
+I (21529) j1850: 68 88 10 03 44 | CRC OK
+I (21538) j1850: C8 88 10 0E BA | CRC OK
+I (21544) j1850: C8 89 60 03 9F | CRC OK
+I (21550) j1850: E8 89 60 0E 54 | CRC OK
+I (21572) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21637) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21703) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21768) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21834) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21900) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (21914) j1850: A8 3B 10 03 00 00 | CRC OK
+I (21914) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (21920) j1850: 68 FF 60 03 AD | CRC OK
+I (21965) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22031) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22096) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22162) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22227) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22293) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22358) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22407) j1850: A8 3B 10 03 00 00 | CRC OK
+I (22407) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (22424) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22489) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22521) j1850: 68 88 10 03 44 | CRC OK
+I (22529) j1850: C8 88 10 0E BA | CRC OK
+I (22539) j1850: C8 89 60 03 9F | CRC OK
+I (22545) j1850: E8 89 60 0E 54 | CRC OK
+I (22555) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22582) j1850: 68 FF 40 03 D8 | CRC OK
+I (22620) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22686) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22752) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22776) j1850: stats: 473 frames, 19 bad CRC, 0 overruns, 13202 edges, 0 same-level
+I (22817) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22883) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (22898) j1850: A8 3B 10 03 00 00 | CRC OK
+I (22898) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (22948) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23014) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23090) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23145) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23208) j1850: 6C 10 F1 19 52 FF 00 F3 | CRC OK
+I (23216) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23228) j1850: 6C F1 10 59 00 00 13 3E | CRC OK
+I (23276) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23334) j1850: 6C 10 F1 19 52 FF 00 F3 | CRC OK
+I (23342) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23350) j1850: 6C F1 10 59 00 00 13 3E | CRC OK
+I (23390) j1850: A8 3B 10 03 00 00 | CRC OK
+I (23390) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (23407) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23472) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23520) j1850: 68 FF 10 03 86 | CRC OK
+I (23528) j1850: 68 88 10 03 44 | CRC OK
+I (23536) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23541) j1850: C8 89 60 03 9F | CRC OK
+I (23547) j1850: C8 88 10 0E BA | CRC OK
+I (23561) j1850: E8 89 60 0E 54 | CRC OK
+I (23604) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23654) dtc: ECM (10): no codes (2 response frames)
+I (23661) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (23669) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23681) j1850: 6C F1 40 59 00 00 93 69 | CRC OK
+I (23735) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23788) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (23800) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23813) j1850: 6C F1 40 59 00 00 93 69 | CRC OK
+I (23866) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23881) j1850: A8 3B 10 03 00 00 | CRC OK
+I (23881) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (23914) j1850: 6C 40 F1 19 52 FF 00 B7 | CRC OK
+I (23930) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (23934) j1850: 68 FF 60 03 AD | CRC OK
+I (23942) j1850: 6C F1 40 59 00 00 93 69 | CRC OK
+I (23997) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24062) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24128) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24193) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24232) dtc: TSM/TSSM (40): no codes (3 response frames)
+I (24240) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (24259) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24324) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24366) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (24373) j1850: A8 3B 10 03 00 00 | CRC OK
+I (24373) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (24390) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24456) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24492) j1850: 6C 60 F1 19 52 FF 00 9F | CRC OK
+I (24521) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24528) j1850: 68 88 10 03 44 | CRC OK
+I (24536) j1850: C8 88 10 0E BA | CRC OK
+I (24557) j1850: C8 89 60 03 9F | CRC OK
+I (24564) j1850: 6C F1 60 59 00 00 13 8E | CRC OK
+I (24570) j1850: E8 89 60 0E 54 | CRC OK
+I (24587) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24611) j1850: 68 FF 40 03 D8 | CRC OK
+I (24652) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24718) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24783) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24810) dtc: other (60): no codes (1 response frame)
+I (24810) dtc: DTC probe: cycle done; re-reading in 8 s
+I (24849) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24865) j1850: A8 3B 10 03 00 00 | CRC OK
+I (24865) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (24914) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (24980) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25045) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25111) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25176) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25242) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25307) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25356) j1850: A8 3B 10 03 00 00 | CRC OK
+I (25356) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (25373) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25439) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25504) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25519) j1850: 68 FF 10 03 86 | CRC OK
+I (25527) j1850: 68 88 10 03 44 | CRC OK
+I (25536) j1850: C8 88 10 0E BA | CRC OK
+I (25562) j1850: C8 89 60 03 9F | CRC OK
+I (25566) j1850: E8 89 60 0E 54 | CRC OK
+I (25574) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25635) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25701) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25766) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25832) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25848) j1850: A8 3B 10 03 00 00 | CRC OK
+I (25848) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (25897) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (25951) j1850: 68 FF 60 03 AD | CRC OK
+I (25963) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26028) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26094) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26159) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26225) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26291) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26339) j1850: A8 3B 10 03 00 00 | CRC OK
+I (26339) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (26356) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26422) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26487) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26518) j1850: 68 88 10 03 44 | CRC OK
+I (26527) j1850: C8 88 10 0E BA | CRC OK
+I (26548) j1850: C8 89 60 03 9F | CRC OK
+I (26554) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26560) j1850: E8 89 60 0E 54 | CRC OK
+I (26618) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26641) j1850: 68 FF 40 03 D8 | CRC OK
+I (26684) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26749) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26815) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26831) j1850: A8 3B 10 03 00 00 | CRC OK
+I (26831) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (26880) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (26946) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27011) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27077) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27143) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27208) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27274) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27322) j1850: A8 3B 10 03 00 00 | CRC OK
+I (27322) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (27339) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27405) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27470) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27518) j1850: 68 FF 10 03 86 | CRC OK
+I (27526) j1850: 68 88 10 03 44 | CRC OK
+I (27536) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27542) j1850: C8 88 10 0E BA | CRC OK
+I (27548) j1850: C8 89 60 03 9F | CRC OK
+I (27570) j1850: E8 89 60 0E 54 | CRC OK
+I (27601) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27667) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27732) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27798) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27814) j1850: A8 3B 10 03 00 00 | CRC OK
+I (27814) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (27863) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27929) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (27975) j1850: 68 FF 60 03 AD | CRC OK
+I (27995) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28060) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28126) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28191) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28257) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28305) j1850: A8 3B 10 03 00 00 | CRC OK
+I (28305) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (28322) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28388) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28453) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28519) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28526) j1850: 68 88 10 03 44 | CRC OK
+I (28534) j1850: C8 88 10 0E BA | CRC OK
+I (28542) j1850: C8 89 60 03 9F | CRC OK
+I (28548) j1850: E8 89 60 0E 54 | CRC OK
+I (28584) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28650) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28671) j1850: 68 FF 40 03 D8 | CRC OK
+I (28715) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28781) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28797) j1850: A8 3B 10 03 00 00 | CRC OK
+I (28797) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (28847) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28912) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (28978) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29043) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29109) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29174) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29240) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29288) j1850: A8 3B 10 03 00 00 | CRC OK
+I (29288) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (29305) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29371) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29436) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29502) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29517) j1850: 68 FF 10 03 86 | CRC OK
+I (29525) j1850: 68 88 10 03 44 | CRC OK
+I (29534) j1850: C8 88 10 0E BA | CRC OK
+I (29543) j1850: C8 89 60 03 9F | CRC OK
+I (29549) j1850: E8 89 60 0E 54 | CRC OK
+I (29567) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29633) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29699) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29764) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29780) j1850: A8 3B 10 03 00 00 | CRC OK
+I (29780) j1850: load: raw=0x00 (A8 3B 10 param; not gear)
+I (29830) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29895) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29961) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (29985) j1850: 68 FF 60 03 AD | CRC OK
+I (30026) j1850: 28 1B 10 02 00 00 D5 | CRC OK
+I (30092) j1850: 28 1B 10 02 00 00 D5 | CRC OK

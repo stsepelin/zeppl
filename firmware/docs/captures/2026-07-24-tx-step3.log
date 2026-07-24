@@ -1,0 +1,426 @@
+(37) boot.esp32p4: SPI Speed      : 80MHz
+I (40) boot.esp32p4: SPI Mode       : QIO
+I (44) boot.esp32p4: SPI Flash Size : 16MB
+I (48) boot: Enabling RNG early entropy source...
+I (53) boot: Partition Table:
+I (55) boot: ## Label            Usage          Type ST Offset   Length
+I (61) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (68) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (74) boot:  2 factory          factory app      00 00 00010000 00800000
+I (81) boot:  3 storage          Unknown data     01 82 00810000 00700000
+I (87) boot:  4 coredump         Unknown data     01 03 00f10000 00040000
+I (95) boot: End of partition table
+I (97) esp_image: segment 0: paddr=00010020 vaddr=48160020 size=345d08h (3431688) map
+I (608) esp_image: segment 1: paddr=00355d30 vaddr=30100000 size=00068h (   104) load
+I (610) esp_image: segment 2: paddr=00355da0 vaddr=4ff00000 size=0a278h ( 41592) load
+I (620) esp_image: segment 3: paddr=00360020 vaddr=48000020 size=1501e0h (1376736) map
+I (823) esp_image: segment 4: paddr=004b0208 vaddr=4ff0a278 size=0e7b4h ( 59316) load
+I (835) esp_image: segment 5: paddr=004be9c4 vaddr=4ff18a80 size=049b0h ( 18864) load
+I (840) esp_image: segment 6: paddr=004c337c vaddr=50108080 size=00024h (    36) load
+I (847) boot: Loaded app from partition at offset 0x10000
+I (847) boot: Disabling RNG early entropy source...
+I (861) hex_psram: vendor id    : 0x0d (AP)
+I (862) hex_psram: Latency      : 0x01 (Fixed)
+I (862) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (862) hex_psram: dev id       : 0x03 (generation 4)
+I (867) hex_psram: density      : 0x07 (256 Mbit)
+I (872) hex_psram: good-die     : 0x06 (Pass)
+I (876) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (880) hex_psram: BurstType    : 0x00 ( Wrap)
+I (885) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (889) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (894) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (899) hex_psram: DriveStrength: 0x00 (1/1)
+I (903) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1240) mmu_psram: .rodata xip on psram
+I (1308) mmu_psram: .text xip on psram
+I (1309) hex_psram: psram CS IO is dedicated
+I (1309) cpu_start: Multicore app
+I (1721) esp_psram: SPI SRAM memory test OK
+I (1731) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1731) cpu_start: Pro cpu start user code
+I (1731) cpu_start: cpu freq: 360000000 Hz
+I (1734) app_init: Application information:
+I (1737) app_init: Project name:     vrod_gauge
+I (1742) app_init: App version:      ebdac22-dirty
+I (1746) app_init: Compile time:     Jul 24 2026 20:35:58
+I (1751) app_init: ELF file SHA256:  6314ca7f1...
+I (1756) app_init: ESP-IDF:          v6.0.1
+I (1760) efuse_init: Min chip rev:     v0.1
+I (1764) efuse_init: Max chip rev:     v1.99
+I (1768) efuse_init: Chip rev:         v1.3
+I (1772) heap_init: Initializing. RAM available for dynamic allocation:
+I (1778) heap_init: At 4FF26010 len 00014FB0 (83 KiB): RETENT_RAM
+I (1784) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1789) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1794) heap_init: At 501080A4 len 00007F5C (31 KiB): RTCRAM
+I (1800) heap_init: At 30100068 len 00001F98 (7 KiB): SPM
+I (1805) esp_psram: Adding pool of 27968K of PSRAM memory to heap allocator
+I (1811) esp_psram: Adding pool of 63K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1823) esp_psram: Adding pool of 40K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1834) spi_flash: detected chip: generic
+W (1838) spi_flash: Detected flash size > 16 MB, but access beyond 16 MB is not supported for this flash model yet.
+I (1848) spi_flash: flash io: qio
+W (1851) spi_flash: Detected size(32768k) larger than the size in the binary image header(16384k). Using the size in the binary image header.
+I (1863) host_init: ESP Hosted : Host chip_ip[18]
+I (1868) H_API: ESP-Hosted starting. Hosted_Tasks: prio:23, stack: 5120 RPC_task_stack: 5120
+I (1876) H_API: ** add_esp_wifi_remote_channels **
+I (1881) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1887) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1893) esp_core_dump_flash: Init core dump to flash
+I (1898) esp_core_dump_flash: Found partition 'coredump' @ f10000 262144 bytes
+I (1907) H_SDIO_DRV: sdio_data_to_rx_buf_task started
+I (1910) main_task: Started on CPU0
+I (1914) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (1923) main_task: Calling app_main()
+I (1934) esp_lvgl:adapter: LVGL adapter initialized successfully
+W (1936) ledc: GPIO 26 is not usable, maybe conflict with others
+I (1937) esp32_p4_wifi6_touch_lcd_xc: MIPI DSI PHY Powered on
+I (1943) esp32_p4_wifi6_touch_lcd_xc: Install MIPI DSI LCD control panel
+I (1948) esp32_p4_wifi6_touch_lcd_xc: Install Waveshare ESP32-P4-WIFI6-Touch-LCD-XC LCD control panel
+I (1957) jd9365: version: 2.0.2
+I (2121) jd9365: LCD ID: 93 65 04
+I (2273) esp32_p4_wifi6_touch_lcd_xc: Display initialized
+I (2297) esp_lvgl:bridge_v9: Initializing hardware resources
+I (2298) esp_lvgl:bridge_v9: Hardware resources initialized successfully
+I (2402) esp32_p4_wifi6_touch_lcd_xc: Touch 0x14 found
+I (2404) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2426) GT911: TouchPad_ID:0x39,0x32,0x37
+I (2427) GT911: TouchPad_Config_Version:90
+W (2427) esp_lvgl:touch: LV_USE_GESTURE_RECOGNITION is disabled; only single-point pointer events are available
+I (2433) esp_lvgl:touch: Touch input device registered successfully (IRQ mode: disabled)
+I (2441) esp_lvgl:adapter: LVGL task started successfully
+I (2442) esp_lvgl:bridge: Initializing hardware resources
+I (2451) esp_lvgl:bridge: Hardware resources initialized successfully
+I (2756) emoji_font: emoji.ttf embedded: 1982596 bytes
+I (2766) emoji_font: emoji fallback attached: 26=0x4ff3f9ec 33=0x4ff68814
+I (2768) vrod_gauge: speed divisor (NVS) = 188
+I (2777) odo: restored odo=26125m trip1=26125m trip2=26125m
+I (2778) j1850: glitch filter off
+I (2779) j1850: passive sniffer on GPIO20 (read-only build)
+I (2783) gps_uart: NMEA reader on UART1 (RX GPIO21, 9600 baud)
+I (2789) j1850tx: TX ready on GPIO24 (high-side, HIGH=dominant); watchdog cutoff 300 us
+I (3071) j1850: raw  1: low  292474 us
+I (3071) j1850: raw  2: HIGH   189 us
+I (3071) j1850: raw  3: low     28 us
+I (3071) j1850: raw  4: HIGH   128 us
+I (3073) j1850: raw  5: low    121 us
+I (3077) j1850: raw  6: HIGH   111 us
+I (3080) j1850: raw  7: low    138 us
+I (3084) j1850: raw  8: HIGH   111 us
+I (3087) j1850: raw  9: low     74 us
+I (3090) j1850: raw 10: HIGH    47 us
+I (3094) j1850: raw 11: low    138 us
+I (3097) j1850: raw 12: HIGH    47 us
+I (3101) j1850: raw 13: low    138 us
+I (3104) j1850: raw 14: HIGH    47 us
+I (3107) j1850: raw 15: low    138 us
+I (3111) j1850: raw 16: HIGH    46 us
+I (3114) j1850: raw 17: low    139 us
+I (3118) j1850: raw 18: HIGH   111 us
+I (3121) j1850: raw 19: low     75 us
+I (3124) j1850: raw 20: HIGH    46 us
+I (3128) j1850: raw 21: low    139 us
+I (3131) j1850: raw 22: HIGH   111 us
+I (3134) j1850: raw 23: low     75 us
+I (3138) j1850: raw 24: HIGH   110 us
+I (3141) j1850: raw 25: low     75 us
+I (3145) j1850: raw 26: HIGH   110 us
+I (3148) j1850: raw 27: low     75 us
+I (3151) j1850: raw 28: HIGH   110 us
+I (3155) j1850: raw 29: low     75 us
+I (3158) j1850: raw 30: HIGH   111 us
+I (3162) j1850: raw 31: low     74 us
+I (3165) j1850: raw 32: HIGH   111 us
+I (3168) j1850: raw 33: low     75 us
+I (3172) j1850: raw 34: HIGH    46 us
+I (3175) j1850: raw 35: low     75 us
+I (3178) j1850: raw 36: HIGH   110 us
+I (3182) j1850: raw 37: low     75 us
+I (3185) j1850: raw 38: HIGH    47 us
+I (3189) j1850: raw 39: low     74 us
+I (3192) j1850: raw 40: HIGH   111 us
+I (3195) j1850: raw 41: low     75 us
+I (3199) j1850: raw 42: HIGH    46 us
+I (3202) j1850: raw 43: low   1290 us
+I (3206) j1850: 29 FE 60 01 11 | CRC OK
+I (3209) j1850: raw 44: HIGH   180 us
+I (3212) j1850: raw 45: low     75 us
+I (3216) j1850: raw 46: HIGH    47 us
+I (3219) j1850: raw 47: low    139 us
+I (3223) j1850: raw 48: HIGH   110 us
+I (3226) j1850: raw 49: low    139 us
+I (3229) j1850: raw 50: HIGH   111 us
+I (3233) j1850: raw 51: low     75 us
+I (3236) j1850: raw 52: HIGH   110 us
+I (3240) j1850: raw 53: low    139 us
+I (3243) j1850: raw 54: HIGH    47 us
+I (3246) j1850: raw 55: low    139 us
+I (3250) j1850: raw 56: HIGH    46 us
+I (3253) j1850: raw 57: low    139 us
+I (3256) j1850: raw 58: HIGH    46 us
+I (3260) j1850: raw 59: low    138 us
+I (3263) j1850: raw 60: HIGH    47 us
+I (3267) j1850: raw 61: low     74 us
+I (3270) j1850: raw 62: HIGH    47 us
+I (3273) j1850: raw 63: low    138 us
+I (3277) j1850: raw 64: HIGH   110 us
+I (3282) j1850: 68 FF 60 03 AD | CRC OK
+I (3299) j1850tx: watchdog trigger test: PASS (faulted=1, line=LOW)
+I (3303) j1850tx: replay: frame 1 sent
+I (3305) j1850: 68 FF 40 03 D8 | CRC OK
+I (3459) j1850tx: replay: frame 2 sent
+W (3599) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+W (3607) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (3613) j1850tx: replay: frame 3 sent
+I (3674) ES8311: Work in Slave mode
+I (3725) I2S_IF: Paired data: 0x4ff6eb04, current mode: playback, paired in_enable: 0, paired out_enable: 0
+W (3727) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (3734) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
+I (3770) I2S_IF: STD: TX, sample_rate_hz: 22050, mclk_multiple: 256, clk_src: 0
+I (3770) j1850: 29 FE 60 01 11 | CRC OK
+I (3769) j1850tx: replay: frame 4 sent
+I (3907) Adev_Codec: Open codec device OK
+I (4426) transport: Attempt connection with slave: retry[0]
+W (4428) H_SDIO_DRV: Reset slave using GPIO[54]
+I (4429) os_wrapper_esp: GPIO [54] configured
+I (4718) j1850: 68 FF 40 03 D8 | CRC OK
+I (4728) j1850: 29 FE 40 01 64 | CRC OK
+I (5094) j1850: 29 FE 60 01 11 | CRC OK
+I (5100) j1850: 68 FF 60 03 AD | CRC OK
+I (5935) j1850tx: replay: frame 5 sent
+I (5937) j1850: 68 FF 40 03 D8 | CRC OK
+I (6003) sdio_wrapper: SDIO master: Slot 1, Data-Lines: 4-bit Freq(KHz)[40000 KHz]
+I (6005) sdio_wrapper: GPIOs: CLK[18] CMD[19] D0[14] D1[15] D2[16] D3[17] Slave_Reset[54]
+I (6009) sdio_wrapper: Queues: Tx[6] Rx[6] SDIO-Rx-Mode[1]
+I (6091) j1850tx: replay: frame 6 sent
+I (6095) sdio_wrapper: Function 0 Blocksize: 512
+I (6097) sdio_wrapper: Function 1 Blocksize: 512
+I (6197) H_SDIO_DRV: Card init success, TRANSPORT_RX_ACTIVE
+I (6197) transport: set_transport_state: 1
+I (6198) transport: Waiting for esp_hosted slave to be ready
+I (6207) H_SDIO_DRV: SDIO Host operating in STREAMING MODE
+I (6207) H_SDIO_DRV: Open data path at slave
+I (6207) H_SDIO_DRV: Starting SDIO process rx task
+I (6215) H_SDIO_DRV: Received ESP_PRIV_IF type message
+I (6219) transport: Received INIT event from ESP32 peripheral
+I (6225) transport: EVENT: 12
+I (6227) transport: Identified slave [esp32c6]
+I (6231) transport: EVENT: 11
+I (6234) transport: capabilities: 0xd
+I (6238) transport: Features supported are:
+I (6241) transport: 	 * WLAN
+I (6244) transport: 	   - HCI over SDIO
+I (6248) transport: 	   - BLE only
+I (6251) transport: EVENT: 13
+W (6253) transport: Version mismatch: Host [2.12.0] > Co-proc [0.0.0] ==> Upgrade co-proc to avoid RPC timeouts
+I (6263) transport: ESP board type is : 13
+
+I (6267) transport: Base transport is set-up, TRANSPORT_TX_ACTIVE
+I (6273) H_API: Transport active
+I (6276) transport: Slave chip Id[12]
+I (6280) transport: raw_tp_dir[-], flow_ctrl: low[60] high[80]
+I (6285) transport: transport_delayed_init
+I (6289) esp_cli: Registering command: crash
+I (6293) esp_cli: Registering command: reboot
+I (6297) esp_cli: Registering command: mem-dump
+I (6301) esp_cli: Registering command: task-dump
+I (6306) esp_cli: Registering command: cpu-dump
+I (6310) esp_cli: Registering command: heap-trace
+I (6314) esp_cli: Registering command: sock-dump
+I (6319) esp_cli: Registering command: host-power-save
+I (6324) vhci_drv: Host BT Support: Enabled
+I (6327) vhci_drv: 	BT Transport Type: VHCI
+I (6331) H_SDIO_DRV: Received INIT event
+I (6335) H_SDIO_DRV: Event type: 0x22
+I (6338) H_SDIO_DRV: Write thread started
+I (6347) j1850tx: replay: frame 7 sent
+I (6348) j1850: 29 FE 40 01 64 | CRC OK
+I (6403) vrod_gauge: boot complete
+I (6403) main_task: Returned from app_main()
+I (6416) NimBLE: GAP procedure initiated: stop advertising.
+
+I (6419) NimBLE: GAP procedure initiated: stop advertising.
+
+I (6424) NimBLE: GAP procedure initiated: advertise;
+I (6425) NimBLE: disc_mode=2
+I (6428) NimBLE:  adv_channel_map=0 own_addr_type=0 adv_filter_policy=0 adv_itvl_min=0 adv_itvl_max=0
+I (6437) NimBLE:
+
+I (6441) ble_peripheral: advertising as 'Zeppl' (undirected, override-on)
+I (6501) j1850tx: replay: frame 8 sent
+I (6503) j1850: 29 FE 60 01 11 | CRC OK
+I (6748) j1850: 68 FF 40 03 D8 | CRC OK
+I (6758) j1850: 29 FE 40 01 64 | CRC OK
+I (6907) RPC_WRAP: Coprocessor Boot-up
+I (7112) j1850: 29 FE 60 01 11 | CRC OK
+I (7117) j1850: 68 FF 60 03 AD | CRC OK
+I (8657) j1850tx: replay: frame 9 sent
+I (8658) j1850: 68 FF 40 03 D8 | CRC OK
+I (8777) j1850: 68 FF 40 03 D8 | CRC OK
+I (8788) j1850: 29 FE 40 01 64 | CRC OK
+I (8813) j1850: 68 FF 60 03 AD | CRC OK
+I (8813) j1850tx: replay: frame 10 sent
+I (8968) j1850tx: replay: frame 11 sent
+I (8969) j1850: 29 FE 40 01 64 | CRC OK
+I (9123) j1850tx: replay: frame 12 sent
+I (9124) j1850: 29 FE 60 01 11 | CRC OK
+I (9136) j1850: 29 FE 60 01 11 | CRC OK
+I (9142) j1850: 68 FF 60 03 AD | CRC OK
+I (10807) j1850: 68 FF 40 03 D8 | CRC OK
+I (10817) j1850: 29 FE 40 01 64 | CRC OK
+I (11144) j1850: 29 FE 60 01 11 | CRC OK
+I (11150) j1850: 68 FF 60 03 AD | CRC OK
+I (11277) j1850tx: replay: frame 13 sent
+I (11279) j1850: 68 FF 40 03 D8 | CRC OK
+I (11431) j1850tx: replay: frame 14 sent
+I (11433) j1850: 68 FF 60 03 AD | CRC OK
+I (11585) j1850tx: replay: frame 15 sent
+I (11587) j1850: 29 FE 40 01 64 | CRC OK
+I (11739) j1850tx: replay: frame 16 sent
+I (11741) j1850: 29 FE 60 01 11 | CRC OK
+I (12781) j1850: stats: 31 frames, 0 bad CRC, 0 overruns, 1425 edges, 5 same-level
+I (12837) j1850: 68 FF 40 03 D8 | CRC OK
+I (12847) j1850: 29 FE 40 01 64 | CRC OK
+I (13161) j1850: 29 FE 60 01 11 | CRC OK
+I (13167) j1850: 68 FF 60 03 AD | CRC OK
+I (13893) j1850tx: replay: frame 17 sent
+I (13895) j1850: 68 FF 40 03 D8 | CRC OK
+I (14047) j1850tx: replay: frame 18 sent
+I (14049) j1850: 68 FF 60 03 AD | CRC OK
+I (14201) j1850tx: replay: frame 19 sent
+I (14203) j1850: 29 FE 40 01 64 | CRC OK
+I (14355) j1850tx: replay: frame 20 sent
+I (14357) j1850: 29 FE 60 01 11 | CRC OK
+I (14867) j1850: 68 FF 40 03 D8 | CRC OK
+I (14877) j1850: 29 FE 40 01 64 | CRC OK
+I (15178) j1850: 29 FE 60 01 11 | CRC OK
+I (15184) j1850: 68 FF 60 03 AD | CRC OK
+I (16509) j1850tx: replay: frame 21 sent
+I (16511) j1850: 68 FF 40 03 D8 | CRC OK
+I (16663) j1850tx: replay: frame 22 sent
+I (16665) j1850: 68 FF 60 03 AD | CRC OK
+I (16817) j1850tx: replay: frame 23 sent
+I (16819) j1850: 29 FE 40 01 64 | CRC OK
+I (16897) j1850: 68 FF 40 03 D8 | CRC OK
+I (16907) j1850: 29 FE 40 01 64 | CRC OK
+I (16971) j1850tx: replay: frame 24 sent
+I (16973) j1850: 29 FE 60 01 11 | CRC OK
+I (17196) j1850: 29 FE 60 01 11 | CRC OK
+I (17202) j1850: 68 FF 60 03 AD | CRC OK
+I (18927) j1850: 68 FF 40 03 D8 | CRC OK
+I (18937) j1850: 29 FE 40 01 64 | CRC OK
+I (19125) j1850tx: replay: frame 25 sent
+I (19127) j1850: 68 FF 40 03 D8 | CRC OK
+I (19217) j1850: 29 FE 60 01 11 | CRC OK
+I (19223) j1850: 68 FF 60 03 AD | CRC OK
+I (19279) j1850tx: replay: frame 26 sent
+I (19281) j1850: 68 FF 60 03 AD | CRC OK
+I (19433) j1850tx: replay: frame 27 sent
+I (19435) j1850: 29 FE 40 01 64 | CRC OK
+I (19587) j1850tx: replay: frame 28 sent
+I (19589) j1850: 29 FE 60 01 11 | CRC OK
+I (20957) j1850: 68 FF 40 03 D8 | CRC OK
+I (20967) j1850: 29 FE 40 01 64 | CRC OK
+I (21230) j1850: 29 FE 60 01 11 | CRC OK
+I (21236) j1850: 68 FF 60 03 AD | CRC OK
+I (21741) j1850tx: replay: frame 29 sent
+I (21743) j1850: 68 FF 40 03 D8 | CRC OK
+I (21895) j1850tx: replay: frame 30 sent
+I (21897) j1850: 68 FF 60 03 AD | CRC OK
+I (22049) j1850tx: replay: frame 31 sent
+I (22051) j1850: 29 FE 40 01 64 | CRC OK
+I (22203) j1850tx: replay: frame 32 sent
+I (22205) j1850: 29 FE 60 01 11 | CRC OK
+I (22783) j1850: stats: 67 frames, 0 bad CRC, 0 overruns, 1512 edges, 0 same-level
+I (22987) j1850: 68 FF 40 03 D8 | CRC OK
+I (22997) j1850: 29 FE 40 01 64 | CRC OK
+I (23247) j1850: 29 FE 60 01 11 | CRC OK
+I (23253) j1850: 68 FF 60 03 AD | CRC OK
+I (24357) j1850tx: replay: frame 33 sent
+I (24359) j1850: 68 FF 40 03 D8 | CRC OK
+I (24511) j1850tx: replay: frame 34 sent
+I (24513) j1850: 68 FF 60 03 AD | CRC OK
+I (24665) j1850tx: replay: frame 35 sent
+I (24667) j1850: 29 FE 40 01 64 | CRC OK
+I (24819) j1850tx: replay: frame 36 sent
+I (24821) j1850: 29 FE 60 01 11 | CRC OK
+I (25017) j1850: 68 FF 40 03 D8 | CRC OK
+I (25027) j1850: 29 FE 40 01 64 | CRC OK
+I (25264) j1850: 29 FE 60 01 11 | CRC OK
+I (25270) j1850: 68 FF 60 03 AD | CRC OK
+I (26973) j1850tx: replay: frame 37 sent
+I (26975) j1850: 68 FF 40 03 D8 | CRC OK
+I (27046) j1850: 68 FF 40 03 D8 | CRC OK
+I (27056) j1850: 29 FE 40 01 64 | CRC OK
+I (27127) j1850tx: replay: frame 38 sent
+I (27129) j1850: 68 FF 60 03 AD | CRC OK
+I (27281) j1850tx: replay: frame 39 sent
+I (27281) j1850: 29 FE 40 01 64 | CRC OK
+I (27286) j1850: 29 FE 60 01 11 | CRC OK
+I (27292) j1850: 68 FF 60 03 AD | CRC OK
+I (27435) j1850tx: replay: frame 40 sent
+I (27437) j1850: 29 FE 60 01 11 | CRC OK
+I (29076) j1850: 68 FF 40 03 D8 | CRC OK
+I (29086) j1850: 29 FE 40 01 64 | CRC OK
+I (29307) j1850: 29 FE 60 01 11 | CRC OK
+I (29313) j1850: 68 FF 60 03 AD | CRC OK
+I (29589) j1850tx: replay: frame 41 sent
+I (29591) j1850: 68 FF 40 03 D8 | CRC OK
+I (29743) j1850tx: replay: frame 42 sent
+I (29745) j1850: 68 FF 60 03 AD | CRC OK
+I (29897) j1850tx: replay: frame 43 sent
+I (29899) j1850: 29 FE 40 01 64 | CRC OK
+I (30051) j1850tx: replay: frame 44 sent
+I (30053) j1850: 29 FE 60 01 11 | CRC OK
+I (31107) j1850: 68 FF 40 03 D8 | CRC OK
+I (31117) j1850: 29 FE 40 01 64 | CRC OK
+I (31315) j1850: 29 FE 60 01 11 | CRC OK
+I (31321) j1850: 68 FF 60 03 AD | CRC OK
+I (32205) j1850tx: replay: frame 45 sent
+I (32207) j1850: 68 FF 40 03 D8 | CRC OK
+I (32359) j1850tx: replay: frame 46 sent
+I (32361) j1850: 68 FF 60 03 AD | CRC OK
+I (32513) j1850tx: replay: frame 47 sent
+I (32515) j1850: 29 FE 40 01 64 | CRC OK
+I (32667) j1850tx: replay: frame 48 sent
+I (32669) j1850: 29 FE 60 01 11 | CRC OK
+I (32785) j1850: stats: 103 frames, 0 bad CRC, 0 overruns, 1512 edges, 0 same-level
+I (33136) j1850: 68 FF 40 03 D8 | CRC OK
+I (33146) j1850: 29 FE 40 01 64 | CRC OK
+I (33332) j1850: 29 FE 60 01 11 | CRC OK
+I (33338) j1850: 68 FF 60 03 AD | CRC OK
+I (34821) j1850tx: replay: frame 49 sent
+I (34823) j1850: 68 FF 40 03 D8 | CRC OK
+I (34975) j1850tx: replay: frame 50 sent
+I (34977) j1850: 68 FF 60 03 AD | CRC OK
+I (35129) j1850tx: replay: frame 51 sent
+I (35131) j1850: 29 FE 40 01 64 | CRC OK
+I (35166) j1850: 68 FF 40 03 D8 | CRC OK
+I (35177) j1850: 29 FE 40 01 64 | CRC OK
+I (35283) j1850tx: replay: frame 52 sent
+I (35285) j1850: 29 FE 60 01 11 | CRC OK
+I (35349) j1850: 29 FE 60 01 11 | CRC OK
+I (35355) j1850: 68 FF 60 03 AD | CRC OK
+I (37196) j1850: 68 FF 40 03 D8 | CRC OK
+I (37206) j1850: 29 FE 40 01 64 | CRC OK
+I (37367) j1850: 29 FE 60 01 11 | CRC OK
+I (37373) j1850: 68 FF 60 03 AD | CRC OK
+I (37437) j1850tx: replay: frame 53 sent
+I (37439) j1850: 68 FF 40 03 D8 | CRC OK
+I (37591) j1850tx: replay: frame 54 sent
+I (37593) j1850: 68 FF 60 03 AD | CRC OK
+I (37745) j1850tx: replay: frame 55 sent
+I (37747) j1850: 29 FE 40 01 64 | CRC OK
+I (37899) j1850tx: replay: frame 56 sent
+I (37901) j1850: 29 FE 60 01 11 | CRC OK
+I (39226) j1850: 68 FF 40 03 D8 | CRC OK
+I (39236) j1850: 29 FE 40 01 64 | CRC OK
+I (39384) j1850: 29 FE 60 01 11 | CRC OK
+I (39390) j1850: 68 FF 60 03 AD | CRC OK
+I (40053) j1850tx: replay: frame 57 sent
+I (40055) j1850: 68 FF 40 03 D8 | CRC OK
+I (40207) j1850tx: replay: frame 58 sent
+I (40209) j1850: 68 FF 60 03 AD | CRC OK

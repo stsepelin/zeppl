@@ -224,6 +224,78 @@ I (5596) j1850tx: self-sniff tally: 4 pass, 0 fail
   no-Rpd loopback caveat was handled (bench pull-down tacked on, or the board
   driven with the recessive reference present).
 
+#### On-bike TX behaviour log (2026-07-24) — engine-off + engine-on
+
+Ran the `VROD_J1850_TX_BIKE_REPLAY` tally build (IM keep-alive replay + fault
+tally + fault-reset recovery) on the fabricated PCB, wired to the bike, Mac on
+USB (charged). Three phases, board hard-reset at the start of each so the tally
+counters start clean. Captures in `docs/captures/2026-07-24-tx-*.log`.
+
+| Phase | Bus state | Sniffer (per 10 s) | TX tally | Faults |
+|---|---|---|---|---|
+| Key-off | dead (unpowered) | 0 frames, 0 edges | 15 ok | **1** (frame 2, self-recovered) |
+| Key-on, engine-off | live, idle | 32 frames, 2 bad CRC, 1516 edges | 28 ok | **0** |
+| Engine running | live, busy | ~245 frames, ~14→+1 bad CRC, 13650 edges | 40 ok | **0** |
+| Engine off->on->off (x2) | cycled, kill-switch | RPM-frame state marker | 148 + 96 ok | **0** |
+
+Findings:
+
+- **Engine-on TX is watchdog-clean: 40/40 sends, 0 faults.** The heavy
+  engine-on faults from the earlier session (all sends `[TX FAULT]` from
+  ~frame 37) did **not** reproduce. That earlier run coincided with the Mac
+  battery dying / a reflash failure under engine EMI, so the fault reads as an
+  environmental/power transient, not a persistent bus-noise latch on this front
+  end.
+- **The one key-off fault is a firmware re-arm artifact, not the bus.** On a
+  *dead* bus it faults once at frame 2 (right after the boot watchdog
+  self-test's reset), `j1850_tx_reset()` re-arms, and it never faults again
+  (`15 ok, 1 fault`). On a *powered* bus (termination pulls recessive-LOW) the
+  frame-2 fault disappears entirely (`4 ok, 0 faults` first cycle) — the
+  floating/dead pad readback is what tripped the watchdog.
+- **The bus decodes real engine telemetry** engine-on: `28 1B 10` RPM (dominant,
+  362 frames), `A8 3B 10` load, `A8 49 10` temp, `28 FF 10` kill-switch/status,
+  `68 88 10` CEL, interleaved with our replay keep-alives and the stock IM's
+  identical `68 FF 40/60` + `29 FE 40/60`.
+- **Bad CRC is collision + EMI, not TX misfire.** Engine-off: 2/32 bad, both our
+  TX colliding with the stock IM keying the *same* keep-alive frame (no CSMA /
+  arbitration). Engine-on: ~15 total, front-loaded in the capture (mangled/short
+  headers: `28 3B 10 0E 16 90 3F`, `E8 89 60 CF D4`, phantom `C4 30`) — RX-side
+  ignition EMI — then settling (+1 in the following window).
+
+Cold-start crank test (`docs/captures/2026-07-24-tx-coldstart.log`): a 65 s
+capture through **engine off -> crank -> run -> off -> crank -> run**, the engine
+stopped/started with the **kill switch** (key stays on, so the ECM keeps
+broadcasting — engine state reads off the RPM frame `28 1B 10` content, not the
+bus frame rate). Timeline (RPM frame data[4]: absent/`00` = stopped,
+`15-19` = idling):
+
+| t | RPM frame | engine | TX faults |
+|---|---|---|---|
+| 0-18 s | none | off | 0 |
+| ~19 s | `00` appears | **crank #1** (RPM 0 -> rising) | 0 |
+| 20-36 s | `15-19` | running | 0 |
+| ~36 s | `00` | shutdown | 0 |
+| 38-47 s | none | off | 0 |
+| ~48 s | `00` | **crank #2** | 0 |
+| 48-66 s | `15-17` | running | 0 |
+
+**Two genuine cold-start crank transients captured from a quiet bus, 0 TX
+faults.** Across all phases this session TX ran **312 consecutive clean sends**
+(28 + 40 + 148 + 96), 0 watchdog trips.
+
+**Conclusion — the earlier engine-on fault was power/environmental, not the
+bus.** The heavy-fault run happened while the Mac battery was dying (USB brownout
+on the P4 / transceiver); the crank transient itself does not trip the watchdog.
+Two clarifications this settles:
+
+- The tally counts a fault **before** `j1850_tx_reset()` recovers it
+  (`++faults; reset();`), so `0 faults` means none occurred — the recovery isn't
+  masking transient trips. The earlier "all sends fault from ~frame 37" was
+  **one** latching fault back when the replay loop had **no** in-loop auto-reset,
+  so a single trip stuck forever and *looked* continuous.
+- Phase-6 Schmitt/comparator front end still stands for the RX bad-CRC margin
+  (RX EMI corruption), which is separate from the (now clean) TX path.
+
 ## Config restore note (on command, after Test C)
 
 The wiggle build stays flashed and `sdkconfig` stays as-is until explicitly

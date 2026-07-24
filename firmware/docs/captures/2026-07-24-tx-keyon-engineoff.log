@@ -1,0 +1,324 @@
+ESP-ROM:esp32p4-eco2-20240710
+Build:Jul 10 2024
+rst:0x1 (POWERON),boot:0x20f (SPI_FAST_FLASH_BOOT)
+SPI mode:DIO, clock div:1
+load:0x4ff33ce0,len:0x1738
+load:0x4ff29ed0,len:0xfa8
+load:0x4ff2cbd0,len:0x368c
+entry 0x4ff29eda
+I (25) boot: ESP-IDF v6.0.1 2nd stage bootloader
+I (26) boot: compile time Jul 11 2026 00:35:18
+I (26) boot: Multicore bootloader
+I (28) boot: chip revision: v1.3
+I (29) boot: efuse block revision: v0.3
+I (32) qio_mode: Enabling default flash chip QIO
+I (37) boot.esp32p4: SPI Speed      : 80MHz
+I (40) boot.esp32p4: SPI Mode       : QIO
+I (44) boot.esp32p4: SPI Flash Size : 16MB
+I (48) boot: Enabling RNG early entropy source...
+I (53) boot: Partition Table:
+I (55) boot: ## Label            Usage          Type ST Offset   Length
+I (61) boot:  0 nvs              WiFi data        01 02 00009000 00006000
+I (68) boot:  1 phy_init         RF data          01 01 0000f000 00001000
+I (74) boot:  2 factory          factory app      00 00 00010000 00800000
+I (81) boot:  3 storage          Unknown data     01 82 00810000 00700000
+I (87) boot:  4 coredump         Unknown data     01 03 00f10000 00040000
+I (95) boot: End of partition table
+I (97) esp_image: segment 0: paddr=00010020 vaddr=48160020 size=345d58h (3431768) map
+I (608) esp_image: segment 1: paddr=00355d80 vaddr=30100000 size=00068h (   104) load
+I (610) esp_image: segment 2: paddr=00355df0 vaddr=4ff00000 size=0a228h ( 41512) load
+I (620) esp_image: segment 3: paddr=00360020 vaddr=48000020 size=150260h (1376864) map
+I (823) esp_image: segment 4: paddr=004b0288 vaddr=4ff0a228 size=0e804h ( 59396) load
+I (835) esp_image: segment 5: paddr=004bea94 vaddr=4ff18a80 size=049b0h ( 18864) load
+I (839) esp_image: segment 6: paddr=004c344c vaddr=50108080 size=00024h (    36) load
+I (847) boot: Loaded app from partition at offset 0x10000
+I (847) boot: Disabling RNG early entropy source...
+I (861) hex_psram: vendor id    : 0x0d (AP)
+I (862) hex_psram: Latency      : 0x01 (Fixed)
+I (862) hex_psram: DriveStr.    : 0x00 (25 Ohm)
+I (862) hex_psram: dev id       : 0x03 (generation 4)
+I (867) hex_psram: density      : 0x07 (256 Mbit)
+I (872) hex_psram: good-die     : 0x06 (Pass)
+I (876) hex_psram: SRF          : 0x02 (Slow Refresh)
+I (880) hex_psram: BurstType    : 0x00 ( Wrap)
+I (885) hex_psram: BurstLen     : 0x03 (2048 Byte)
+I (889) hex_psram: BitMode      : 0x01 (X16 Mode)
+I (894) hex_psram: Readlatency  : 0x04 (14 cycles@Fixed)
+I (899) hex_psram: DriveStrength: 0x00 (1/1)
+I (903) MSPI Timing: Enter psram timing tuning
+I esp_psram: Found 32MB PSRAM device
+I esp_psram: Speed: 200MHz
+I (1240) mmu_psram: .rodata xip on psram
+I (1308) mmu_psram: .text xip on psram
+I (1309) hex_psram: psram CS IO is dedicated
+I (1310) cpu_start: Multicore app
+I (1717) esp_psram: SPI SRAM memory test OK
+I (1726) cpu_start: GPIO 38 and 37 are used as console UART I/O pins
+I (1727) cpu_start: Pro cpu start user code
+I (1727) cpu_start: cpu freq: 360000000 Hz
+I (1729) app_init: Application information:
+I (1733) app_init: Project name:     vrod_gauge
+I (1737) app_init: App version:      ebdac22-dirty
+I (1742) app_init: Compile time:     Jul 24 2026 21:03:09
+I (1747) app_init: ELF file SHA256:  d5301fb46...
+I (1751) app_init: ESP-IDF:          v6.0.1
+I (1755) efuse_init: Min chip rev:     v0.1
+I (1759) efuse_init: Max chip rev:     v1.99
+I (1763) efuse_init: Chip rev:         v1.3
+I (1767) heap_init: Initializing. RAM available for dynamic allocation:
+I (1773) heap_init: At 4FF26010 len 00014FB0 (83 KiB): RETENT_RAM
+I (1779) heap_init: At 4FF3AFC0 len 00004BF0 (18 KiB): RAM
+I (1784) heap_init: At 4FF40000 len 00040000 (256 KiB): RAM
+I (1790) heap_init: At 501080A4 len 00007F5C (31 KiB): RTCRAM
+I (1795) heap_init: At 30100068 len 00001F98 (7 KiB): SPM
+I (1800) esp_psram: Adding pool of 27968K of PSRAM memory to heap allocator
+I (1807) esp_psram: Adding pool of 63K of PSRAM memory gap generated due to end address alignment of irom to the heap allocator
+I (1818) esp_psram: Adding pool of 40K of PSRAM memory gap generated due to end address alignment of drom to the heap allocator
+I (1830) spi_flash: detected chip: generic
+W (1833) spi_flash: Detected flash size > 16 MB, but access beyond 16 MB is not supported for this flash model yet.
+I (1843) spi_flash: flash io: qio
+W (1846) spi_flash: Detected size(32768k) larger than the size in the binary image header(16384k). Using the size in the binary image header.
+I (1859) host_init: ESP Hosted : Host chip_ip[18]
+I (1863) H_API: ESP-Hosted starting. Hosted_Tasks: prio:23, stack: 5120 RPC_task_stack: 5120
+I (1871) H_API: ** add_esp_wifi_remote_channels **
+I (1877) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+I (1882) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+I (1889) esp_core_dump_flash: Init core dump to flash
+I (1894) esp_core_dump_flash: Found partition 'coredump' @ f10000 262144 bytes
+I (1902) H_SDIO_DRV: sdio_data_to_rx_buf_task started
+I (1905) main_task: Started on CPU0
+I (1909) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+I (1918) main_task: Calling app_main()
+I (1929) esp_lvgl:adapter: LVGL adapter initialized successfully
+W (1931) ledc: GPIO 26 is not usable, maybe conflict with others
+I (1932) esp32_p4_wifi6_touch_lcd_xc: MIPI DSI PHY Powered on
+I (1938) esp32_p4_wifi6_touch_lcd_xc: Install MIPI DSI LCD control panel
+I (1943) esp32_p4_wifi6_touch_lcd_xc: Install Waveshare ESP32-P4-WIFI6-Touch-LCD-XC LCD control panel
+I (1952) jd9365: version: 2.0.2
+I (2116) jd9365: LCD ID: 93 65 04
+I (2268) esp32_p4_wifi6_touch_lcd_xc: Display initialized
+I (2292) esp_lvgl:bridge_v9: Initializing hardware resources
+I (2293) esp_lvgl:bridge_v9: Hardware resources initialized successfully
+I (2397) esp32_p4_wifi6_touch_lcd_xc: Touch 0x14 found
+I (2399) GT911: I2C address initialization procedure skipped - using default GT9xx setup
+I (2421) GT911: TouchPad_ID:0x39,0x32,0x37
+I (2422) GT911: TouchPad_Config_Version:90
+W (2422) esp_lvgl:touch: LV_USE_GESTURE_RECOGNITION is disabled; only single-point pointer events are available
+I (2428) esp_lvgl:touch: Touch input device registered successfully (IRQ mode: disabled)
+I (2436) esp_lvgl:adapter: LVGL task started successfully
+I (2437) esp_lvgl:bridge: Initializing hardware resources
+I (2446) esp_lvgl:bridge: Hardware resources initialized successfully
+I (2752) emoji_font: emoji.ttf embedded: 1982596 bytes
+I (2762) emoji_font: emoji fallback attached: 26=0x4ff3f9ec 33=0x4ff68814
+I (2765) vrod_gauge: speed divisor (NVS) = 188
+I (2773) odo: restored odo=26125m trip1=26125m trip2=26125m
+I (2774) j1850: glitch filter off
+I (2776) j1850: passive sniffer on GPIO20 (read-only build)
+I (2779) gps_uart: NMEA reader on UART1 (RX GPIO21, 9600 baud)
+I (2786) j1850tx: TX ready on GPIO24 (high-side, HIGH=dominant); watchdog cutoff 300 us
+I (3050) j1850: raw  1: low  274743 us
+I (3050) j1850: raw  2: HIGH   181 us
+I (3050) j1850: raw  3: low     61 us
+I (3050) j1850: raw  4: HIGH   124 us
+I (3052) j1850: raw  5: low    123 us
+I (3056) j1850: raw  6: HIGH   110 us
+I (3059) j1850: raw  7: low    139 us
+I (3062) j1850: raw  8: HIGH   110 us
+I (3066) j1850: raw  9: low     75 us
+I (3069) j1850: raw 10: HIGH    46 us
+I (3072) j1850: raw 11: low    139 us
+I (3076) j1850: raw 12: HIGH    47 us
+I (3079) j1850: raw 13: low    139 us
+I (3083) j1850: raw 14: HIGH    46 us
+I (3086) j1850: raw 15: low    139 us
+I (3089) j1850: raw 16: HIGH    46 us
+I (3093) j1850: raw 17: low    139 us
+I (3096) j1850: raw 18: HIGH   110 us
+I (3100) j1850: raw 19: low     74 us
+I (3103) j1850: raw 20: HIGH    47 us
+I (3106) j1850: raw 21: low    138 us
+I (3110) j1850: raw 22: HIGH   110 us
+I (3113) j1850: raw 23: low     75 us
+I (3116) j1850: raw 24: HIGH   110 us
+I (3120) j1850: raw 25: low     74 us
+I (3123) j1850: raw 26: HIGH   111 us
+I (3127) j1850: raw 27: low     75 us
+I (3130) j1850: raw 28: HIGH   110 us
+I (3133) j1850: raw 29: low     75 us
+I (3137) j1850: raw 30: HIGH   113 us
+I (3140) j1850: raw 31: low     72 us
+I (3144) j1850: raw 32: HIGH   110 us
+I (3147) j1850: raw 33: low     76 us
+I (3150) j1850: raw 34: HIGH    46 us
+I (3154) j1850: raw 35: low     75 us
+I (3157) j1850: raw 36: HIGH   110 us
+I (3160) j1850: raw 37: low     75 us
+I (3164) j1850: raw 38: HIGH    47 us
+I (3167) j1850: raw 39: low     74 us
+I (3171) j1850: raw 40: HIGH   110 us
+I (3174) j1850: raw 41: low     76 us
+I (3177) j1850: raw 42: HIGH    46 us
+I (3181) j1850: raw 43: low   1515 us
+I (3184) j1850: 29 FE 60 01 11 | CRC OK
+I (3188) j1850: raw 44: HIGH   182 us
+I (3191) j1850: raw 45: low     75 us
+I (3194) j1850: raw 46: HIGH    46 us
+I (3198) j1850: raw 47: low    139 us
+I (3201) j1850: raw 48: HIGH   110 us
+I (3205) j1850: raw 49: low    139 us
+I (3208) j1850: raw 50: HIGH   110 us
+I (3211) j1850: raw 51: low     75 us
+I (3215) j1850: raw 52: HIGH   110 us
+I (3218) j1850: raw 53: low    139 us
+I (3222) j1850: raw 54: HIGH    47 us
+I (3225) j1850: raw 55: low    139 us
+I (3228) j1850: raw 56: HIGH    46 us
+I (3232) j1850: raw 57: low    139 us
+I (3235) j1850: raw 58: HIGH    46 us
+I (3239) j1850: raw 59: low    139 us
+I (3242) j1850: raw 60: HIGH    46 us
+I (3245) j1850: raw 61: low     75 us
+I (3249) j1850: raw 62: HIGH    46 us
+I (3252) j1850: raw 63: low    138 us
+I (3255) j1850: raw 64: HIGH   113 us
+I (3261) j1850: 68 FF 60 03 AD | CRC OK
+I (3295) j1850tx: watchdog trigger test: PASS (faulted=1, line=LOW)
+I (3301) j1850: 68 FF 40 03 D8 | CRC OK
+W (3595) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+W (3604) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (3671) ES8311: Work in Slave mode
+I (3720) I2S_IF: Paired data: 0x4ff6e544, current mode: playback, paired in_enable: 0, paired out_enable: 0
+W (3722) i2s_common: dma frame num is adjusted to 256 to align the dma buffer with 64, bufsize = 512
+I (3729) I2S_IF: STD: TX, data_bit: 16, slot_bit: 16, ws_width: 16, slot_mode: MONO, slot_mask: 0x1
+I (3765) I2S_IF: STD: TX, sample_rate_hz: 22050, mclk_multiple: 256, clk_src: 0
+I (3765) j1850: 29 FE 60 01 11 | CRC OK
+I (3894) Adev_Codec: Open codec device OK
+I (3914) j1850tx: replay tally: 4 ok, 0 faults (of 4)
+I (3919) j1850: 29 FE 40 01 64 | CRC OK
+I (4374) transport: Attempt connection with slave: retry[0]
+W (4375) H_SDIO_DRV: Reset slave using GPIO[54]
+I (4376) os_wrapper_esp: GPIO [54] configured
+I (4427) j1850: 68 FF 40 03 D8 | CRC OK
+I (5073) j1850: 29 FE 60 01 51 | CRC BAD
+I (5078) j1850: 68 FF 60 03 AD | CRC OK
+I (5920) j1850: 68 FF 40 03 D8 | CRC OK
+I (5949) j1850: 29 FE 40 01 64 | CRC OK
+I (6005) sdio_wrapper: SDIO master: Slot 1, Data-Lines: 4-bit Freq(KHz)[40000 KHz]
+I (6007) sdio_wrapper: GPIOs: CLK[18] CMD[19] D0[14] D1[15] D2[16] D3[17] Slave_Reset[54]
+I (6011) sdio_wrapper: Queues: Tx[6] Rx[6] SDIO-Rx-Mode[1]
+I (6134) sdio_wrapper: Function 0 Blocksize: 512
+I (6137) sdio_wrapper: Function 1 Blocksize: 512
+I (6228) j1850: 29 FE 40 01 64 | CRC OK
+I (6246) H_SDIO_DRV: Card init success, TRANSPORT_RX_ACTIVE
+I (6248) transport: set_transport_state: 1
+I (6249) transport: Waiting for esp_hosted slave to be ready
+I (6302) H_SDIO_DRV: Starting SDIO process rx task
+I (6302) H_SDIO_DRV: SDIO Host operating in STREAMING MODE
+I (6302) H_SDIO_DRV: Open data path at slave
+I (6314) H_SDIO_DRV: Received ESP_PRIV_IF type message
+I (6314) transport: Received INIT event from ESP32 peripheral
+I (6314) transport: EVENT: 12
+I (6317) transport: Identified slave [esp32c6]
+I (6321) transport: EVENT: 11
+I (6324) transport: capabilities: 0xd
+I (6327) transport: Features supported are:
+I (6331) transport: 	 * WLAN
+I (6334) transport: 	   - HCI over SDIO
+I (6337) transport: 	   - BLE only
+I (6341) transport: EVENT: 13
+W (6343) transport: Version mismatch: Host [2.12.0] > Co-proc [0.0.0] ==> Upgrade co-proc to avoid RPC timeouts
+I (6353) transport: ESP board type is : 13
+
+I (6357) transport: Base transport is set-up, TRANSPORT_TX_ACTIVE
+I (6363) H_API: Transport active
+I (6366) transport: Slave chip Id[12]
+I (6369) transport: raw_tp_dir[-], flow_ctrl: low[60] high[80]
+I (6375) transport: transport_delayed_init
+I (6379) esp_cli: Registering command: crash
+I (6383) j1850: 29 FE 60 01 11 | CRC OK
+I (6383) esp_cli: Registering command: reboot
+I (6390) esp_cli: Registering command: mem-dump
+I (6395) esp_cli: Registering command: task-dump
+I (6399) esp_cli: Registering command: cpu-dump
+I (6403) esp_cli: Registering command: heap-trace
+I (6408) esp_cli: Registering command: sock-dump
+I (6412) esp_cli: Registering command: host-power-save
+I (6417) vhci_drv: Host BT Support: Enabled
+I (6421) vhci_drv: 	BT Transport Type: VHCI
+I (6425) H_SDIO_DRV: Received INIT event
+I (6428) H_SDIO_DRV: Event type: 0x22
+I (6432) H_SDIO_DRV: Write thread started
+I (6457) j1850: 68 FF 40 03 D8 | CRC OK
+I (6489) vrod_gauge: boot complete
+I (6494) main_task: Returned from app_main()
+I (6501) NimBLE: GAP procedure initiated: stop advertising.
+
+I (6504) NimBLE: GAP procedure initiated: stop advertising.
+
+I (6510) NimBLE: GAP procedure initiated: advertise;
+I (6510) NimBLE: disc_mode=2
+I (6513) NimBLE:  adv_channel_map=0 own_addr_type=0 adv_filter_policy=0 adv_itvl_min=0 adv_itvl_max=0
+I (6522) NimBLE:
+
+I (6526) ble_peripheral: advertising as 'Zeppl' (undirected, override-on)
+I (6531) j1850tx: replay tally: 8 ok, 0 faults (of 8)
+I (6902) RPC_WRAP: Coprocessor Boot-up
+I (7095) j1850: 68 FF 61 03 AD | CRC BAD
+I (7979) j1850: 29 FE 40 01 64 | CRC OK
+I (8487) j1850: 68 FF 40 03 D8 | CRC OK
+I (8541) j1850: 68 FF 40 03 D8 | CRC OK
+I (8696) j1850: 68 FF 60 03 AD | CRC OK
+I (8851) j1850: 29 FE 40 01 64 | CRC OK
+I (9006) j1850: 29 FE 60 01 11 | CRC OK
+I (9107) j1850: 29 FE 60 01 11 | CRC OK
+I (9113) j1850: 68 FF 60 03 AD | CRC OK
+I (9155) j1850tx: replay tally: 12 ok, 0 faults (of 12)
+I (10009) j1850: 29 FE 40 01 64 | CRC OK
+I (10517) j1850: 68 FF 40 03 D8 | CRC OK
+I (11124) j1850: 29 FE 60 01 11 | CRC OK
+I (11130) j1850: 68 FF 60 03 AD | CRC OK
+I (11161) j1850: 68 FF 40 03 D8 | CRC OK
+I (11315) j1850: 68 FF 60 03 AD | CRC OK
+I (11469) j1850: 29 FE 40 01 64 | CRC OK
+I (11623) j1850: 29 FE 60 01 11 | CRC OK
+I (11771) j1850tx: replay tally: 16 ok, 0 faults (of 16)
+I (12039) j1850: 29 FE 40 01 64 | CRC OK
+I (12547) j1850: 68 FF 40 03 D8 | CRC OK
+I (12777) j1850: stats: 32 frames, 2 bad CRC, 0 overruns, 1516 edges, 4 same-level
+I (13144) j1850: 29 FE 60 01 11 | CRC OK
+I (13150) j1850: 68 FF 60 03 AD | CRC OK
+I (13777) j1850: 68 FF 40 03 D8 | CRC OK
+I (13931) j1850: 68 FF 60 03 AD | CRC OK
+I (14069) j1850: 29 FE 40 01 64 | CRC OK
+I (14085) j1850: 29 FE 40 01 64 | CRC OK
+I (14239) j1850: 29 FE 60 01 11 | CRC OK
+I (14387) j1850tx: replay tally: 20 ok, 0 faults (of 20)
+I (14577) j1850: 68 FF 40 03 D8 | CRC OK
+I (15159) j1850: 29 FE 60 01 11 | CRC OK
+I (15170) j1850: 68 FF 60 03 AD | CRC OK
+I (16099) j1850: 29 FE 40 01 64 | CRC OK
+I (16393) j1850: 68 FF 40 03 D8 | CRC OK
+I (16547) j1850: 68 FF 60 03 AD | CRC OK
+I (16607) j1850: 68 FF 40 03 D8 | CRC OK
+I (16701) j1850: 29 FE 40 01 64 | CRC OK
+I (16855) j1850: 29 FE 60 01 11 | CRC OK
+I (17003) j1850tx: replay tally: 24 ok, 0 faults (of 24)
+I (17176) j1850: 29 FE 60 01 11 | CRC OK
+I (17182) j1850: 68 FF 60 03 AD | CRC OK
+I (18129) j1850: 29 FE 40 01 64 | CRC OK
+I (18637) j1850: 68 FF 40 03 D8 | CRC OK
+I (19009) j1850: 68 FF 40 03 D8 | CRC OK
+I (19163) j1850: 68 FF 60 03 AD | CRC OK
+I (19193) j1850: 29 FE 60 01 11 | CRC OK
+I (19199) j1850: 68 FF 60 03 AD | CRC OK
+I (19317) j1850: 29 FE 40 01 64 | CRC OK
+I (19471) j1850: 29 FE 60 01 11 | CRC OK
+I (19619) j1850tx: replay tally: 28 ok, 0 faults (of 28)
+I (20159) j1850: 29 FE 40 01 64 | CRC OK
+I (20667) j1850: 68 FF 40 03 D8 | CRC OK
+I (21210) j1850: 29 FE 60 01 11 | CRC OK
+I (21216) j1850: 68 FF 60 03 AD | CRC OK
+I (21625) j1850: 68 FF 40 03 D8 | CRC OK
+I (21779) j1850: 68 FF 60 03 AD | CRC OK
+I (21933) j1850: 29 FE 40 01 64 | CRC OK
+I (22087) j1850: 29 FE 60 01 11 | CRC OK
