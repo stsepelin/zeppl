@@ -20,6 +20,7 @@ Carried over from `ride-1-findings.md` / `ride-2-findings.md`, still open:
 | **Fuel level + low-fuel** | RESOLVED — not on the bus (Ride 2 low-vs-full bracket, `ride-2-findings.md`). Discrete sender tap (Phase 3). | done; no Ride 3 capture needed |
 | **Speed-cal wizard** (Ride 2 action #2) | Never completed on Ride 2 (sampled ~3 s); fixed in PR #28 | Part B: re-run the wizard, write the divisor to NVS, record divisor/RMS/n |
 | **Lean / bank angle** | Any TSSM frame track lean? | Part A1 test 7 (off the stand, rock L/R) |
+| **Dynamic module-60 frame** (`C8 89 60` bit7) | Motion/wheel-rotation flag? Needs a *rolling* diff — see [`../reference/j1850-undecoded-frames.md`](../reference/j1850-undecoded-frames.md) | Part B: label a capture moving-under-load vs stopped (next-onbike Test H2) |
 | **Turn signals** | Re-confirm `48 DA 40 39` bit1=L / bit0=R | Part A1 test 3 |
 | **GPS map on bike** (#58) | Does the module drive the map at speed? | Part B: ride with the map view up |
 | **Speed 188 + gear** | Locked at bench; confirm against GPS/radar on the road | Part B: cross-check `speed_raw` vs phone-GPS speed |
