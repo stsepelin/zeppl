@@ -36,7 +36,7 @@ Flash the one named per test. All are `idf.py -p /dev/cu.usbmodem5B5F0299541 fla
 
 | # | Build (Kconfig) | For |
 |---|---|---|
-| B1 | live gauge: `VROD_J1850_SNIFFER=y` + `VROD_J1850=y` (+ `VROD_RIDE_LOG=y` for laptop-free) | Tests A, F (normal producer, anti-jitter, ride log) |
+| B1 | live gauge: `VROD_J1850_SNIFFER=y` + `VROD_J1850=y` (+ `VROD_RIDE_LOG=y` for laptop-free) | Tests A, F, H (normal producer, anti-jitter, ride log, frame capture) |
 | B2 | `…_TX=y` + `VROD_J1850_DTC_PROBE=y` | Test C (DTC read) |
 | B3 | `…_TX=y` + `VROD_J1850_TX_BIKE_REPLAY=y` | Test D (IM replay / stock-cluster removal) |
 | B4 | map + `VROD_GPS_UART=y` (if onboard module) | Test G (Ride 3 map) |
@@ -142,6 +142,37 @@ full map-specific checklist.
       the map.
 - [ ] **Capture:** notes on tile smoothness, GPS lock time, any stutter.
 
+## Test H — undecoded-frame decode / verify ◻ (data-gathering)
+
+**Build B1 (sniffer + `VROD_RIDE_LOG=y` so it logs laptop-free while riding).**
+Confirm — or refute — the assumptions in
+[`../reference/j1850-undecoded-frames.md`](../reference/j1850-undecoded-frames.md).
+Do each sub-check as a **separately labelled capture** so the A/B diff is clean;
+one variable at a time. Name them `YYYY-MM-DD-frames-H<n>-<state>.log`.
+
+- [ ] **H1 — heartbeat families (engine idle, ~30 s).** Confirm `68 FF 10/40/60`
+      and `29 FE 40/60` each broadcast ~1-2 Hz. If safe, unplug one module and note
+      which frame stops (proves per-module heartbeat). Watch the TSSM `68 FF 40`
+      for `02 C5` vs `03 D8` and note what flips it.
+- [ ] **H2 — `C8 89 60` (the priority one) — ROLLING.** Capture stationary vs
+      **moving in gear under load**. Diff byte0 `83 xx` vs `03 xx` (bit7) against
+      speed / RPM / motion. **Assumption to test:** bit7 = wheel-rotation / motion
+      (module-60 = speed/ABS). Confirm or refute.
+- [ ] **H3 — ECM dynamic bits (throttle blip at idle).** Blip throttle / change
+      load; watch `68 62 10` **bit5 (0x20)** and `28 93 10` byte2 **bit0**.
+      Correlate with the decoded load (`A8 3B 10`) and RPM.
+- [ ] **H4 — hidden temp sub-byte `A8 49 10`.** As the engine warms, log the
+      frame; confirm byte1 = coolant (slow) and characterise **byte2** (the fast
+      3rd byte) — does it track RPM, load, or read like a second temperature?
+- [ ] **H5 — CEL third state `68 88 10`.** Note the engine condition when byte0 =
+      `0B` (bit3) vs `03`/`83` — likely warmup / open-vs-closed-loop.
+- [ ] **H6 — security handshake (key-off → key-on → authenticated, ~5 s).** Track
+      `69 93 60` (`2A`?), `29 92 10`, and `28 93 40` (`FF FF` → ?) alongside the
+      decoded immobiliser pair. Feeds a possible TSSM bypass (Test D).
+- [ ] **Expected:** enough labelled A/B captures to promote the group-B/C frames to
+      decoded (or refute the guesses). **After:** fold results into
+      `j1850-undecoded-frames.md` and, for anything decoded, `j1850_parse.c`.
+
 ---
 
 ## Bench prep (before the bike, optional) — watchdog frame-2 scope test
@@ -171,4 +202,5 @@ scope triggers — details in the watchdog discussion / bench log.
 1. **C** (real DTC) + **D** (stock-cluster removal) — these unblock the most.
 2. **B** (discrete polarity) — cheap, needed for Phase 3.
 3. **A** (anti-jitter) — quick visual confirm.
-4. **E / F / G** — data-gathering / optional.
+4. **E / F / G / H** — data-gathering / optional (**H2 rolling** + **H6 key-on**
+   are the ones that actually need the bike; the rest piggyback on any capture).
