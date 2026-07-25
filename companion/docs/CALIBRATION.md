@@ -62,6 +62,6 @@ Phase-3 addition for an absolute gauge + low-fuel telltale).
 ## Ground truth
 
 Both modules mirror the firmware's pure logic and are cross-checked against the
-same fixtures: `firmware/main/vehicle/gear_calc.c` / `settings.h` bounds for the
+same fixtures: `firmware/main/engine/vehicle/gear_calc.c` / `settings.h` bounds for the
 divisor, and the fuel constants in the firmware's fuel-economy tests. Keep them
 in lock-step.

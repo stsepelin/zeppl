@@ -219,7 +219,7 @@ shortfall has been replaced by 335 KB of free DIRAM.
    triple-partial framebuffers, then `bsp_display_brightness_set()`
    once at the end.
 
-3. **`main/ble/ble_peripheral.c` GATT table fails validation.**
+3. **`main/connectivity/ble/ble_peripheral.c` GATT table fails validation.**
    `ble_gatts_count_cfg()` returned `rc=3` (`BLE_HS_EINVAL`) because
    the TX characteristic had `access_cb = NULL`. NimBLE's
    `ble_gatts_chr_is_sane()` rejects entries with a null callback,

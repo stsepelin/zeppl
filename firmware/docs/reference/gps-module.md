@@ -49,11 +49,11 @@ UART bytes ─▶ nmea_framer_push ─▶ nmea_parse_rmc ─▶ gps_source_set
                               phone_data (BLE) ◀──────────  falls back to phone)
 ```
 
-- `main/gps/nmea.c` — pure NMEA 0183 framer + RMC parser (host-tested, 100%).
-- `main/gps/gps_source.c` — mutex-guarded latest-fix store (host-tested).
-- `main/gps/gps_uart.c` — the UART reader task; publishes fixes stamped with a
+- `main/display/gps/nmea.c` — pure NMEA 0183 framer + RMC parser (host-tested, 100%).
+- `main/display/gps/gps_source.c` — mutex-guarded latest-fix store (host-tested).
+- `main/display/gps/gps_uart.c` — the UART reader task; publishes fixes stamped with a
   monotonic receive time so the map can age them out if the module goes silent.
-- Fusion lives in `main/map/map_sd.c` (`GPS_MODULE_STALE_MS = 3000`).
+- Fusion lives in `main/display/map/map_sd.c` (`GPS_MODULE_STALE_MS = 3000`).
 
 ## Bench bring-up
 

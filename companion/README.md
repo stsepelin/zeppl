@@ -104,7 +104,7 @@ gradle wrapper         # one-time, generates gradlew jar
 ## Wire format
 
 `app/src/main/java/ee/zeppl/companion/ble/Protocol.kt` mirrors
-[`firmware/main/phone/phone_protocol.c`](../firmware/main/phone/phone_protocol.c)
+[`firmware/main/connectivity/phone/phone_protocol.c`](../firmware/main/connectivity/phone/phone_protocol.c)
 byte-for-byte. The firmware's host tests
 (`firmware/test_apps/host/tests/test_phone_protocol.c`) are the
 canonical fixtures; `ProtocolTest.kt` asserts the same shapes from the

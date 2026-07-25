@@ -9,7 +9,7 @@ runs them through the same phone_protocol_parse + phone_data_apply
 path the real cluster uses, so the same banner / media widgets render
 exactly as they would on the bike.
 
-Mirrors companion/.../Protocol.kt and firmware/main/phone/phone_protocol.c
+Mirrors companion/.../Protocol.kt and firmware/main/connectivity/phone/phone_protocol.c
 byte-for-byte. If you touch either of those wire formats, touch this
 file too — there is no version negotiation.
 
@@ -36,7 +36,7 @@ import sys
 HOST = "127.0.0.1"
 PORT = 7700
 
-# Mirrors phone_event_type_t in firmware/main/phone/phone.h
+# Mirrors phone_event_type_t in firmware/main/connectivity/phone/phone.h
 TYPE_NOTIF         = 0x01
 TYPE_NOTIF_DISMISS = 0x02
 TYPE_MEDIA         = 0x03

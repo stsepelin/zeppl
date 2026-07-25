@@ -327,7 +327,7 @@ void app_main(void)
 ### vehicle_data.h — Shared, thread-safe state
 
 ```c
-// main/vehicle/vehicle_data.h
+// main/engine/vehicle/vehicle_data.h
 #pragma once
 #include <stdint.h>
 #include <stdbool.h>
@@ -374,7 +374,7 @@ gear_t   vehicle_data_get_gear(void);
 ### vehicle_data.c
 
 ```c
-// main/vehicle/vehicle_data.c
+// main/engine/vehicle/vehicle_data.c
 #include "vehicle_data.h"
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -414,7 +414,7 @@ gear_t   vehicle_data_get_gear(void)  { return s_data.gear; }
 ### simulator/sim_engine.c — Fake data for Phase 1
 
 ```c
-// main/simulator/sim_engine.c
+// main/engine/simulator/sim_engine.c
 #include "sim_engine.h"
 #include "vehicle_data.h"
 #include "freertos/FreeRTOS.h"
@@ -468,7 +468,7 @@ void sim_engine_start(void)
 ```
 
 ```c
-// main/simulator/sim_engine.h
+// main/engine/simulator/sim_engine.h
 #pragma once
 void sim_engine_start(void);
 ```
@@ -999,6 +999,6 @@ Brief delta — for the full file map see `docs/PROJECT-BRIEF.md`.
 ### Hand-off to Phase 2
 
 The data-abstraction layer made the migration shape trivial:
-`main/simulator/sim_engine.c` becomes `components/j1850/j1850_driver.c`,
+`main/engine/simulator/sim_engine.c` becomes `components/j1850/j1850_driver.c`,
 writing the same `vehicle_data_t` struct. The UI, tests, and simulator
 stay unchanged.

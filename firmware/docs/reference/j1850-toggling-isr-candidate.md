@@ -1,7 +1,7 @@
 # J1850 RX: toggling-ISR candidate (module merged behind a flag; trial pending)
 
 > **Status: pure tracker merged to main behind a compile flag; the sniffer
-> ISR is NOT wired to it yet.** `main/j1850/j1850_edge.c` is the toggle +
+> ISR is NOT wired to it yet.** `main/engine/j1850/j1850_edge.c` is the toggle +
 > idle-anchor level reconstructor, host-tested in `test_j1850_edge.c`
 > (clean-stream reconstruction through the decoder, startup drop, idle-gap
 > boundary, and injected missed/spurious-edge re-sync) at 100% line+branch.
@@ -51,7 +51,7 @@ substitute for the comparator.
 
 ## The current ISR (what races the filter)
 
-`edge_isr()` in `main/j1850/j1850_sniffer.c`, on every edge:
+`edge_isr()` in `main/engine/j1850/j1850_sniffer.c`, on every edge:
 
 ```c
 int level = gpio_get_level(SNIFF_GPIO);  // <-- the pin read that races
