@@ -8,7 +8,7 @@
 // 2026-07-04 on-bike capture (firmware/docs/captures/). Host-tested.
 
 // SPEED — km/h-native on the bus, magnitude provisional.
-// Ride 1 (see firmware/docs/ride-1-findings.md) overturned the earlier
+// Ride 1 (see firmware/docs/rides/ride-1-findings.md) overturned the earlier
 // "mph-native" guess: the ECM speed value is KM/H-native, ~117-128 counts per
 // km/h. Fitting the logged RPM/speed pairs against the spec's exact gear
 // ratios gives ~117 counts/km-h; the stock speedo peak gives ~124; so true

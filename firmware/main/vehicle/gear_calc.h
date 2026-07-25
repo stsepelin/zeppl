@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 // Gear from the RPM:speed ratio. The 2009 VRSCF has no gear-position sensor
-// (the bus never reports gear - see firmware/docs/ride-1-findings.md), so gear
+// (the bus never reports gear - see firmware/docs/rides/ride-1-findings.md), so gear
 // is inferred the way plug-and-play indicators do: each gear has a fixed
 // engine-rev-per-mph ratio (the drivetrain's overall ratio x wheel size), and
 // the live rpm/speed_mph is matched to the nearest one.

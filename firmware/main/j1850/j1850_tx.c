@@ -126,9 +126,22 @@ bool j1850_tx_reset(void)
     if (!s_ready)
         return false;
     if (s_faulted) {
-        // A trip handed the pad to the GPIO peripheral; give it back to RMT
-        // (which idles LOW), then re-enable the watchdog readback.
-        if (rmt_tx_switch_gpio(s_chan, TX_GPIO, false) != ESP_OK)
+        // A trip handed the pad to the GPIO peripheral (already driven LOW);
+        // give it back to RMT (which idles LOW), then re-enable the watchdog
+        // readback. rmt_tx_switch_gpio() rejects an enabled channel with
+        // ESP_ERR_INVALID_STATE, so the channel must be disabled around the
+        // switch. The pad stays LOW (recessive) throughout: the ISR left the
+        // GPIO output LOW, and the disabled/re-enabled RMT channel idles LOW
+        // (init_level = 0) -- no transient dominant on the bus.
+        gpio_set_level(TX_GPIO, 0);
+
+        if (rmt_disable(s_chan) != ESP_OK)
+            return false;
+        if (rmt_tx_switch_gpio(s_chan, TX_GPIO, false) != ESP_OK) {
+            (void)rmt_enable(s_chan);  // best-effort: leave the channel usable
+            return false;
+        }
+        if (rmt_enable(s_chan) != ESP_OK)
             return false;
         gpio_input_enable(TX_GPIO);
         gpio_set_level(TX_GPIO, 0);
@@ -204,7 +217,7 @@ bool j1850_tx_send(const uint8_t *payload, size_t n)
     return !s_faulted;
 }
 
-#if CONFIG_VROD_J1850_TX_SELFTEST
+#if CONFIG_VROD_J1850_TX_SELFTEST || CONFIG_VROD_J1850_TX_BIKE_REPLAY
 
 // IM keep-alive payloads (WITHOUT CRC — the driver appends it), the set
 // identified in the Stage 2 capture. Doubles as the bike replay set.
@@ -248,7 +261,9 @@ static bool wd_selftest(void)
     j1850_tx_reset();
     return tripped;
 }
+#endif  // SELFTEST || BIKE_REPLAY — shared keep-alive set + watchdog trigger test
 
+#if CONFIG_VROD_J1850_TX_SELFTEST
 static void selftest_task(void *arg)
 {
     (void)arg;
@@ -305,5 +320,47 @@ static void selftest_task(void *arg)
 void j1850_tx_selftest_start(void)
 {
     xTaskCreatePinnedToCore(selftest_task, "j1850_tx_st", 4096, NULL, 6, NULL, 0);
+}
+#endif
+
+#if CONFIG_VROD_J1850_TX_BIKE_REPLAY
+// Live-bus replay for the Stage-4 on-bike step (3): emit the IM keep-alive set
+// at ~2 s cadence WITHOUT the bench self-sniff compare — a live bus carries the
+// stock IM's traffic, which would flap that verdict. The RX sniffer logs the
+// whole bus separately; judge from its per-frame CRC log + stats, not from a
+// PASS/FAIL line here.
+static void bike_replay_task(void *arg)
+{
+    (void)arg;
+    vTaskDelay(pdMS_TO_TICKS(500));
+    wd_selftest();  // prove the watchdog once before keying a live bus
+    uint32_t n = 0, ok = 0, faults = 0;
+    for (;;) {
+        for (size_t i = 0; i < SELFTEST_N; i++) {
+            bool sent = j1850_tx_send(SELFTEST_FRAMES[i].bytes, SELFTEST_FRAMES[i].len);
+            ++n;
+            if (sent) {
+                ++ok;
+            } else if (j1850_tx_faulted()) {
+                // DEBUG: recover and count, so we can see fault RATE and whether
+                // a reset re-arms (persistent noise -> reset fails / re-faults
+                // instantly; intermittent collision -> recovers and runs on).
+                ++faults;
+                bool rec = j1850_tx_reset();
+                ESP_LOGW(TAG, "replay: frame %lu TX FAULT (#%lu, %lu ok) -> reset %s",
+                         (unsigned long)n, (unsigned long)faults, (unsigned long)ok,
+                         rec ? "OK re-armed" : "FAILED");
+            }
+            vTaskDelay(pdMS_TO_TICKS(150));  // inter-frame gap within the set
+        }
+        ESP_LOGI(TAG, "replay tally: %lu ok, %lu faults (of %lu)", (unsigned long)ok,
+                 (unsigned long)faults, (unsigned long)n);
+        vTaskDelay(pdMS_TO_TICKS(2000));  // ~2 s IM keep-alive cadence (Stage 2)
+    }
+}
+
+void j1850_tx_bike_replay_start(void)
+{
+    xTaskCreatePinnedToCore(bike_replay_task, "j1850_tx_rp", 4096, NULL, 6, NULL, 0);
 }
 #endif

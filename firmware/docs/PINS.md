@@ -21,7 +21,7 @@ Update this table whenever a pin gets claimed.
 | 33 | LCD TE (display block) | |
 | 35 | BOOT strap + auto-download circuit | Header-exposed; leave alone |
 | 37, 38 | UART0 console via CH343P (TXD/RXD) | The header's "RXD/TXD" holes |
-| 39–44 | microSD slot | 4-bit SDMMC (CLK 43, CMD 44, D0-3 39-42) on **slot 0**. Used by the ride log (`CONFIG_VROD_RIDE_LOG`). The C6 radio (esp_hosted SDIO) is on slot 1 of the same controller; the mount stubs `host.init` to share it (see the Phase 3 plan ride-log section). |
+| 39–44 | microSD slot | 4-bit SDMMC (CLK 43, CMD 44, D0-3 39-42) on **slot 0**. Used by the ride log (`CONFIG_VROD_RIDE_LOG`). The C6 radio (esp_hosted SDIO) is on slot 1 of the same controller; the mount stubs `host.init` to share it (see the Phase 2 plan ride-log section). |
 | 45 | microSD power switch | SD IO power is via the P4 on-chip LDO (channel 4), per the vendor 05_sdmmc example. |
 | 53 | Audio PA enable | |
 | 54 | ESP32-C6 reset (esp_hosted) | |
@@ -35,12 +35,12 @@ GND 47 52 48 32 51 24 GND 50  2  3 3V3 28 20 21 GND 29 SCL SDA 3V3
  30 46 31 GND 34 GND 25 49 36 35 GND  4  5 GND 22 RXD TXD GND 5V  5V
 ```
 
-## Claimed by the cluster (Phase 3+)
+## Claimed by the cluster (Phase 2+)
 
 | GPIO | Used by | Where set |
 |---|---|---|
 | 20 | J1850 RX (divider node) | `CONFIG_VROD_J1850_RX_GPIO` |
-| **22** | **RESERVED: fuel-level sender ADC (Phase 6)** | — |
+| **22** | **RESERVED: fuel-level sender ADC (Phase 3)** | — |
 
 GPIO 21 is the **GPS NMEA RX** again (`VROD_GPS_RX_GPIO`) — the optional NEO-6M
 map-position module reads on it when `CONFIG_VROD_GPS_UART` is enabled (see
@@ -53,19 +53,19 @@ nothing digital gets to squat on 22.
 (Note: the 2009 VRSC sender is **ultrasonic** — powered, but with an
 ohmic output emulating a resistive sender, so ADC remains the right
 interface; calibration/temp-comp/motion-gating must be reimplemented.
-Details in the master plan's Phase 6 fuel-sender caveat.)
+Details in the roadmap's Phase 3 fuel-sender caveat.)
 
 > **Resolved trap (July 2026):** linking `esp_adc` used to crash-loop
 > this firmware before `app_main`. Root cause was ~2 KB of
 > pre-scheduler internal-heap margin on rev<v3 silicon (the SRAM above
 > 0x4ff3afc0 joins the heap late; esp_hosted's WiFi-sized SDIO queues
 > ate the rest) — fixed by `CONFIG_ESP_HOSTED_SDIO_TX/RX_Q_SIZE=6` in
-> `sdkconfig.defaults`. **Phase 6's fuel ADC is unblocked.** Full story
+> `sdkconfig.defaults`. **Phase 3's fuel ADC is unblocked.** Full story
 > + regression canary (`CONFIG_VROD_ADC_REPRO`) in the
 > `ble-bringup-bisect.md` addendum; re-run the canary after
 > IDF/toolchain bumps.
 
-## Free on the header (Phase 6 discrete inputs, etc.)
+## Free on the header (Phase 3 discrete inputs, etc.)
 
 2, 3, 4, 5, 24, 25, 28, 29, 30, 31, 32, 34, 36, 46, 47, 48, 49, 50,
 51, 52 (21 is GPS RX again when the NEO-6M module is fitted) — plenty for the six 12V discrete

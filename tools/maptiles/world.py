@@ -5,7 +5,7 @@ world.py - bake a whole continent into a GPS-paged cell-grid map for the cluster
 Where region.py makes ONE .zmta for a small area whose entire tile index must fit
 in PSRAM, world.py tiles the input into a grid of lat/lon cells - one ZMTA per
 cell - so the firmware keeps only the cells near the rider resident and pages the
-rest off the SD card as it moves (firmware/docs/map-worldwide-plan.md). This is
+rest off the SD card as it moves (firmware/docs/plans/map-worldwide-plan.md). This is
 what puts Europe (and later the world) on the card.
 
 Output tree (copy the whole thing to /sdcard/map, or match CONFIG_VROD_MAP_SD_DIR):

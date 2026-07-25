@@ -5,7 +5,7 @@
 
 // A map source is what the map screen draws from. Today it wraps a single
 // tileset (a flash-embedded demo blob, or one ZMTA opened for streaming off SD);
-// the worldwide plan (firmware/docs/map-worldwide-plan.md) adds a paged-cell
+// the worldwide plan (firmware/docs/plans/map-worldwide-plan.md) adds a paged-cell
 // source behind this same interface so a continent lives on the card with only
 // the tiles near the rider resident. The render path (screen_map.c) talks only
 // to this seam, never to map_tileset_t directly, so swapping the backing store
@@ -22,7 +22,7 @@ map_source_t *map_source_from_tileset(map_tileset_t *ts, bool own);
 // set of open per-cell archives that follows the rider (map_source_set_center
 // pages them in/out). This is what puts a whole continent on the card - only the
 // cells near the current position are resident. NULL if world.hdr is missing or
-// bad. See firmware/docs/map-worldwide-plan.md and tools/maptiles/world.py.
+// bad. See firmware/docs/plans/map-worldwide-plan.md and tools/maptiles/world.py.
 map_source_t *map_source_open_cells(const char *dir);
 
 // Zoom level of the tiles (all one zoom today).

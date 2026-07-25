@@ -32,6 +32,7 @@ idf_component_register(
         display/widget_util.c
         display/widgets/tach_arc.c
         display/widgets/smooth.c
+        display/widgets/display_filter.c
         display/widgets/speed_display.c
         display/widgets/gear_indicator.c
         display/widgets/fuel_arc.c
@@ -116,7 +117,7 @@ endif()
 
 # Synthetic driving-cycle simulator. Pulled in by default for bench
 # builds where the gauge needs to visibly swing; compiled out when
-# CONFIG_VROD_INCLUDE_SIM_ENGINE=n so real-bike builds (Phase 3 J1850
+# CONFIG_VROD_INCLUDE_SIM_ENGINE=n so real-bike builds (Phase 2 J1850
 # driver as the producer) don't carry dead weight. gear_table.c stays
 # unconditional — the gear indicator widget reads from it independently.
 if(CONFIG_VROD_INCLUDE_SIM_ENGINE)
@@ -144,7 +145,7 @@ if(CONFIG_VROD_GPS_UART)
     target_sources(${COMPONENT_LIB} PRIVATE gps/nmea.c gps/gps_uart.c)
 endif()
 
-# J1850 codec (Phase 3). j1850_vpw.c is the host-tested VPW encoder +
+# J1850 codec (Phase 2). j1850_vpw.c is the host-tested VPW encoder +
 # decoder, shared by the passive sniffer (Stage 2) and the TX driver
 # (Stage 4); pull it in once if either side is compiled.
 if(CONFIG_VROD_J1850_SNIFFER OR CONFIG_VROD_J1850_TX)
@@ -166,10 +167,10 @@ if(CONFIG_VROD_RIDE_LOG)
     target_sources(${COMPONENT_LIB} PRIVATE j1850/ride_log.c)
 endif()
 
-# Toggling edge->level tracker (Phase 6 RX experiment prep). Gate (a):
+# Toggling edge->level tracker (Phase 3 RX experiment prep). Gate (a):
 # compiles the host-tested j1850_edge module into the firmware. It is NOT
 # wired into the live ISR here — that is gate (b) VROD_J1850_TOGGLE_ISR_LIVE,
-# deferred to Phase 6. See docs/j1850-toggling-isr-candidate.md.
+# deferred to Phase 3. See docs/reference/j1850-toggling-isr-candidate.md.
 if(CONFIG_VROD_J1850_TOGGLE_ISR)
     target_sources(${COMPONENT_LIB} PRIVATE j1850/j1850_edge.c)
 endif()
@@ -191,6 +192,16 @@ if(CONFIG_VROD_J1850_TX)
     target_sources(${COMPONENT_LIB} PRIVATE
         j1850/j1850_tx_logic.c
         j1850/j1850_tx.c
+    )
+endif()
+
+# DTC read probe (Stage 5): TX the HD read-codes request + collect responses
+# off the sniffer. dtc.c is the host-tested request/response/format codec; the
+# probe glue is the task that drives it. Only this build compiles them in.
+if(CONFIG_VROD_J1850_DTC_PROBE)
+    target_sources(${COMPONENT_LIB} PRIVATE
+        j1850/dtc.c
+        j1850/dtc_probe.c
     )
 endif()
 

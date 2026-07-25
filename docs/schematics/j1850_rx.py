@@ -1,4 +1,4 @@
-# J1850 RX front end (Phase 3 Stage 1-2, the sniff build).
+# J1850 RX front end (Phase 2 Stage 1-2, the sniff build).
 # Regenerate: see README.md in this directory.
 import schemdraw
 import schemdraw.elements as elm

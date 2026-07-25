@@ -1,6 +1,6 @@
 # J1850 capture corpus
 
-Raw sniffer logs off the bike's bus (Phase 3 Stage 2). These become
+Raw sniffer logs off the bike's bus (Phase 2 Stage 2). These become
 the test fixtures for the Stage 3 message parser, so capture liberally
 — disk is cheap, bench time on the bike is not.
 
@@ -63,4 +63,4 @@ frames; full analysis in `../ride-1-findings.md`.
   not `/128`); **engine temp is `raw − 40 = °C`** (not raw °C). See
   `../ride-1-findings.md`.
 - CRC health: ride 1 ran ~2.5% bad — RX noise, tolerable for calibration;
-  a hysteresis front end (Phase 6) tightens it.
+  a hysteresis front end (Phase 3) tightens it.

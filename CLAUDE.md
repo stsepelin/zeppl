@@ -11,24 +11,29 @@ Three top-level components, one git tree:
   cluster's peripheral, relays phone notifications + media metadata
   over the GATT link. Build notes are in `companion/README.md`.
 - **`hardware/`** — physical build. `hardware/enclosure/` is the
-  parametric OpenSCAD case for the round display (Phase 6). Build/print
+  parametric OpenSCAD case for the round display (Phase 3). Build/print
   notes are in `hardware/enclosure/README.md`.
 
 Cross-system docs live at the repo root in `docs/`:
 - `PROJECT-BRIEF.md` — what this project is, current status.
-- `00-MASTER-PROJECT-PLAN.md` — full build plan + phases + budget.
-- `02-PHASE2.5-OFFBIKE-PLAN.md` — completed phase (touch / settings /
-  BLE / phone relay).
-- `03-PHASE3-J1850-PLAN.md` — the active phase (J1850 bus + IM
-  simulation).
+- `ROADMAP.md` — every phase/stage, status + links (the build map).
+- `reference/HARDWARE.md` — BOM, transceiver circuit, proxy box, power,
+  warnings, dev env, external references.
+- `reference/J1850-BUS.md` — 12-pin pinout, VPW decode table, IM
+  simulation, CRC.
+- `phases/phase1-offbike.md` — Phase 1 off-bike features (touch / settings /
+  BLE / phone relay); complete.
+- `phases/phase2-j1850.md` — the active phase (J1850 bus + IM simulation).
 
-Firmware-internal docs are under `firmware/docs/`:
-- `01-PHASE2-DISPLAY-PLAN.md` — the (complete) gauge-UI phase.
+Firmware-internal docs are under `firmware/docs/` (index in its `README.md`):
 - `ARCHITECTURE.md` — threading, render pipeline, boot sequence.
 - `DISPLAY-PERF-AND-MEMORY.md` — render/RAM constraints; read before
   touching anything that draws.
+- `PINS.md` — header pin map / GPIO assignments.
 - `ble-bringup-bisect.md` — resolution notes for the binutils 2.45 /
   IDF P4-rev<3 link trap that blocked BLE bring-up for a while.
+- `plans/phase1-display-plan.md` — the (complete) gauge-UI phase.
+- `reference/` — design + bring-up notes · `rides/` — on-bike session logs.
 - `waveshare-reference/` — vendor examples kept for reference.
 
 ## Working in the monorepo

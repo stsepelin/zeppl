@@ -8,33 +8,29 @@ Background:
 
 - Cross-system docs at the monorepo root:
   - `../docs/PROJECT-BRIEF.md` — what we're building
-  - `../docs/00-MASTER-PROJECT-PLAN.md` — phases / roadmap
-  - `../docs/03-PHASE3-J1850-PLAN.md` — current phase
-- Firmware-internal docs (here in `firmware/docs/`):
-  - `docs/01-PHASE2-DISPLAY-PLAN.md` — Phase 2 plan (complete)
+  - `../docs/ROADMAP.md` — phases / stages / status
+  - `../docs/reference/` — HARDWARE.md + J1850-BUS.md (BOM, circuit, bus map)
+  - `../docs/phases/phase2-j1850.md` — the active phase (J1850)
+- Firmware-internal docs (here in `firmware/docs/`) — full index in
+  `docs/README.md`. The ones you'll reach for most:
   - `docs/ARCHITECTURE.md` — threading, render pipeline, decision history
   - `docs/DISPLAY-PERF-AND-MEMORY.md` — **read before touching anything that
     draws.** Render/RAM constraints, the bake-don't-transform rules, the
     internal-RAM budget, the debug playbook (sim+ASan first), and a
     feature-development checklist.
+  - `docs/PINS.md` — header pin map / GPIO assignments.
   - `docs/ble-bringup-bisect.md` — BLE link-trap resolution notes
-  - `docs/j1850-toggling-isr-candidate.md` — design note (not
-    implemented) for a future RX ISR that infers the pulse level by
-    toggling instead of reading the pin, so a glitch filter could
-    coexist. Read before touching the sniffer edge capture.
-  - `docs/bike-power-injection.md` — protected 12V→5V power chain
-    (fuse / reverse-polarity / load-dump TVS / mini560 / output
-    reverse-block) into the header 5V; parts list + bench test.
-    Prerequisite for powering the cluster on the bike.
-  - `docs/gps-module.md` — optional NEO-6M map-position module (UART on
-    GPIO 21, `CONFIG_VROD_GPS_UART`); wiring schematic + bench bring-up.
-    Map is dual-source: module preferred, phone GPS fallback.
-  - `docs/map-worldwide-plan.md` — planned: GPS-paged per-cell map tiles
-    so a whole continent lives on the SD card with only the tiles near
-    the rider resident. Builds on the streaming loader (task #60).
-  - `docs/live-gauge-bench-test.md` — build config (`CONFIG_VROD_J1850=y`)
-    + stationary checklist to show real bus data on the gauge, laptop USB
-    powered, before a ride.
+  - `docs/plans/phase1-display-plan.md` — the (complete) gauge-UI phase.
+  - `docs/reference/` — design + bring-up notes: `j1850-toggling-isr-candidate.md`
+    (future RX ISR; read before touching the sniffer edge capture),
+    `bike-power-injection.md` (protected 12V→5V power chain — prerequisite for
+    bike power), `gps-module.md` (optional NEO-6M map module,
+    `CONFIG_VROD_GPS_UART`), `dtc-read-probe.md` (HD DTC read protocol),
+    `live-gauge-bench-test.md` (stationary bus→gauge check), `j1850-undecoded-frames.md`.
+  - `docs/rides/` — on-bike sessions + logs (ride-1/2/3 findings + plans,
+    `stage4-tx-bench-log.md`).
+  - `docs/plans/map-worldwide-plan.md` — GPS-paged per-cell map tiles so a whole
+    continent lives on the SD card with only the tiles near the rider resident.
 
 This file is for *how to work in the firmware code*, not what we're
 working toward or why each decision is the way it is. Path references
@@ -183,11 +179,11 @@ Full policy in `test_apps/host/README.md`. Short version:
   `smooth.c`, `fuel_scale.c`, `phone_data.c`, `phone_protocol.c`,
   `settings.c`, `vehicle_data.c`, `ble_visibility.c`, `j1850_vpw.c`,
   `j1850_parse.c`, `j1850_driver.c`, `j1850_edge.c`, `j1850_tx_logic.c`,
-  `ride_log_format.c` — **plus all the widgets** (including `tach_arc.c`),
+  `dtc.c`, `ride_log_format.c` — **plus all the widgets** (including `tach_arc.c`),
   which run against the LVGL stub and sit inside the same gate.
 - **Out of scope:** fonts (generated), boot/screen wiring (BSP glue),
   `sim_engine.c`'s task body, and the `j1850_sniffer.c` / `j1850_tx.c` /
-  `ride_log.c` producers and capture/driver glue.
+  `dtc_probe.c` / `ride_log.c` producers and capture/driver glue.
 
 When you add code:
 

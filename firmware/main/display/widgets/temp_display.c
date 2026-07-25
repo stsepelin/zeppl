@@ -1,4 +1,5 @@
 #include "temp_display.h"
+#include "display_filter.h"
 #include "lvgl.h"
 #include "theme.h"
 #include "widget_util.h"
@@ -13,7 +14,8 @@ LV_FONT_DECLARE(mdi_36);
 typedef struct {
     lv_obj_t    *icon;
     lv_obj_t    *value;
-    int8_t       last_c;
+    dfilter_t    filt;     // damped-hysteresis anti-jitter (on celsius)
+    int16_t      last_fc;  // filtered celsius currently on screen
     temp_units_t last_units;
     bool         last_hot;
     bool         has_value;
@@ -41,7 +43,8 @@ lv_obj_t *temp_display_create(lv_obj_t *parent)
     temp_data_t *td = lv_malloc(sizeof(temp_data_t));
     td->icon  = icon;
     td->value = value;
-    td->last_c = 0;
+    td->filt        = (dfilter_t){0};
+    td->last_fc     = 0;
     td->last_units  = UNITS_CELSIUS;
     td->last_hot = false;
     td->has_value = false;
@@ -53,16 +56,28 @@ void temp_display_set_value(lv_obj_t *cont, int8_t celsius, temp_units_t units)
 {
     temp_data_t *td = lv_obj_get_user_data(cont);
     if (!td) return;
+
+    // Anti-jitter on celsius (the source unit) so a temperature parked on a
+    // rounding edge stops strobing; "hot" and the display both derive from the
+    // steady value, so the red threshold doesn't flicker at 110 either. The
+    // display unit doesn't change celsius, so no reseed on a unit switch.
+    if (!td->has_value)
+        dfilter_seed(&td->filt, celsius);
+    int fc = (int)dfilter_update(&td->filt, celsius);
+
     // "hot" is a physical threshold, so it tracks celsius regardless of the
     // display unit.
-    bool hot = (celsius >= TEMP_HOT_C);
-    if (td->has_value && td->last_c == celsius && td->last_units == units)
+    bool hot = (fc >= TEMP_HOT_C);
+    // Cache on the filtered celsius + unit. fc determines both the shown value
+    // and the hot colour, so an unchanged fc at the same unit has nothing to
+    // repaint; a unit switch still repaints the text (colour is physical).
+    if (td->has_value && td->last_fc == fc && td->last_units == units)
         return;
+    int  disp        = units_temp_display(fc, units);
     bool color_dirty = !td->has_value || td->last_hot != hot;
 
     char buf[16];
-    snprintf(buf, sizeof(buf), "%d\xC2\xB0%s", units_temp_display(celsius, units),
-             units_temp_label(units));
+    snprintf(buf, sizeof(buf), "%d\xC2\xB0%s", disp, units_temp_label(units));
     lv_label_set_text(td->value, buf);
 
     if (color_dirty) {
@@ -74,7 +89,7 @@ void temp_display_set_value(lv_obj_t *cont, int8_t celsius, temp_units_t units)
         lv_obj_set_style_text_color(td->value, value_c, 0);
         lv_obj_set_style_text_color(td->icon,  icon_c,  0);
     }
-    td->last_c     = celsius;
+    td->last_fc    = (int16_t)fc;
     td->last_units = units;
     td->last_hot   = hot;
     td->has_value  = true;

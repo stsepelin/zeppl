@@ -34,6 +34,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/display/gesture.c
     ${MAIN_DIR}/display/units.c
     ${MAIN_DIR}/display/widgets/smooth.c
+    ${MAIN_DIR}/display/widgets/display_filter.c
     ${MAIN_DIR}/display/widgets/fuel_scale.c
     ${MAIN_DIR}/display/widgets/rpm_scale.c
     ${MAIN_DIR}/phone/phone_data.c
@@ -47,6 +48,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/j1850/j1850_vpw.c
     ${MAIN_DIR}/j1850/j1850_tx_logic.c
     ${MAIN_DIR}/j1850/j1850_parse.c
+    ${MAIN_DIR}/j1850/dtc.c
     ${MAIN_DIR}/j1850/j1850_driver.c
     ${MAIN_DIR}/j1850/j1850_edge.c
     ${MAIN_DIR}/j1850/ride_log_format.c
@@ -119,6 +121,7 @@ add_unit_test(test_gear_table)
 add_unit_test(test_sim_math)
 add_unit_test(test_format)
 add_unit_test(test_smooth)
+add_unit_test(test_display_filter)
 add_unit_test(test_fuel_scale)
 add_unit_test(test_rpm_scale)
 add_unit_test(test_vehicle_data)
@@ -134,6 +137,7 @@ add_unit_test(test_gesture)
 add_unit_test(test_j1850_vpw)
 add_unit_test(test_j1850_tx_logic)
 add_unit_test(test_j1850_parse)
+add_unit_test(test_dtc)
 add_unit_test(test_j1850_driver)
 add_unit_test(test_j1850_edge)
 add_unit_test(test_ride_log_format)

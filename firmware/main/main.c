@@ -38,6 +38,9 @@
 #endif
 #if CONFIG_VROD_J1850_TX
 #include "j1850_tx.h"
+#if CONFIG_VROD_J1850_DTC_PROBE
+#include "dtc_probe.h"
+#endif
 #endif
 #if CONFIG_VROD_PIN_WIGGLE_GPIO >= 0
 #include "pin_wiggle.h"
@@ -134,7 +137,11 @@ void app_main(void)
 #endif
 #if CONFIG_VROD_J1850_TX
     j1850_tx_init();
-#if CONFIG_VROD_J1850_TX_SELFTEST
+#if CONFIG_VROD_J1850_DTC_PROBE
+    dtc_probe_start();
+#elif CONFIG_VROD_J1850_TX_BIKE_REPLAY
+    j1850_tx_bike_replay_start();
+#elif CONFIG_VROD_J1850_TX_SELFTEST
     j1850_tx_selftest_start();
 #endif
 #endif

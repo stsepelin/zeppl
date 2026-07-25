@@ -1,0 +1,230 @@
+I (31484) j1850: raw  1: low  28727900 us
+I (31484) j1850: raw  2: HIGH   190 us
+I (31484) j1850: raw  3: low     76 us
+I (31485) j1850: raw  4: HIGH    54 us
+I (31487) j1850: raw  5: low    138 us
+I (31491) j1850: raw  6: HIGH   117 us
+I (31494) j1850: raw  7: low    141 us
+I (31498) j1850: raw  8: HIGH   116 us
+I (31501) j1850: raw  9: low     76 us
+I (31505) j1850: raw 10: HIGH   117 us
+I (31508) j1850: raw 11: low    141 us
+I (31512) j1850: raw 12: HIGH    51 us
+I (31515) j1850: raw 13: low    141 us
+I (31518) j1850: raw 14: HIGH    52 us
+I (31522) j1850: raw 15: low    141 us
+I (31525) j1850: raw 16: HIGH    51 us
+I (31529) j1850: raw 17: low    142 us
+I (31532) j1850: raw 18: HIGH    51 us
+I (31536) j1850: raw 19: low     76 us
+I (31539) j1850: raw 20: HIGH    52 us
+I (31543) j1850: raw 21: low     76 us
+I (31546) j1850: raw 22: HIGH   117 us
+I (31550) j1850: raw 23: low     76 us
+I (31553) j1850: raw 24: HIGH   116 us
+I (31557) j1850: raw 25: low     76 us
+I (31560) j1850: raw 26: HIGH   117 us
+I (31564) j1850: raw 27: low     76 us
+I (31567) j1850: raw 28: HIGH   117 us
+I (31571) j1850: raw 29: low     75 us
+I (31574) j1850: raw 30: HIGH   117 us
+I (31578) j1850: raw 31: low     76 us
+I (31581) j1850: raw 32: HIGH   117 us
+I (31584) j1850: raw 33: low    141 us
+I (31588) j1850: raw 34: HIGH   116 us
+I (31591) j1850: raw 35: low    141 us
+I (31595) j1850: raw 36: HIGH    52 us
+I (31598) j1850: raw 37: low     76 us
+I (31602) j1850: raw 38: HIGH   117 us
+I (31605) j1850: raw 39: low     75 us
+I (31609) j1850: raw 40: HIGH    53 us
+I (31612) j1850: raw 41: low     75 us
+I (31616) j1850: raw 42: HIGH    52 us
+I (31619) j1850: raw 43: low  98326 us
+I (31623) j1850: 68 FF 40 02 C5 | CRC OK
+I (31626) j1850: raw 44: HIGH   190 us
+I (31630) j1850: raw 45: low     76 us
+I (31633) j1850: raw 46: HIGH    51 us
+I (31637) j1850: raw 47: low     76 us
+I (31640) j1850: raw 48: HIGH   117 us
+I (31644) j1850: raw 49: low    141 us
+I (31647) j1850: raw 50: HIGH   117 us
+I (31651) j1850: raw 51: low     75 us
+I (31654) j1850: raw 52: HIGH   117 us
+I (31658) j1850: raw 53: low    141 us
+I (31661) j1850: raw 54: HIGH   117 us
+I (31664) j1850: raw 55: low     76 us
+I (31668) j1850: raw 56: HIGH    51 us
+I (31671) j1850: raw 57: low     76 us
+I (31675) j1850: raw 58: HIGH   117 us
+I (31678) j1850: raw 59: low    141 us
+I (31682) j1850: raw 60: HIGH   117 us
+I (31685) j1850: raw 61: low     76 us
+I (31689) j1850: raw 62: HIGH    51 us
+I (31692) j1850: raw 63: low     76 us
+I (31696) j1850: raw 64: HIGH   117 us
+I (31699) j1850: 48 92 40 AA FF FF 5B | CRC OK
+I (31704) j1850: 48 92 40 AA FF FF 5B | CRC OK
+I (31708) j1850: 68 FF 40 03 D8 | CRC OK
+I (31711) j1850: 68 93 60 AA FF FF 53 | CRC OK
+I (31715) j1850: 48 DA 40 39 00 70 | CRC OK
+I (31719) j1850: 29 FE 40 01 64 | CRC OK
+I (31723) j1850: 48 3B 40 02 29 | CRC OK
+I (31729) j1850: 48 3B 40 A0 B2 | CRC OK
+I (31847) j1850: 48 DA 40 39 00 70 | CRC OK
+I (32069) j1850: 29 FE 60 01 11 | CRC OK
+I (32076) j1850tx: replay: frame 45 sent
+I (32078) j1850: 68 FF 40 03 D8 | CRC OK
+I (32230) j1850tx: replay: frame 46 sent
+I (32232) j1850: 68 FF 60 03 AD | CRC OK
+I (32342) j1850: 29 FE 60 01 11 | CRC OK
+I (32348) j1850: 68 FF 60 03 AD | CRC OK
+I (32384) j1850tx: replay: frame 47 sent
+I (32386) j1850: 29 FE 40 01 64 | CRC OK
+I (32538) j1850tx: replay: frame 48 sent
+I (32540) j1850: 29 FE 60 01 11 | CRC OK
+I (32762) j1850: stats: 17 frames, 0 bad CRC, 0 overruns, 778 edges, 0 same-level
+I (33399) j1850: 68 FF 40 03 D8 | CRC OK
+I (33409) j1850: 29 FE 40 01 64 | CRC OK
+I (34283) j1850: 48 DA 40 39 00 70 | CRC OK
+I (34359) j1850: 29 FE 60 01 11 | CRC OK
+I (34365) j1850: 68 FF 60 03 AD | CRC OK
+I (34692) j1850tx: replay: frame 49 sent
+I (34694) j1850: 68 FF 40 03 D8 | CRC OK
+I (34846) j1850tx: replay: frame 50 sent
+I (34848) j1850: 68 FF 60 03 AD | CRC OK
+I (35000) j1850tx: replay: frame 51 sent
+I (35002) j1850: 29 FE 40 01 64 | CRC OK
+I (35154) j1850tx: replay: frame 52 sent
+I (35156) j1850: 29 FE 60 01 11 | CRC OK
+I (35411) j1850: 48 92 40 2A 00 00 1E | CRC OK
+I (35428) j1850: 68 FF 40 03 D8 | CRC OK
+I (35435) j1850: 68 93 60 2A 00 00 16 | CRC OK
+I (35441) j1850: 29 FE 40 01 64 | CRC OK
+I (36376) j1850: 29 FE 60 01 11 | CRC OK
+I (36382) j1850: 68 FF 60 03 AD | CRC OK
+I (36719) j1850: 48 DA 40 39 00 70 | CRC OK
+I (37308) j1850tx: replay: frame 53 sent
+I (37310) j1850: 68 FF 40 03 D8 | CRC OK
+I (37462) j1850tx: replay: frame 54 sent
+I (37469) j1850: 29 FE 40 01 64 | CRC OK
+I (37616) j1850tx: replay: frame 55 sent
+I (37618) j1850: 29 FE 40 01 64 | CRC OK
+I (37770) j1850tx: replay: frame 56 sent
+I (37772) j1850: 29 FE 60 01 11 | CRC OK
+I (37967) j1850: 68 FF 40 03 D8 | CRC OK
+I (38395) j1850: 29 FE 60 01 11 | CRC OK
+I (38401) j1850: 68 FF 60 03 AD | CRC OK
+I (39489) j1850: 29 FE 40 01 64 | CRC OK
+I (39924) j1850tx: replay: frame 57 sent
+I (39926) j1850: 68 FF 40 03 D8 | CRC OK
+I (39997) j1850: 68 FF 40 03 D8 | CRC OK
+I (40078) j1850tx: replay: frame 58 sent
+I (40080) j1850: 68 FF 60 03 AD | CRC OK
+I (40232) j1850tx: replay: frame 59 sent
+I (40234) j1850: 29 FE 40 01 64 | CRC OK
+I (40386) j1850tx: replay: frame 60 sent
+I (40388) j1850: 29 FE 60 01 11 | CRC OK
+I (40418) j1850: 29 FE 60 01 11 | CRC OK
+I (40424) j1850: 68 FF 60 03 AD | CRC OK
+I (41519) j1850: 29 FE 40 01 64 | CRC OK
+I (42027) j1850: 68 FF 40 03 D8 | CRC OK
+I (42540) j1850tx: replay: frame 61 sent
+I (42694) j1850tx: replay: frame 62 sent
+I (42764) j1850: stats: 50 frames, 0 bad CRC, 0 overruns, 1517 edges, 0 same-level
+I (42848) j1850tx: replay: frame 63 sent
+I (43002) j1850tx: replay: frame 64 sent
+I (43683) j1850: 48 92 40 AA FF FF 5B | CRC OK
+I (43692) j1850: 68 FF 40 03 D8 | CRC OK
+I (43703) j1850: 48 DA 40 39 00 70 | CRC OK
+I (43712) j1850: 29 FE 40 01 64 | CRC OK
+I (43721) j1850: 48 3B 40 02 29 | CRC OK
+I (43728) j1850: 68 93 60 AA FF FF 53 | CRC OK
+I (43734) j1850: 48 3B 40 A0 B2 | CRC OK
+I (43777) j1850: 29 FE 60 01 11 | CRC OK
+I (43916) j1850: 48 DA 40 39 00 70 | CRC OK
+I (44246) j1850: 29 FE 60 01 11 | CRC OK
+I (44251) j1850: 69 93 60 2A 18 | CRC OK
+I (44256) j1850: 68 FF 60 03 AD | CRC OK
+I (44264) j1850: 48 92 40 AA FF FF 5B | CRC OK
+I (44273) j1850: 68 93 60 AA FF FF 53 | CRC OK
+I (45156) j1850tx: replay: frame 65 sent
+I (45158) j1850: 68 FF 40 03 D8 | CRC OK
+I (45310) j1850tx: replay: frame 66 sent
+I (45312) j1850: 68 FF 60 03 AD | CRC OK
+I (45464) j1850tx: replay: frame 67 sent
+I (45466) j1850: 29 FE 40 01 64 | CRC OK
+I (45590) j1850: 68 FF 40 03 D8 | CRC OK
+I (45600) j1850: 29 FE 40 01 64 | CRC OK
+I (45618) j1850tx: replay: frame 68 sent
+I (45620) j1850: 29 FE 60 01 11 | CRC OK
+I (45789) j1850: 29 FE 60 01 11 | CRC OK
+I (45795) j1850: 68 FF 60 03 AD | CRC OK
+I (46352) j1850: 48 DA 40 39 00 70 | CRC OK
+I (47591) j1850: 48 92 40 2A 00 00 1E | CRC OK
+I (47611) j1850: 68 93 60 2A 00 00 16 | CRC OK
+I (47620) j1850: 68 FF 40 03 D8 | CRC OK
+I (47630) j1850: 29 FE 40 01 64 | CRC OK
+I (47772) j1850tx: replay: frame 69 sent
+I (47774) j1850: 68 FF 40 03 D8 | CRC OK
+I (47807) j1850: 29 FE 60 01 11 | CRC OK
+I (47813) j1850: 68 FF 60 03 AD | CRC OK
+I (47926) j1850tx: replay: frame 70 sent
+I (47928) j1850: 68 FF 60 03 AD | CRC OK
+I (48080) j1850tx: replay: frame 71 sent
+I (48082) j1850: 29 FE 40 01 64 | CRC OK
+I (48234) j1850tx: replay: frame 72 sent
+I (48236) j1850: 29 FE 60 01 11 | CRC OK
+I (48788) j1850: 48 DA 40 39 00 70 | CRC OK
+I (49650) j1850: 68 FF 40 03 D8 | CRC OK
+I (49660) j1850: 29 FE 40 01 64 | CRC OK
+I (49824) j1850: 29 FE 60 01 11 | CRC OK
+I (49830) j1850: 68 FF 60 03 AD | CRC OK
+I (50388) j1850tx: replay: frame 73 sent
+I (50390) j1850: 68 FF 40 03 D8 | CRC OK
+I (50542) j1850tx: replay: frame 74 sent
+I (50544) j1850: 68 FF 60 03 AD | CRC OK
+I (50696) j1850tx: replay: frame 75 sent
+I (50698) j1850: 29 FE 40 01 64 | CRC OK
+I (50850) j1850tx: replay: frame 76 sent
+I (50852) j1850: 29 FE 60 01 11 | CRC OK
+I (51680) j1850: 68 FF 40 03 D8 | CRC OK
+I (51690) j1850: 29 FE 40 01 64 | CRC OK
+I (51841) j1850: 29 FE 60 01 11 | CRC OK
+I (51847) j1850: 68 FF 60 03 AD | CRC OK
+I (52765) j1850: stats: 96 frames, 0 bad CRC, 0 overruns, 2061 edges, 2 same-level
+I (53004) j1850tx: replay: frame 77 sent
+I (53158) j1850tx: replay: frame 78 sent
+I (53312) j1850tx: replay: frame 79 sent
+I (53466) j1850tx: replay: frame 80 sent
+I (55620) j1850tx: replay: frame 81 sent
+I (55774) j1850tx: replay: frame 82 sent
+I (55928) j1850tx: replay: frame 83 sent
+I (56082) j1850tx: replay: frame 84 sent
+I (56858) j1850: 48 92 40 AA FF FF 5B | CRC OK
+I (56868) j1850: 68 FF 40 03 D8 | CRC OK
+I (56878) j1850: 48 DA 40 39 00 70 | CRC OK
+I (56888) j1850: 29 FE 40 01 64 | CRC OK
+I (56898) j1850: 48 3B 40 02 29 | CRC OK
+I (56908) j1850: 48 3B 40 A0 B2 | CRC OK
+I (56924) j1850: 68 93 60 AA FF FF 53 | CRC OK
+I (57091) j1850: 48 DA 40 39 00 70 | CRC OK
+I (57444) j1850: 29 FE 60 01 11 | CRC OK
+I (57453) j1850: 69 93 60 2A 18 | CRC OK
+I (57467) j1850: 48 92 40 AA FF FF 5B | CRC OK
+I (57497) j1850: 68 93 60 AA FF FF 53 | CRC OK
+I (58091) j1850: 29 FE 60 01 11 | CRC OK
+I (58097) j1850: 68 FF 60 03 AD | CRC OK
+I (58236) j1850tx: replay: frame 85 sent
+I (58238) j1850: 68 FF 40 03 D8 | CRC OK
+I (58390) j1850tx: replay: frame 86 sent
+I (58392) j1850: 68 FF 60 03 AD | CRC OK
+I (58544) j1850tx: replay: frame 87 sent
+I (58546) j1850: 29 FE 40 01 64 | CRC OK
+I (58698) j1850tx: replay: frame 88 sent
+I (58700) j1850: 29 FE 60 01 11 | CRC OK
+I (58765) j1850: 68 FF 40 03 D8 | CRC OK
+I (58775) j1850: 29 FE 40 01 64 | CRC OK
+I (59527) j1850: 48 DA 40 39 00 70 | CRC OK
+I (60108) j1850: 29 FE 60 01 11 | CRC OK
+I (60114) j1850: 68 FF 60 03 AD | CRC OK

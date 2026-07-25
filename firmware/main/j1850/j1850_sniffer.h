@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Phase 3 Stage 2 passive capture: GPIO edge timing → VPW decoder →
+// Phase 2 Stage 2 passive capture: GPIO edge timing → VPW decoder →
 // one serial log line per bus frame. Read-only by design — the build
 // carries no TX path at all, so it cannot disturb the bus regardless
 // of what the firmware does. Enabled by CONFIG_VROD_J1850_SNIFFER.
@@ -30,6 +30,14 @@ typedef struct {
 } j1850_sniffer_stats_t;
 
 void j1850_sniffer_get_stats(j1850_sniffer_stats_t *out);
+
+// Optional per-frame observer, for a probe that needs EVERY decoded frame (the
+// DTC read collects one response frame per stored code, so last_frame polling
+// would miss codes). Receives the raw bytes + CRC verdict of each frame from
+// the sniffer task. NULL clears it. Runs in the sniffer task context: keep it
+// short and lock any state it shares with another task.
+typedef void (*j1850_frame_observer_t)(const uint8_t *data, size_t len, bool crc_ok);
+void j1850_sniffer_set_observer(j1850_frame_observer_t cb);
 
 // Bus-amplitude ADC reads live in j1850_adc_probe.c on a DEDICATED pin
 // (GPIO 22) — the sniffer pin can't be time-shared between the digital

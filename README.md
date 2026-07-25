@@ -19,8 +19,8 @@ app for phone integration.
 |---|---|
 | [`firmware/`](firmware/) | ESP-IDF cluster firmware — gauge UI, sim engine, BLE peripheral, host tests, desktop simulator |
 | [`companion/`](companion/) | **Zeppl** Android BLE-central app — notifications + media bridge, live telemetry, and speed/fuel calibration for the cluster |
-| [`docs/`](docs/) | Cross-system docs (project brief, master plan, current phase) |
-| [`firmware/docs/`](firmware/docs/) | Firmware-internal docs (architecture, phase plans, bisect notes) |
+| [`docs/`](docs/) | Cross-system docs — project brief, roadmap, hardware/bus reference, phase plans, UI screens |
+| [`firmware/docs/`](firmware/docs/) | Firmware-internal docs — architecture, reference notes, ride logs, plans |
 
 Start with [`docs/PROJECT-BRIEF.md`](docs/PROJECT-BRIEF.md) for the whole-system view,
 or jump straight to a component:
@@ -47,21 +47,20 @@ command line if defaults don't match your setup.
 
 ## Status
 
-Phase 2 (gauge UI) and Phase 2.5 (off-bike work: touch + settings +
-BLE phone integration) are complete — a synthetic driving cycle drives
-the full widget set at 30 FPS on the round display. Phase 3 (J1850 bus
-+ IM simulation) is well along: the RX sniffer, decode → vehicle_data
-producer, on-board ride log, and the full **companion Stage 5** (live
-telemetry, GPS speed calibration, config write-back to NVS, fuel
-economy/range) are in and bench-validated. Remaining: the on-bike GPS
-calibration ride to lock the speed divisor
-([`firmware/docs/ride-2-calibration-plan.md`](firmware/docs/ride-2-calibration-plan.md)),
-then TX / IM replay on the bench. See
-[`docs/03-PHASE3-J1850-PLAN.md`](docs/03-PHASE3-J1850-PLAN.md).
+**Phase 1 (firmware & gauge UI)** is complete — display, widgets, touch,
+settings, the Android BLE companion, the simulator, and a 100% host-test
+gate; a synthetic driving cycle drives the full widget set at 30 FPS on the
+round display. **Phase 2 (J1850 bus + IM simulation)** is well along: the RX
+sniffer, decode → vehicle_data producer, on-board ride log, and the full
+companion telemetry / calibration / fuel stack are in and bench-validated,
+with the **speed divisor locked at 188** (Ride 2, 2026-07-09 — gear-ratio
+physics + radar, not GPS). **Stage 4 TX + IM replay is on-bike validated
+(2026-07-24)** and the **DTC read** firmware is built. Remaining: the DTC
+follow-ups and the stock-cluster-removal checks. See
+[`docs/phases/phase2-j1850.md`](docs/phases/phase2-j1850.md).
 
-See [`docs/00-MASTER-PROJECT-PLAN.md`](docs/00-MASTER-PROJECT-PLAN.md)
-for the full roadmap and [`docs/02-PHASE2.5-OFFBIKE-PLAN.md`](docs/02-PHASE2.5-OFFBIKE-PLAN.md)
-for the active stage breakdown.
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the full four-phase roadmap with
+per-stage statuses.
 
 ## Hardware
 

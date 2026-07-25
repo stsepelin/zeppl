@@ -6,7 +6,7 @@
 // Reconstructs the held level of each VPW pulse from edge TIMING alone —
 // no pin read, so it is immune to the glitch-filter delay vs
 // gpio_get_level() race that forced the filter off (see
-// docs/j1850-toggling-isr-candidate.md).
+// docs/reference/j1850-toggling-isr-candidate.md).
 //
 // Levels strictly alternate, so the level is toggled each edge. Absolute
 // phase is anchored by the recessive idle: any pulse longer than the

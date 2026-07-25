@@ -1,4 +1,5 @@
 #include "speed_display.h"
+#include "display_filter.h"
 #include "lvgl.h"
 #include "theme.h"
 #include "widget_util.h"
@@ -20,7 +21,8 @@ LV_FONT_DECLARE(jbm_bold_33);
 typedef struct {
     lv_obj_t       *digit[MAX_DIGITS];
     lv_obj_t       *unit_label;
-    uint16_t        last_mph;
+    dfilter_t       filt;       // damped-hysteresis anti-jitter (on mph)
+    uint16_t        last_fmph;  // filtered mph currently on screen
     display_units_t last_units;
     char            shown[MAX_DIGITS];  // glyph currently in each slot, 0 = blank
     bool            has_value;
@@ -66,7 +68,8 @@ lv_obj_t *speed_display_create(lv_obj_t *parent)
     lv_obj_align(unit, LV_ALIGN_CENTER, 0, 95);
 
     sd->unit_label = unit;
-    sd->last_mph   = 0;
+    sd->filt       = (dfilter_t){0};
+    sd->last_fmph  = 0;
     sd->last_units = UNITS_KPH;
     sd->has_value  = false;
     lv_obj_set_user_data(cont, sd);
@@ -76,21 +79,32 @@ lv_obj_t *speed_display_create(lv_obj_t *parent)
 void speed_display_set_value(lv_obj_t *cont, uint16_t mph, display_units_t units)
 {
     speed_data_t *sd = lv_obj_get_user_data(cont);
-    if (!sd) return;
-    if (sd->has_value && sd->last_mph == mph && sd->last_units == units)
+    if (!sd)
         return;
 
+    // Anti-jitter: feed the source mph through the damped-hysteresis filter
+    // every frame so a speed parked on a rounding edge stops strobing its last
+    // digit, then convert the steady value to the display unit. Seed (no ramp)
+    // on the first value; a unit switch leaves mph unchanged so no reseed.
     bool units_changed = sd->last_units != units;
-    sd->last_mph       = mph;
-    sd->last_units = units;
-    sd->has_value  = true;
+    if (!sd->has_value)
+        dfilter_seed(&sd->filt, mph);
+    uint16_t fmph      = (uint16_t)dfilter_update(&sd->filt, mph);
+    unsigned shown_val = units_speed_display(fmph, units);
 
     // Peg at 999: the layout has three digit slots, and truncating a longer
     // number to its leading digits would read as a confident wrong value
     // (1024 -> "102"). 4+ digits only happens on a faulty/garbage reading.
-    unsigned shown_val = units_speed_display(mph, units);
     if (shown_val > 999)
         shown_val = 999;
+
+    // Cache on the filtered mph (the canonical state) + unit, so an unchanged
+    // reading skips the re-render but a unit switch still repaints.
+    if (sd->has_value && sd->last_fmph == fmph && !units_changed)
+        return;
+    sd->last_fmph  = fmph;
+    sd->last_units = units;
+    sd->has_value  = true;
 
     char buf[8];
     snprintf(buf, sizeof(buf), "%u", shown_val);
