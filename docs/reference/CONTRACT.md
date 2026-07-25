@@ -5,8 +5,10 @@ consumers: the on-board display, the companion app, and — via CAN+DBC — futu
 third-party dashes / loggers. This is the living-spec side of
 [ADR 0001](../adr/0001-engine-display-split.md) (Phase A). It **names, versions,
 and documents what already ships** — no behaviour change. The firmware structs
-(`firmware/main/vehicle/vehicle_data.h`, `firmware/main/phone/telemetry_codec.h`,
-`firmware/main/phone/phone.h`, `firmware/main/j1850/dtc.h`) and the companion's
+(`firmware/main/engine/vehicle/vehicle_data.h`,
+`firmware/main/connectivity/phone/telemetry_codec.h`,
+`firmware/main/connectivity/phone/phone.h`,
+`firmware/main/engine/j1850/dtc.h`) and the companion's
 `ble/*.kt` remain the source of truth; this doc is their shared description.
 
 ## Design rule: one model, two serializers

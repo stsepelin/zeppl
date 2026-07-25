@@ -1,10 +1,11 @@
 # ADR 0001 — Engine / connectivity / display separation
 
-- **Status:** Proposed (2026-07)
+- **Status:** Accepted (2026-07) — **Phases A + B implemented**; C + D pending
+  (see the phased plan).
 - **Deciders:** project owner
 - **Supersedes / relates to:** the `vehicle_data_t` contract and the phone
-  telemetry protocol (`firmware/main/phone/telemetry_codec.c`), which already
-  embody parts of this split.
+  telemetry protocol (`firmware/main/connectivity/phone/telemetry_codec.c`),
+  which already embody parts of this split.
 
 ## Context
 
@@ -226,7 +227,9 @@ want live-tuning or motorsport-log interop. Not now.
   in `telemetry_codec` + `phone_protocol`; the work is naming, versioning, and
   documenting it. **Shape it for interop:** model signals as flat, scaled,
   fixed-point channels that map 1:1 onto a DBC, and draft a first **versioned
-  DBC** alongside the schema. No behaviour change.
+  DBC** alongside the schema. No behaviour change. **Done (2026-07):** spec at
+  [`reference/CONTRACT.md`](../reference/CONTRACT.md), DBC at
+  [`reference/zeppl.dbc`](../reference/zeppl.dbc) (validated in cantools).
 - **Phase B — In-repo package refactor (still one P4).** Move vehicle sources
   under `engine/`, the radios under `connectivity/`, widgets/screens under
   `display/`, the model + codecs + command envelope under `contract/`. **First
@@ -237,6 +240,11 @@ want live-tuning or motorsport-log interop. Not now.
   engine's publish path an **output-adapter seam** (the BLE telemetry publisher
   is the first adapter) so a CAN broadcaster is a drop-in sibling. No board
   change; the 100% host-test gate + the simulator make this a safe refactor.
+  **Done (2026-07):** the command seam (`contract/command.c`) and the
+  `engine/` · `connectivity/` · `display/` · `contract/` package split have
+  landed — `ble_peripheral.c` no longer touches engine internals. The
+  publish-path output-adapter seam is folded into Phase C (it lands with the
+  first real broadcaster).
 - **Phase C — Standards interop output (CAN broadcast + DBC).** Implement the
   TWAI CAN-broadcast adapter and publish the versioned DBC. Validate with a
   laptop CAN tool (PCAN / SocketCAN) first, a real motorsport dash/logger when
