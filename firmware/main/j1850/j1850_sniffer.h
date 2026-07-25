@@ -3,7 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-// Phase 3 Stage 2 passive capture: GPIO edge timing → VPW decoder →
+// Phase 2 Stage 2 passive capture: GPIO edge timing → VPW decoder →
 // one serial log line per bus frame. Read-only by design — the build
 // carries no TX path at all, so it cannot disturb the bus regardless
 // of what the firmware does. Enabled by CONFIG_VROD_J1850_SNIFFER.

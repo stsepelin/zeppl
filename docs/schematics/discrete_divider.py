@@ -1,5 +1,5 @@
 # 12V discrete-signal divider (x6: turn L/R, high beam, neutral, oil
-# pressure, ignition sense) — Phase 6. Sized for the real electrical
+# pressure, ignition sense) — Phase 3. Sized for the real electrical
 # system: "12V" is ~14.4V with the engine running; 10k/2.7k gives 3.06V
 # at 14.4V and 2.55V at 12V. The optional 3.3V zener is belt-and-braces.
 # Regenerate: see README.md in this directory.

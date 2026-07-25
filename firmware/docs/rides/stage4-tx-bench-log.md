@@ -2,15 +2,15 @@
 
 Running log for the DC bench bring-up of the TX high-side stage on breadboard.
 **BENCH ONLY — no bike.** This is the canonical record of the Stage 4 TX
-transceiver bench ladder (Phase 3, `../../docs/phases/phase3-j1850.md`).
+transceiver bench ladder (Phase 2, `../../../docs/phases/phase2-j1850.md`).
 
 ## Board under test
 
 RX front end + TX cascade on breadboard:
 
-- **RX front end** (`../../docs/schematics/j1850_rx.svg`): R1 10k / R2 4.7k
+- **RX front end** (`../../../docs/schematics/j1850_rx.svg`): R1 10k / R2 4.7k
   divider, D1 7.5V zener with the band (cathode) to the BUS node (clamp).
-- **TX cascade** (`../../docs/schematics/j1850_tx.svg`): R3 1k, R4 10k,
+- **TX cascade** (`../../../docs/schematics/j1850_tx.svg`): R3 1k, R4 10k,
   R5 100Ω, R6 10k, Q1 IRLZ44N (logic-level N-FET), Q2 2N2907A (PNP high-side).
 - **Bench-only additions** (not on the bike, stand in for the vehicle):
   - **Rg 10k** gate -> GND pull-down. Holds Q1 off while the P4 TX pad is

@@ -3,7 +3,7 @@
 First real capture on the 2009 VRSCF: ~10.4 min, laptop-free, powerbank-
 powered, RX-only tap, logged to microSD and pulled over serial
 (`CONFIG_VROD_RIDE_LOG_DUMP` + `tools/ride_log_pull.py`). 16,896 frames,
-~2.5% bad CRC (RX noise, tolerable; a hysteresis front end is Phase 6).
+~2.5% bad CRC (RX noise, tolerable; a hysteresis front end is Phase 3).
 
 Bike spec sheet (`2016 V-Rod Muscle`, same drivetrain): overall gear ratios
 1st 10.969 / 2nd 7.371 / 3rd 5.9 / 4th 5.095 / 5th 4.563; rear 240/40R18
@@ -52,7 +52,7 @@ advanced). So odo/trip come straight from the bus — no speed integration.
 Accumulate ticks × 0.4 m; trips are deltas. (Exact tick size to be confirmed
 against GPS distance.)
 
-## Not on the bus (discrete wires — Phase 6) — oil still open
+## Not on the bus (discrete wires — Phase 3) — oil still open
 Compared our cluster to the stock one during the ride:
 - **Low oil pressure** lamp — **status unresolved, not yet ruled discrete.** The
   rider confirms it lights key-on/engine-off (oil pressure = 0). That state

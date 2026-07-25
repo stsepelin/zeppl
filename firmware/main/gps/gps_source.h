@@ -3,8 +3,8 @@
 #include <stdint.h>
 
 // Producer-agnostic GPS snapshot. Filled by gps_sim during off-bike
-// development, and by the NEO-6M / M8N NMEA parser in Phase 5 when the
-// real module lands. Mirrors the vehicle_data pattern: a single
+// development, and by the NEO-6M / M8N NMEA parser (nmea.c) for the
+// moving-map GPS module. Mirrors the vehicle_data pattern: a single
 // mutex-guarded latest-value store; consumers grab a snapshot.
 //
 // Coordinates are integer-encoded as 1e-7 degrees (the NMEA wire
@@ -19,7 +19,7 @@ typedef struct {
     uint16_t heading_deg;  // 0..359 from true north
     bool     fix_ok;       // false until first valid fix
     uint8_t  sats_in_view;  // GSV satellites in view (module reception; 0 = none)
-    uint32_t time_ms;      // monotonic since boot; NMEA time after Phase 5
+    uint32_t time_ms;       // monotonic since boot; NMEA time once the module fills it
 } gps_source_t;
 
 void gps_source_init(void);

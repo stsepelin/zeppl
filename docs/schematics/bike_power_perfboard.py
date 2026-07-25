@@ -2,7 +2,7 @@
 # bike-power-chain.py draws schematically (fuse -> reverse-polarity Schottky
 # -> load-dump TVS -> mini560 buck @5.0V -> XL74610 ideal-diode -> 5V to the
 # board). Separate board from the signal board (switcher noise/current). Parts
-# + ratings in bike-power-chain.bom.md / firmware/docs/bike-power-injection.md.
+# + ratings in bike-power-chain.bom.md / firmware/docs/reference/bike-power-injection.md.
 # matplotlib, NOT schemdraw. Regenerate: python3 bike_power_perfboard.py (needs matplotlib).
 import matplotlib
 matplotlib.use("Agg")

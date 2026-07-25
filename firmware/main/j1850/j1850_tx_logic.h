@@ -7,7 +7,7 @@
 // Pure-logic helpers for the Stage 4 TX driver. No hardware here — the
 // RMT/timer glue lives in j1850_tx.c. Host-tested in vrod_pure.
 //
-// Bus polarity (settled Phase 3, standard VPW): dominant = bus HIGH,
+// Bus polarity (settled Phase 2, standard VPW): dominant = bus HIGH,
 // driven by the high-side PNP; recessive = bus LOW, released. So on the
 // TX GPIO, HIGH keys the bus dominant. Holding it dominant jams every
 // node — hence the watchdog limit below.

@@ -74,7 +74,7 @@ creation (`vApplicationGet{Idle,Timer}TaskMemory ... pxStackBufferTemp != NULL`)
 or any unchecked `malloc` fails and the device crash-loops. PSRAM is the
 opposite — ~15 MB+ free. Watch internal RAM, not PSRAM.
 
-One more constraint discovered in Phase 3 (July 2026): on rev<v3
+One more constraint discovered in Phase 2 (July 2026): on rev<v3
 silicon the ~274 KB of SRAM above 0x4ff3afc0 joins the heap only after
 both CPUs are scheduling — **before that, every task stack fights for
 a ~151 KB pool** (RETENT_RAM+RTCRAM+TCM). esp_hosted's WiFi-sized SDIO

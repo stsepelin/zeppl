@@ -1,19 +1,19 @@
-# Phase 2: Display & Gauge UI Development
+# Phase 1: Display & Gauge UI Development
 ## ESP32-P4-WIFI6-Touch-LCD-3.4C — Building the Speedometer UI
 
 > **Status: ✅ COMPLETE**
 >
-> Phase 2 shipped. Gauge UI runs against a synthetic driving cycle; every
+> Phase 1 shipped. Gauge UI runs against a synthetic driving cycle; every
 > stage from "create the project" through "polish" is in. See *Outcome*
 > at the bottom of this file for the delta between the original plan and
 > what actually got built — mostly the plan got *more* than it called for
 > (richer widget set, full host-test harness, desktop SDL2 simulator,
 > shift-light, embedded GIF boot animation). This document is
-> retained as the historical Phase 2 record; for current architecture see
+> retained as the historical Phase 1 record; for current architecture see
 > the repo's `CLAUDE.md` and `docs/PROJECT-BRIEF.md`.
 
 **Editor**: Zed
-**Goal**: Build a working 800×800 round speedometer gauge with simulated data. By the end of this phase you'll have a beautiful gauge UI running on your desk, ready to receive real J1850 data in Phase 3.
+**Goal**: Build a working 800×800 round speedometer gauge with simulated data. By the end of this phase you'll have a beautiful gauge UI running on your desk, ready to receive real J1850 data in Phase 2.
 
 ---
 
@@ -218,7 +218,7 @@ vrod_gauge/
 │   │       ├── gear_indicator.h
 │   │       └── gear_indicator.c
 │   └── simulator/
-│       ├── sim_engine.h           # Phase 2 only — fake data
+│       ├── sim_engine.h           # Phase 1 only — fake data
 │       └── sim_engine.c
 └── components/                     # Future: J1850, BLE
 ```
@@ -308,7 +308,7 @@ void app_main(void)
     ui_manager_init();
     bsp_display_unlock();
 
-    // Start the simulator (Phase 2 only - fake data)
+    // Start the simulator (Phase 1 only - fake data)
     sim_engine_start();
 
     ESP_LOGI(TAG, "Boot complete - simulator running");
@@ -339,7 +339,7 @@ typedef enum {
 } gear_t;
 
 typedef struct {
-    // From J1850 bus (Phase 3)
+    // From J1850 bus (Phase 2)
     uint16_t speed_kmh;
     uint16_t rpm;
     gear_t   gear;
@@ -411,7 +411,7 @@ uint16_t vehicle_data_get_rpm(void)   { return s_data.rpm; }
 gear_t   vehicle_data_get_gear(void)  { return s_data.gear; }
 ```
 
-### simulator/sim_engine.c — Fake data for Phase 2
+### simulator/sim_engine.c — Fake data for Phase 1
 
 ```c
 // main/simulator/sim_engine.c
@@ -894,9 +894,9 @@ Navigate to:
 
 ---
 
-## Stage 7 — Hand-off to Phase 3
+## Stage 7 — Hand-off to Phase 2
 
-When the gauge UI looks good with simulated data, Phase 3 begins:
+When the gauge UI looks good with simulated data, Phase 2 begins:
 
 1. **Wire the J1850 bidirectional circuit** (IRLZ44N + 2N2222 + zener + resistors) to two P4 GPIOs on the 40-pin header
 2. **Create `components/j1850/`** — VPW timing decoder, message parser
@@ -940,7 +940,7 @@ When you see your first orange needle sweep across the round display, you'll kno
 
 ## Outcome — what actually shipped vs the plan
 
-Phase 2 delivered everything in the plan plus a few things that weren't.
+Phase 1 delivered everything in the plan plus a few things that weren't.
 Brief delta — for the full file map see `docs/PROJECT-BRIEF.md`.
 
 ### As planned, shipped
@@ -948,7 +948,7 @@ Brief delta — for the full file map see `docs/PROJECT-BRIEF.md`.
 - **Project scaffold** based on the Waveshare `08_lvgl_demo_v9` example,
   with the BSP patched up to ESP-IDF v6.0.1.
 - **Thread-safe `vehicle_data_t`** as the single source of truth between
-  the producer (sim now, J1850 driver in Phase 3) and the UI thread.
+  the producer (sim now, J1850 driver in Phase 2) and the UI thread.
 - **Dual-core split**: sim task on core 0 at prio 8, LVGL pthreads on
   core 1 (via `CONFIG_PTHREAD_DEFAULT_CORE_1=y`).
 - **Synthetic 32-second driving cycle** exercising every phase:
@@ -996,7 +996,7 @@ Brief delta — for the full file map see `docs/PROJECT-BRIEF.md`.
 - **CI**: `host-tests.yml` (coverage gate on every push), `firmware-build.yml`
   (espressif/idf container builds artifacts).
 
-### Hand-off to Phase 3
+### Hand-off to Phase 2
 
 The data-abstraction layer made the migration shape trivial:
 `main/simulator/sim_engine.c` becomes `components/j1850/j1850_driver.c`,

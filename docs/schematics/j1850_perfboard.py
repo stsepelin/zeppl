@@ -1,4 +1,4 @@
-# J1850 transceiver perfboard layout (Phase 3 Stage 4 bench -> bike board).
+# J1850 transceiver perfboard layout (Phase 2 Stage 4 bench -> bike board).
 # Physical pad-per-hole placement of the validated bench circuit (RX bare
 # divider + high-side TX) on a 5x7 cm perfboard. Companion to the schemdraw
 # schematics j1850_tx.py / j1850_rx.py, which stay the electrical source of

@@ -11,7 +11,7 @@ menu "V-Rod cluster"
             and notification work) and required while real bike data
             sources (J1850, etc.) are still on the supply chain.
 
-            Disable for real-bike builds — once Phase 3 lands, the
+            Disable for real-bike builds — once Phase 2 lands, the
             J1850 driver becomes the vehicle_data producer and the
             sim is just dead weight in flash. Disabling here only
             affects the cluster firmware; the desktop SDL2 simulator
@@ -89,7 +89,7 @@ menu "V-Rod cluster"
             Factory default for both NEO-6M and NEO-M8N is 9600.
 
     config VROD_J1850_SNIFFER
-        bool "J1850 passive sniffer (Phase 3 Stage 2 capture build)"
+        bool "J1850 passive sniffer (Phase 2 Stage 2 capture build)"
         default n
         help
             Logs every J1850 VPW frame seen on the RX GPIO over serial:
@@ -102,7 +102,7 @@ menu "V-Rod cluster"
             Off by default; only the bench capture build sets it.
 
     config VROD_J1850
-        bool "J1850 vehicle-data producer (Phase 3 Stage 3)"
+        bool "J1850 vehicle-data producer (Phase 2 Stage 3)"
         depends on VROD_J1850_SNIFFER
         default n
         help
@@ -155,7 +155,7 @@ menu "V-Rod cluster"
             decode path and off the LVGL core. Storage faults (no card, card
             full, write error) stop logging cleanly and surface on the bench
             indicator without disturbing the gauge. Uses the board's microSD
-            slot (GPIO 39-45); needs bike power to ride (see the Phase 3
+            slot (GPIO 39-45); needs bike power to ride (see the Phase 2
             plan's ride-log prerequisite). Off by default.
 
     config VROD_RIDE_LOG_DUMP
@@ -222,9 +222,9 @@ menu "V-Rod cluster"
 
             Noise immunity for the permanent harness is therefore
             deferred to an RX hysteresis (comparator / Schmitt) front end
-            in Phase 6 — see the master plan Phase 6 note. A software
+            in Phase 3 — see the roadmap Phase 3 note. A software
             alternative that could let a conservative filter coexist is
-            designed in firmware/docs/j1850-toggling-isr-candidate.md
+            designed in firmware/docs/reference/j1850-toggling-isr-candidate.md
             (infer the level by toggling instead of reading the pin). Use
             VROD_J1850_GLITCH_SWEEP to re-measure if the front end
             changes.
@@ -256,7 +256,7 @@ menu "V-Rod cluster"
         help
             Gate (a) of two. Compiles main/j1850/j1850_edge.c (the
             host-tested toggle + idle-anchor RX level reconstructor) into
-            the firmware so it is available for the Phase 6 on-hardware
+            the firmware so it is available for the Phase 3 on-hardware
             trial.
 
             HARMLESS ON ITS OWN: the live sniffer ISR still reads the pin
@@ -266,10 +266,10 @@ menu "V-Rod cluster"
 
             Switching the live ISR to the tracker is the SEPARATE gate (b)
             below (VROD_J1850_TOGGLE_ISR_LIVE), which is deliberately not
-            wired yet. See docs/j1850-toggling-isr-candidate.md.
+            wired yet. See docs/reference/j1850-toggling-isr-candidate.md.
 
     config VROD_J1850_TOGGLE_ISR_LIVE
-        bool "Switch the live RX ISR to toggling (gate b; Phase 6 trial - NOT WIRED)"
+        bool "Switch the live RX ISR to toggling (gate b; Phase 3 trial - NOT WIRED)"
         depends on VROD_J1850_TOGGLE_ISR
         default n
         help
@@ -280,14 +280,14 @@ menu "V-Rod cluster"
 
             NOT YET FUNCTIONAL. Enabling this today has NO effect — the
             sniffer ISR is intentionally left unchanged in this merge. The
-            wiring lands in Phase 6 and must be validated on the bench
+            wiring lands in Phase 3 and must be validated on the bench
             against the filter-off baseline (546 frames / 0 bad CRC), one
             variable at a time (toggle ISR + a conservative filter, invert
             nothing). Kept here so the two-step opt-in is explicit; see
-            docs/j1850-toggling-isr-candidate.md.
+            docs/reference/j1850-toggling-isr-candidate.md.
 
     config VROD_J1850_TX
-        bool "J1850 VPW transmitter (Phase 3 Stage 4)"
+        bool "J1850 VPW transmitter (Phase 2 Stage 4)"
         default n
         help
             Compiles the TX driver: RMT-timed VPW symbols from the
@@ -321,7 +321,7 @@ menu "V-Rod cluster"
             each frame is logged PASS/FAIL with the decoded bytes + CRC
             verdict. Needs the TX output tied to the RX bus node with the
             bench recessive-LOW termination (see the Stage 4 section of
-            docs/phases/phase3-j1850.md). Bench only.
+            docs/phases/phase2-j1850.md). Bench only.
 
     config VROD_J1850_TX_BIKE_REPLAY
         bool "TX live-bus IM keep-alive replay (Stage 4 on-bike step 3)"
@@ -422,7 +422,7 @@ menu "V-Rod cluster"
             <lat>/<lon>.zmt per cell (tools/maptiles/world.py) let a whole
             continent live on the card while only the cells near the rider stay
             resident - the index that would be gigabytes for Europe is paged by
-            position. See firmware/docs/map-worldwide-plan.md.
+            position. See firmware/docs/plans/map-worldwide-plan.md.
 
             OFF: the single-archive path (CONFIG_VROD_MAP_SD_PATH), unchanged.
 

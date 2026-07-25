@@ -153,7 +153,7 @@ the single source of truth):
 
 A stuck-high TX jams the bus dominant — the firmware TX watchdog is mandatory
 before this stage touches the bike. (TX watchdog + on-bike validation:
-[`../../firmware/docs/stage4-tx-bench-log.md`](../../firmware/docs/stage4-tx-bench-log.md).)
+[`../../firmware/docs/rides/stage4-tx-bench-log.md`](../../firmware/docs/rides/stage4-tx-bench-log.md).)
 
 ### 12V discrete signal voltage divider (×6 — turn L/R, high beam, neutral, oil, ignition)
 
@@ -172,7 +172,7 @@ running the "12V" rails sit at ~14.4V charging voltage. An earlier 10kΩ/4.7kΩ
 divider gave **4.6V at 14.4V — above the P4's ~3.6V absolute maximum** (P4 GPIOs
 are not 5V tolerant). 10kΩ/2.7kΩ gives 2.55V at 12V and 3.06V at 14.4V — a clean
 logic high with margin. Per-line active-high/active-low polarity is a firmware
-flag (see ROADMAP Phase 6) — the divider hardware is identical ×6.
+flag (see ROADMAP Phase 3) — the divider hardware is identical ×6.
 
 ## Proxy box design
 
@@ -200,7 +200,7 @@ Lifecycle: **Dev** — Bike → Proxy → Stock cluster (rides normally) + P4 on
 - **iPhone — zero setup (built-in ANCS + AMS):** ANCS (notifications, caller ID,
   turn-by-turn) + AMS (track/artist + transport). No companion app; pair via iOS
   Settings. (iOS parsers deferred to Phase 4.)
-- **Android — companion app (`companion/`, ✅ Phase 2.5):** Kotlin/Compose with
+- **Android — companion app (`companion/`, ✅ Phase 1):** Kotlin/Compose with
   `NotificationListenerService` + `MediaSessionManager`, a foreground BLE
   service, LE Secure Connections bonding, device-picker UI. Notifications + media
   → custom TLV over BLE GATT → P4; transport commands come back over the notify
@@ -233,7 +233,7 @@ moving-map screen) with regen commands: [`../screens/`](../screens/).
   period for redundancy.
 - **Power:** keyed +12V (pin 6) for ignition on/off; 470µF cap on the 5V rail to
   absorb cranking spikes; the P4 boots in ~2 s — no graceful shutdown needed.
-  Protected power chain: [`../../firmware/docs/bike-power-injection.md`](../../firmware/docs/bike-power-injection.md).
+  Protected power chain: [`../../firmware/docs/reference/bike-power-injection.md`](../../firmware/docs/reference/bike-power-injection.md).
 
 ## Development environment
 

@@ -8,7 +8,7 @@
 // RECESSIVE (idle). Holding it dominant jams every node, so an
 // independent watchdog forces the line LOW if a dominant persists past
 // the longest valid symbol. Compiled only for CONFIG_VROD_J1850_TX;
-// read-only sniff builds carry no TX path. See the master plan Stage 4 +
+// read-only sniff builds carry no TX path. See the roadmap Stage 4 +
 // docs/schematics/j1850_tx.svg.
 
 void j1850_tx_init(void);

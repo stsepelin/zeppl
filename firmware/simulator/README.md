@@ -70,7 +70,7 @@ simulator/
 
 To poke phone notifications without hardware: run the sim, then e.g.
 `python3 ../../tools/notify.py --sms "Mom" "running late"` — same TLV
-pipeline the cluster's BLE RX uses (Phase 2.5 Stage 4).
+pipeline the cluster's BLE RX uses (Phase 1 Stage 4).
 
 If you add a widget to `main/display/widgets/`, add it to the source
 list in `CMakeLists.txt` here too.

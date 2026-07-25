@@ -1,4 +1,4 @@
-# Phase 3: J1850 Bus + IM Simulation
+# Phase 2: J1850 Bus + IM Simulation
 
 > **Status: ⏳ active** (kicked off July 2026 — parts arrived June 2026).
 > Stages 1-3 (RX transceiver, passive sniff, decode → `vehicle_data`), Stage
@@ -7,18 +7,18 @@
 > (TX + IM replay) is now on-bike validated (2026-07-24):** the fabricated
 > transceiver PCB does full bidirectional J1850 on the live bike — TX ran
 > **312 consecutive clean sends, 0 watchdog faults** across engine-off,
-> engine-on, and two cold-start off→on cranks (`firmware/docs/stage4-tx-bench-log.md`).
+> engine-on, and two cold-start off→on cranks (`firmware/docs/rides/stage4-tx-bench-log.md`).
 > The **DTC read** firmware is also built and validated live (`dtc.c` codec +
-> `CONFIG_VROD_J1850_DTC_PROBE`, `firmware/docs/dtc-read-probe.md`) — the bike
+> `CONFIG_VROD_J1850_DTC_PROBE`, `firmware/docs/reference/dtc-read-probe.md`) — the bike
 > reads clean (zero stored codes). The **speed divisor is locked at 188**
-> (Ride 2, 2026-07-09, PR #27; `firmware/docs/ride-2-findings.md`) and fuel
+> (Ride 2, 2026-07-09, PR #27; `firmware/docs/rides/ride-2-findings.md`) and fuel
 > economy is calibrated. Remaining: the **DTC follow-ups** (real non-zero code
 > test, clear-codes action, phone Diagnostics view); and the
 > **stock-cluster-removal** U1255 / TSSM checks. See the follow-up list at the
 > end of Stage 4/5.
 >
-> First phase that touches the bike. The gauge UI (Phase 2), all
-> off-bike features (Phase 2.5), and the loose ends from both are done;
+> First phase that touches the bike. The gauge UI (Phase 1), all
+> off-bike features (Phase 1), and the loose ends from both are done;
 > everything below runs on the bench transceiver + the bike's 12-pin
 > harness.
 >
@@ -36,7 +36,7 @@
 > reads NMEA on GPIO 21 (`VROD_GPS_RX_GPIO`) and feeds *only* the moving-map
 > position, dual-sourced with the phone GPS (module preferred, phone fallback;
 > `map_sd.c`, `GPS_MODULE_STALE_MS = 3000`). No speed / cameras / POI /
-> turn-by-turn. See `firmware/docs/gps-module.md` + `PINS.md`.
+> turn-by-turn. See `firmware/docs/reference/gps-module.md` + `PINS.md`.
 
 ## Goal
 
@@ -63,7 +63,7 @@ throughout (stock cluster keeps working until Stage 4 testing).
 > fabricated on a PCB** — bidirectional J1850 is validated on the live
 > bike (2026-07-24). The signal-board / power-board layouts are under
 > `docs/schematics/`. Enclosure + permanent harness integration stay in
-> Phase 6.
+> Phase 3.
 
 Breadboard the corrected transceiver — rendered schematics in
 [`../schematics/`](../schematics/): [RX front end](../schematics/j1850_rx.svg)
@@ -71,7 +71,7 @@ Breadboard the corrected transceiver — rendered schematics in
 hardware reference's "J1850 bidirectional transceiver circuit" section
 ([`../reference/HARDWARE.md`](../reference/HARDWARE.md)) has the same
 drawings plus the design notes; the schematic was fixed at
-Phase 3 kickoff — the old drawing would jam the bus:
+Phase 2 kickoff — the old drawing would jam the bus:
 
 - **Populate RX only first**: 10kΩ/4.7kΩ divider + 7.5V zener. No Q1/Q2
   — physically impossible to disturb the bus while sniffing.
@@ -99,10 +99,10 @@ Phase 3 kickoff — the old drawing would jam the bus:
 > - **IM keep-alive set identified** (`68 FF 40/60`, `29 FE 40/60`,
 >   steady ~2 s) — the Stage 4 replay targets.
 > - Beam + neutral are **discrete wires** (pins 2/10), not on the bus.
->   Discrete-tap polarity (Phase 6): **neutral = active-LOW** (0V = N),
+>   Discrete-tap polarity (Phase 3): **neutral = active-LOW** (0V = N),
 >   **turns = active-HIGH**; high beam / oil / ignition are **TBD by
 >   measurement** — measure BOTH states, don't hard-code (see the master
->   plan Phase 6 discrete table).
+>   plan Phase 3 discrete table).
 >
 > Still open in Stage 2 (all need the bike): a **riding capture** for road
 > speed (`48 29 10 02`, native mph vs the stock speedo to fix DIV) + gears 1-6, and a
@@ -127,7 +127,7 @@ Phase 3 kickoff — the old drawing would jam the bus:
   Stage 1/2 checks without a laptop or DMM attached. (The ADC readout
   briefly crash-looped the board; root cause was pre-scheduler heap
   margin, fixed in `sdkconfig.defaults` — see the addendum in
-  `firmware/docs/ble-bringup-bisect.md`. Phase 6's fuel ADC is
+  `firmware/docs/ble-bringup-bisect.md`. Phase 3's fuel ADC is
   unblocked by the same fix.)
 - **Pin choice resolved**: GPIO 20 (J1850 RX) is confirmed broken out on
   the 40-pin header and unclaimed. GPIO 21 is **reclaimed** as the optional
@@ -146,7 +146,7 @@ Phase 3 kickoff — the old drawing would jam the bus:
   what the ECM expects to keep hearing. Specifically confirm whether
   the fuel-gauge broadcast (`A8 83 61 12`) is IM-originated: the 2009
   fuel sender is ultrasonic and wired to the IM, so that message
-  likely dies with the stock cluster (see the roadmap's Phase 6
+  likely dies with the stock cluster (see the roadmap's Phase 3
   fuel-sender caveat, [`../ROADMAP.md`](../ROADMAP.md), for the fallback
   strategies).
 
@@ -157,14 +157,14 @@ Phase 3 kickoff — the old drawing would jam the bus:
   Host tests against real captured
   frames from Stage 2 — same fixture pattern as `phone_protocol`.
 - **Decode calibrated on ride 1** (full analysis in
-  `firmware/docs/ride-1-findings.md`; `j1850_parse.c` updated):
+  `firmware/docs/rides/ride-1-findings.md`; `j1850_parse.c` updated):
   - **Speed `48 29 10 02` — km/h-native (not mph), divisor provisional.**
     Ride 1 overturned the mph-native guess: the ECM value is km/h-native,
     ~117-128 counts per km/h (gear-ratio fit vs stock speedo). `speed_mph`
     stays mph-canonical, so the parser divides counts→mph: **set to 195**
     (was 128, which read ~1.5x high) — **later LOCKED to 188 in Ride 2**
     (gear-ratio physics + roadside radar agree; compile-time default is now
-    188, PR #27; see `firmware/docs/ride-2-findings.md`). The ride log stores
+    188, PR #27; see `firmware/docs/rides/ride-2-findings.md`). The ride log stores
     RAW counts (`speed_raw=`) so it's re-derivable without another ride.
   - **Temp `A8 49 10 10` — SETTLED: `°C = raw − 40`.** Cold-start raw 0x3F
     at ~20-25°C ambient → 23°C, warm 0x81 → 89°C. Both correct.
@@ -223,14 +223,14 @@ run headless.
 > **Prerequisite for the ride (hardware, out of scope here):** laptop-free
 > capture needs the ESP powered from the mini560 buck off switched +12V,
 > sharing ground with the J1850 transceiver — NOT USB. The ride-log firmware
-> is useless without bike power. Wiring is a Phase 6 / bench-harness step;
+> is useless without bike power. Wiring is a Phase 3 / bench-harness step;
 > flagged here so it isn't forgotten before a capture ride.
 
 #### Speed DIV (`J1850_SPEED_DIVISOR`, now 188) calibration reference
 
 The reference is the **STOCK SPEEDOMETER**, which is mechanically driven by
 the J1850 bus (there is **no onboard GPS for speed** — the optional NEO-6M
-revived later feeds map position only, not speed; see `firmware/docs/gps-module.md`).
+revived later feeds map position only, not speed; see `firmware/docs/reference/gps-module.md`).
 Method: ride at a steady speed
 and compare the logged native speed from `vehicle_data` (the `speed:` line /
 ride-log `speed=` field) against the stock speedo read **in its native
@@ -252,7 +252,7 @@ later if ever desired.
 > **312 consecutive clean sends, 0 watchdog faults** across engine-off,
 > engine-on, and two cold-start off→on cranks. An earlier heavy-fault run was
 > traced to a dying-Mac USB brownout (not the bus). Full record +
-> per-phase tally in `firmware/docs/stage4-tx-bench-log.md`. RX bad-CRC under
+> per-phase tally in `firmware/docs/rides/stage4-tx-bench-log.md`. RX bad-CRC under
 > engine EMI (RX-side corruption, distinct from the clean TX path) is the
 > remaining margin item, deferred to the Phase-6 Schmitt/comparator front end.
 
@@ -337,7 +337,7 @@ PASS before the bike.**
 4. **Stock-cluster removal (step 4 above).** U1255 / TSSM lockout checks with
    the stock IM disconnected; fall back to option C if security fails.
 5. **Phase-6 RX front end.** Schmitt/comparator input stage to cut the
-   engine-EMI RX bad-CRC rate (TX is already clean). Tracked in Phase 6.
+   engine-EMI RX bad-CRC rate (TX is already clean). Tracked in Phase 3.
 
 ### Stage 5 — Companion app: telemetry, GPS calibration, fault codes
 
@@ -345,7 +345,7 @@ PASS before the bike.**
 > config write-back, fuel economy) are built, host/JVM-tested, and validated
 > end-to-end on the bench (a synthetic-SPEED-frame firmware build drove the
 > divisor recompute + NVS persistence), then **locked on-bike at Ride 2**
-> (2026-07-09): the divisor is **188** (PR #27; `firmware/docs/ride-2-findings.md`). The
+> (2026-07-09): the divisor is **188** (PR #27; `firmware/docs/rides/ride-2-findings.md`). The
 > **DTC read firmware is now built + on-bike validated** (Stage 4 TX landed):
 > `dtc.c` codec (HD J1850 read/clear framing + response decode + J2012 format,
 > ported from HarleyDroid, host-tested at 100%) + the `CONFIG_VROD_J1850_DTC_PROBE`
@@ -355,7 +355,7 @@ PASS before the bike.**
 > also restructured around per-cluster detail screens and rebranded to **Zeppl**
 > (`ee.zeppl.companion`).
 
-Ride 1 (`firmware/docs/ride-1-findings.md`) showed the companion app is the
+Ride 1 (`firmware/docs/rides/ride-1-findings.md`) showed the companion app is the
 right home for calibration and diagnostics — the phone already pairs over BLE
 and brings a GPS. Builds on the existing NimBLE peripheral + Android central.
 
@@ -369,7 +369,7 @@ and brings a GPS. Builds on the existing NimBLE peripheral + Android central.
   wizard collects samples and writes the result back to NVS. **The current
   divisor lock (188) did NOT come from GPS** — it was pinned on Ride 2 by the
   gear-ratio physics (speed_raw:rpm clustering at the exact overall ratios) plus
-  a roadside-radar point (`firmware/docs/ride-2-findings.md`). The wizard's
+  a roadside-radar point (`firmware/docs/rides/ride-2-findings.md`). The wizard's
   screen-off sampling bug was only fixed *after* that ride (PR #28), so a
   GPS-based on-bike calibration is still **unexercised** — a cross-check on the
   already-locked 188, not a blocker.
@@ -385,7 +385,7 @@ and brings a GPS. Builds on the existing NimBLE peripheral + Android central.
   host-tested `dtc.c` codec (`dtc_request` / `dtc_response` / `dtc_format`,
   32/32 tests, 100% gate). The `dtc_probe.c` task keys the request to the ECM
   (10), TSM/TSSM (40) and other (60) modules and logs each decoded code. See
-  `firmware/docs/dtc-read-probe.md`. **Pending:** an on-bike run where a module
+  `firmware/docs/reference/dtc-read-probe.md`. **Pending:** an on-bike run where a module
   answers the request (key-on / engine-off, TX clean); then the clear-codes
   action (service `14`) and the phone-side Diagnostics view. The MIL lamp bit is
   already available passively (`68 88 10`).
@@ -394,14 +394,14 @@ and brings a GPS. Builds on the existing NimBLE peripheral + Android central.
   (tank 18.9 L) from the per-trip fuel-tick counter. A Ride-screen Fuel card +
   fill-up dialog drive it. Persistent per-ride history is deferred to its own
   brick. Real L/100km / mpg still needs the one-time fill-up calibration — see
-  `firmware/docs/ride-2-calibration-plan.md`.
+  `firmware/docs/rides/ride-2-calibration-plan.md`.
 
-### Carried-over hardware verification (from Phase 2.5)
+### Carried-over hardware verification (from Phase 1)
 
 Run through once while the board is on the bench anyway:
 
 - **Stage 8 E2E record** — the 4-step directed-advertising checklist
-  in the Phase 2.5 plan.
+  in the Phase 1 plan.
 - **Auto-reconnect** — power-cycle the cluster mid-connection; the
   companion must reach `Connected` again without taps (it arms a
   background `connectGatt` on link loss). Deliberate disconnects from

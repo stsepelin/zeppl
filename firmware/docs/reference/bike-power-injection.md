@@ -5,9 +5,9 @@ How to power the Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C from a **mini560 buck
 connected. This is the first vehicle power tap for this project — the design is
 deliberately conservative and every part is explained.
 
-Schematic: [`../../docs/schematics/bike-power-chain.svg`](../../docs/schematics/bike-power-chain.svg)
+Schematic: [`../../../docs/schematics/bike-power-chain.svg`](../../../docs/schematics/bike-power-chain.svg)
 (regenerate from `bike-power-chain.py`; see that dir's README).
-BOM: [`../../docs/schematics/bike-power-chain.bom.md`](../../docs/schematics/bike-power-chain.bom.md)
+BOM: [`../../../docs/schematics/bike-power-chain.bom.md`](../../../docs/schematics/bike-power-chain.bom.md)
 (one row per chain component, bike-side to board; derived from the parts table below).
 
 Prerequisite for the **ride-log** (`live-gauge-bench-test.md` needs USB, but a
@@ -139,7 +139,7 @@ the very end.
   run); D2 + TVS1 + mini560 + D4 together in a small heatshrunk/potted module near
   the cluster; **D4 right at the mini560 output**; short, strain-relieved,
   soldered + heatshrunk leads; secure against vibration; conformal-coat on the
-  permanent build (Phase 6).
+  permanent build (Phase 3).
 - **USB-C stays free for data.** When a laptop is plugged in (bench / flashing),
   the two 5 V sources OR safely at `VCC_5V` (D4 + the board's on-board AO3401).
 - **Verify the V-Rod pinout** against the service manual / the master-plan

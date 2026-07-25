@@ -57,7 +57,7 @@ Expected NOT to move in this test:
 - **High/low beam — NOT on the J1850 bus.** They are discrete 12 V wires
   read locally by the IM (pin 2 White = high beam), confirmed off-bus in the
   2026-07-04 capture; `j1850_parse` does not decode them, so the beam lamp
-  will **not** follow the switch here. That is a Phase 6 discrete-line tap,
+  will **not** follow the switch here. That is a Phase 3 discrete-line tap,
   not a bug in this build.
 - **Fuel gauge, oil, ABS, battery, immobiliser** — also not bus-decoded in
   Stage 3; they sit at their boot/zero state.
@@ -75,7 +75,7 @@ Expected NOT to move in this test:
    both.
 5. **High beam (expected no-op).** The on-screen beam lamp will **not**
    change — off-bus. Confirm via serial that no beam-related frame appears;
-   that is the expected result, and the reason the discrete tap is Phase 6.
+   that is the expected result, and the reason the discrete tap is Phase 3.
 
 Success = RPM, temperature, turn signals, and the neutral "N" all follow the
 bike live off the J1850 bus. That proves bus -> decode -> display end to end

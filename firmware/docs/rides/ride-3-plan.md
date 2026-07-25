@@ -17,7 +17,7 @@ Carried over from `ride-1-findings.md` / `ride-2-findings.md`, still open:
 | **Neutral** | Confirmed NOT on the bus (`48 3B 40` disproven); is it truly discrete? | Part A1 test 6: hold N vs 1st, look for any *steady* frame |
 | **Oil pressure lamp** | On the bus or discrete (pin 9)? Untestable so far (engine-off capture was empty) | Part A0 test 2: key-on engine-OFF (lamp on) → start → diff |
 | **Immobiliser / security** | The key-on handshake frames | Part A0 test 1: key off→on, capture the settle |
-| **Fuel level + low-fuel** | RESOLVED — not on the bus (Ride 2 low-vs-full bracket, `ride-2-findings.md`). Discrete sender tap (Phase 6). | done; no Ride 3 capture needed |
+| **Fuel level + low-fuel** | RESOLVED — not on the bus (Ride 2 low-vs-full bracket, `ride-2-findings.md`). Discrete sender tap (Phase 3). | done; no Ride 3 capture needed |
 | **Speed-cal wizard** (Ride 2 action #2) | Never completed on Ride 2 (sampled ~3 s); fixed in PR #28 | Part B: re-run the wizard, write the divisor to NVS, record divisor/RMS/n |
 | **Lean / bank angle** | Any TSSM frame track lean? | Part A1 test 7 (off the stand, rock L/R) |
 | **Turn signals** | Re-confirm `48 DA 40 39` bit1=L / bit0=R | Part A1 test 3 |
@@ -80,7 +80,7 @@ ambiguous, kill the engine, wait, and repeat the whole OFF→ON→start once.
    vs clutch on the same bit5.
 6. **Neutral**: N 30 s → 1st 30 s → N 30 s (clutch as needed). Looking for any frame
    that holds a *steady* state across each block (expected: none → confirms the
-   discrete pin-10 tap for Phase 6).
+   discrete pin-10 tap for Phase 3).
 7. **Lean**: off the stand, rock the bike L/R past ~10-20°, a few times each side.
    Any `…40` (TSSM) byte that tracks lean?
 (Fuel level was on this list but is **resolved — not on the bus** (Part C); no
@@ -122,7 +122,7 @@ Done before Ride 3 by mining the Ride 2 fuel-stop bracket (leg 2a low tank vs le
 low-fuel lamp are not broadcast; the only fuel traffic is the `A8 83 10`
 consumption accumulator. Full method + evidence in `ride-2-findings.md`
 ("Fuel level / low-fuel — resolved"). So the fuel gauge + low-fuel telltale become
-a **discrete fuel-sender tap** (Phase 6), not a decode. **No Ride 3 fuel capture
+a **discrete fuel-sender tap** (Phase 3), not a decode. **No Ride 3 fuel capture
 is needed.**
 
 ## Post-ride analysis
@@ -139,7 +139,7 @@ is needed.**
 - **`ride-3-findings.md`** — the results, with the evidence per signal.
 - **`j1850_parse.c`** — decode any signal proven to be on the bus (brake?, fuel
   level?), with the ride evidence in the commit.
-- **`PINS.md` + master-plan Phase 6 table** — anything proven **off** the bus
+- **`PINS.md` + master-plan Phase 3 table** — anything proven **off** the bus
   (neutral, likely oil) becomes a discrete-wire tap (pins 2/9/10/11 dividers).
 - **GPS/map**: fold the on-bike result into task #58; note any rotation/handover
   tuning (`GPS_MODULE_STALE_MS`, frame rate) the road exposed.
@@ -148,4 +148,4 @@ is needed.**
   written to NVS, plus divisor/RMS/sample-count in `ride-3-findings.md`; if it lands
   off 188, update `SETTINGS_SPEED_DIVISOR_DEFAULT` / `J1850_SPEED_DIVISOR`.
 - **Low-fuel**: RESOLVED before the ride — not on the bus (`ride-2-findings.md`);
-  becomes a Phase 6 discrete fuel-sender tap, no decode.
+  becomes a Phase 3 discrete fuel-sender tap, no decode.

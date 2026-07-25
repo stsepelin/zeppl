@@ -1,4 +1,4 @@
-# J1850 TX stage (Phase 3 Stage 4 — populate only after the sniff works).
+# J1850 TX stage (Phase 2 Stage 4 — populate only after the sniff works).
 # High-side switched source: TX GPIO high -> Q1 pulls Q2's base low
 # through R4 -> Q2 sources +12V through R5 onto the bus; D1 (in the RX
 # drawing) clamps the driven level at ~7.5V. TX low -> Q1 off, R6 holds

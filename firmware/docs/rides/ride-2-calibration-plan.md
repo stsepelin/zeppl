@@ -123,13 +123,13 @@ If the phone shows live RPM/temp, the decode -> display -> BLE telemetry chain
 
 ## Post-ride
 
-1. Record results in **`firmware/docs/ride-2-findings.md`**: solved divisor,
+1. Record results in **`firmware/docs/rides/ride-2-findings.md`**: solved divisor,
    RMS, sample count, cross-check deltas (wizard vs offline re-derivation vs
    stock).
 2. **Promote the locked divisor** for fresh flashes (this unit's NVS already
    holds it): update `SETTINGS_SPEED_DIVISOR_DEFAULT` in
    `main/settings/settings.h` and `J1850_SPEED_DIVISOR` in
    `main/j1850/j1850_parse.h`, and replace the "provisional 195" notes in
-   `ride-1-findings.md` and the Phase 3 plan with the locked value.
+   `ride-1-findings.md` and the Phase 2 plan with the locked value.
 3. Turn `VROD_RIDE_LOG_DUMP` on only to pull the capture, then back **off**
    (it blocks boot ~1 min).

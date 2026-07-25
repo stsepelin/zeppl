@@ -1,7 +1,7 @@
 # BOM — protected bike-power chain (12V → 5V)
 
 Bill of materials for the `bike-power-chain.py/.svg` drawing. Derived from the
-parts table in [`../../firmware/docs/bike-power-injection.md`](../../firmware/docs/bike-power-injection.md);
+parts table in [`../../firmware/docs/reference/bike-power-injection.md`](../../firmware/docs/reference/bike-power-injection.md);
 keep the three in sync (drawn part = parts-table part = BOM row). Order is
 bike-side to board.
 

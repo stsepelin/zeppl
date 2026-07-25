@@ -8,13 +8,21 @@ gauge over a BLE GATT link, and accepts commands back (accept / reject
 calls, media transport). The firmware advertises as `Zeppl`
 and this app is the central that pairs with it.
 
+Whole-system context: [`../docs/PROJECT-BRIEF.md`](../docs/PROJECT-BRIEF.md) ·
+[`../docs/ROADMAP.md`](../docs/ROADMAP.md). The companion work is Phase 1 (relay)
++ Phase 2 Stage 5 (telemetry / calibration) in that roadmap.
+
+**Deep-dive docs** (in [`docs/`](docs/)): [`ARCHITECTURE`](docs/ARCHITECTURE.md)
+(packages, link model, data flow) · [`PROTOCOL`](docs/PROTOCOL.md) (the BLE wire
+format) · [`CALIBRATION`](docs/CALIBRATION.md) (speed-divisor + fuel math).
+
 ## Status
 
-**Phase 2.5 relay + Phase 3 Stage 5 companion, done.** The Material 3
+**Phase 1 relay + Phase 2 Stage 5 companion, done.** The Material 3
 Expressive redesign (adaptive nav, per-cluster detail screens, Galaxy
 Fold 6 foldable support) is in.
 
-Relay (2.5): BLE central with scan + device picker, LE Secure Connections
+Relay (Phase 1): BLE central with scan + device picker, LE Secure Connections
 bonding (numeric comparison), a foreground service
 (`FOREGROUND_SERVICE_CONNECTED_DEVICE`) hosting the GATT link,
 `NotificationListenerService` relay with a per-app allow-list,
@@ -23,7 +31,7 @@ bonding (numeric comparison), a foreground service
 accept/reject/end, media prev/play/pause/next, notification dismiss)
 into `TelecomManager` / `MediaController`.
 
-Cluster integration (Phase 3 Stage 5): a 4 Hz **telemetry** stream
+Cluster integration (Phase 2 Stage 5): a 4 Hz **telemetry** stream
 (`TelemetryCodec`), a **GPS speed-calibration** wizard (`SpeedCalibrator`
 least-squares-fits GPS speed vs the cluster's raw ECM count → speed
 divisor, written back over BLE), **config write-back** to cluster NVS,
@@ -140,10 +148,13 @@ companion/
 - [x] Material 3 Expressive redesign: branded theme, adaptive
       navigation hub (Ride / Cluster / Settings / History), persistent
       connection status.
-- [ ] Live telemetry stream on the Ride dashboard (Brick 1).
-- [ ] GPS speed-calibration wizard (Brick 2).
-- [ ] Cluster config write-back with ack/read-back (Brick 3).
-- [ ] Trip history + fuel-economy trends (Brick 4).
+- [x] Live telemetry stream on the Ride dashboard (Brick 1).
+- [x] GPS speed-calibration wizard (Brick 2). (Firmware divisor is locked at
+      188 from Ride 2 physics + radar; the wizard is a GPS cross-check.)
+- [x] Cluster config write-back with ack/read-back (Brick 3).
+- [x] Fuel economy / range (Brick 4). Persistent trip history is a follow-up.
+- [ ] **Diagnostics view** — surface the DTCs the cluster reads (firmware read
+      path is built) + a clear-codes action. See the roadmap's Phase 2 Stage 5.
 
 ## License
 

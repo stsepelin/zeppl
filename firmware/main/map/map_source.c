@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Two backing stores behind one interface (firmware/docs/map-worldwide-plan.md):
+// Two backing stores behind one interface (firmware/docs/plans/map-worldwide-plan.md):
 //
 //   SINGLE - one map_tileset_t (flash-embedded demo blob, or one ZMTA streamed
 //            off SD). The whole index is resident; fine for a city/region.

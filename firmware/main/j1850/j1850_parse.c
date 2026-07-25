@@ -26,7 +26,7 @@ bool j1850_parse(const j1850_frame_t *f, vehicle_data_t *vd)
         return true;
     }
     if (msg(f, TEMP, 4, 6)) {
-        // Confirmed on ride 1 (firmware/docs/ride-1-findings.md): the OBD-style
+        // Confirmed on ride 1 (firmware/docs/rides/ride-1-findings.md): the OBD-style
         // offset. Cold-start raw 0x3F (63) at ~20-25 C ambient climbed to ~0x81
         // (129) fully warm; raw-40 gives 23 C cold / 89 C hot, both correct.
         // engine_temp_c is int8_t; the realistic bus range (0x00..~0xA7) maps
@@ -41,7 +41,7 @@ bool j1850_parse(const j1850_frame_t *f, vehicle_data_t *vd)
     // gear_calc (called by j1850_driver). Neutral is NOT on the bus: the
     // once-suspected 48 3B 40 bit5 turned out to be a TSSM deceleration/brake
     // event, not a neutral switch (ride-2-findings.md). Real neutral is the
-    // discrete pin-10 tap (Phase 6).
+    // discrete pin-10 tap (Phase 3).
     if (msg(f, SPEED, 4, 7)) {
         uint16_t raw  = (uint16_t)((f->data[4] << 8) | f->data[5]);
         vd->speed_raw = raw;

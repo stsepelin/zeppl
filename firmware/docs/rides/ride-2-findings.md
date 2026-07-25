@@ -50,7 +50,7 @@ change needed — it tracks the speed calibration by design.
 |---|---|
 | Speed ~45% high vs radar | NVS divisor 130 (bench leftover). Correct = **188**. |
 | Gears wrong / inconsistent | Downstream of the divisor (2% → 91% correct at 188). |
-| Neutral won't restore after moving | **Neutral is not decoded, and is not on `48 3B 40`** (that frame turned out to be a TSSM brake/deceleration event — see the section below). The "N" shown is only `gear_calc` returning UNKNOWN below 5 mph. Real neutral needs the discrete pin-10 tap (Phase 6). |
+| Neutral won't restore after moving | **Neutral is not decoded, and is not on `48 3B 40`** (that frame turned out to be a TSSM brake/deceleration event — see the section below). The "N" shown is only `gear_calc` returning UNKNOWN below 5 mph. Real neutral needs the discrete pin-10 tap (Phase 3). |
 | Key-on: oil + immobiliser on stock, nothing on ours | **Not decoded.** The parser handles only RPM / temp / speed / turn / check-engine. Oil (pin 9) + immobiliser are discrete or IM-originated, not in the table. |
 | Check-engine blinked early then synced | Correct (`68 88 10`, bit 0x80) — a boot-order blink before the first good frame. |
 | Temp OK | Correct (`A8 49 10`, °C = raw − 40). |
@@ -96,7 +96,7 @@ and bit5 are mutually exclusive, bit7 is independent.
 when stopping, so the ride can't separate them). It is an *event* (~2.6 s
 sampling → brief blips), not a clean held state, so it would make a flaky steady
 indicator. **Neutral is not on this frame** — treat neutral as the discrete
-pin-10 tap (Phase 6).
+pin-10 tap (Phase 3).
 
 To split brake vs clutch and finish mapping the other unknowns, run the
 controlled capture in `signal-mapping-capture.md` (one input at a time).
@@ -129,7 +129,7 @@ J1850 on this VRSCF — filling the tank changed zero bus frames. The stock clus
 reads the fuel-level sender directly (discrete analog wire). Ours can only derive
 consumption / economy / range from the `A8 83 10` ticks (`ml_per_tick = 0.309`,
 above). A real fuel gauge + low-fuel telltale needs the fuel sender tapped as a
-**discrete input** (Phase 6), the same class as neutral (pin 10) and oil (pin 9).
+**discrete input** (Phase 3), the same class as neutral (pin 10) and oil (pin 9).
 This closes the fuel question — no further ride capture is needed for it.
 
 ## Actions
@@ -139,11 +139,11 @@ This closes the fuel question — no further ride capture is needed for it.
    + radar all agree). Done (PR #27).
 2. **Fix the GPS calibration wizard** so sampling survives screen-off — collect
    in the foreground BLE service instead of the Composable. Done (PR #28).
-3. **Neutral is a discrete pin-10 tap** (Phase 6), not `48 3B 40` (see above).
+3. **Neutral is a discrete pin-10 tap** (Phase 3), not `48 3B 40` (see above).
    The `48 3B 40` brake/clutch event is worth confirming via the controlled
    capture before any decode.
 4. **Oil / immobiliser** — decode via the controlled capture
    (`signal-mapping-capture.md`): a bench signal isn't identifiable from a
    moving ride, only from toggling one input at a time.
-5. **Fuel level / low-fuel is a discrete sender tap** (Phase 6), not on the bus
+5. **Fuel level / low-fuel is a discrete sender tap** (Phase 3), not on the bus
    — resolved by the low-vs-full bracket above, no further capture needed.

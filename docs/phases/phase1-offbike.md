@@ -1,20 +1,20 @@
-# Phase 2.5: Off-bike Feature Work
+# Phase 1: Off-bike Feature Work
 
 > **Status: ✅ complete** (June 2026 — all 8 stages landed; loose ends
 > carried forward are listed at the bottom of this file)
 >
-> **Historical record.** This documents what Phase 2.5 built at the time.
+> **Historical record.** This documents what Phase 1 built at the time.
 > **Stage 7 (the speed-camera / POI alert framework) and its fake-GPS test
 > harness were REMOVED in July 2026** when onboard GPS was dropped — speed
 > comes from the J1850 bus and the camera feature depended on GPS position
 > (see the PROJECT-BRIEF changelog). The Stage 7 text below is kept for
 > history; that code no longer exists.
 >
-> Inserted between Phase 2 (gauge UI, complete) and Phase 3 (J1850 bus,
+> Inserted between Phase 1 (gauge UI, complete) and Phase 2 (J1850 bus,
 > which was blocked on parts) to keep the project moving while hardware
 > shipped. All work in this phase ran on the Waveshare ESP32-P4 board we
 > already had — no bike harness needed. The parts have since arrived;
-> Phase 3 is the active phase.
+> Phase 2 is the active phase.
 
 ## Goal
 
@@ -46,8 +46,8 @@ usable on the bench:
 
 | Hardware | Blocks |
 |---|---|
-| NEO-6M/M8N GPS module | Real GPS speed/position → speed-camera validation, GPS time → real RTC. **[Superseded July 2026: speed-camera dropped; a map-position-only NEO-6M returned separately — see `../firmware/docs/gps-module.md`.]** |
-| IRLZ44N + 2N2222 + zener + resistors | J1850 bidirectional transceiver → Phase 3. **[Corrected: the high-side TX needs a 2N2907A **PNP** for Q2 — the kit's 2N2222 is NPN and cannot serve; see the transceiver-circuit note in [`../reference/HARDWARE.md`](../reference/HARDWARE.md).]** |
+| NEO-6M/M8N GPS module | Real GPS speed/position → speed-camera validation, GPS time → real RTC. **[Superseded July 2026: speed-camera dropped; a map-position-only NEO-6M returned separately — see `../firmware/docs/reference/gps-module.md`.]** |
+| IRLZ44N + 2N2222 + zener + resistors | J1850 bidirectional transceiver → Phase 2. **[Corrected: the high-side TX needs a 2N2907A **PNP** for Q2 — the kit's 2N2222 is NPN and cannot serve; see the transceiver-circuit note in [`../reference/HARDWARE.md`](../reference/HARDWARE.md).]** |
 | GT 12-pin connector + T-taps + buck converter | Wiring to the bike harness |
 
 ## Stage 1 — Touch + screen-switching framework
@@ -255,7 +255,7 @@ Three options, ordered by ambition:
 - **C. Skip iOS entirely.** Only viable if Android is the primary
   phone for the bike.
 
-Recommendation: **A**. Phase 2.5's purpose was to fill bench time
+Recommendation: **A**. Phase 1's purpose was to fill bench time
 while parts ship; ANCS is a meaningful protocol implementation that
 deserves its own phase. The decision belongs to the rider — which
 phone do you actually use on the bike?
@@ -345,7 +345,7 @@ just-works model. CI doesn't set the flag; bench flashes do if needed.
 **Why now**: small but useful. The synthetic 32-second driving cycle is
 fine on the bench, but adds noise to the gauge dial when we're trying
 to demo notification rendering, eats a few KB of flash, and won't be
-the data source once Phase 3 lands.
+the data source once Phase 2 lands.
 
 ### Scope
 
@@ -361,7 +361,7 @@ the data source once Phase 3 lands.
 
 When the flag is off and no other producer is plugged in, the gauge
 sits at zeros. That's fine — it's what makes notification-rendering
-bench work cleaner. Once Phase 3 lands, the J1850 driver becomes the
+bench work cleaner. Once Phase 2 lands, the J1850 driver becomes the
 producer in the off-sim build.
 
 ### Tests to add
@@ -375,7 +375,8 @@ producer in the off-sim build.
 **Last in the phase** — the framework is fully off-bike testable via
 the SDL2 sim + a fake GPS producer + a hand-authored test camera DB.
 The on-bike pieces (real NEO-6M wiring + real SCDB import + ride
-validation) live in Phase 5.
+validation) were later **dropped** (Jul 2026) along with the whole
+speed-camera / GPS-for-speed feature — see the roadmap's history note.
 
 ### Scope (here)
 
@@ -394,7 +395,7 @@ validation) live in Phase 5.
 - Audio hook into the existing `sound` module — one short tone on
   alert fire.
 
-### Out of scope here — see Phase 5
+### Out of scope here (the on-bike parts — later dropped)
 
 - Real NEO-6M / M8N module wiring + NMEA parser → `gps_source_t`
 - SCDB.info / OSM data export + import into the binary format
@@ -479,12 +480,12 @@ visibility for the "pair a second phone" case.
 
 These came up during discussion but belong elsewhere:
 
-- **Real RTC / SNTP** — needs WiFi (Phase 7 polish) or GPS time
-  (Phase 3) — mock clock for now.
-- **Auto-brightness** — needs BH1750 sensor (Phase 7).
-- **Ignition power management** — needs the bike harness (Phase 6).
-- **OTA** — Phase 7.
-- **Ride logging** — Phase 7.
+- **Real RTC / SNTP** — needs WiFi (Phase 4 polish) or GPS time
+  (Phase 2) — mock clock for now.
+- **Auto-brightness** — needs BH1750 sensor (Phase 4).
+- **Ignition power management** — needs the bike harness (Phase 3).
+- **OTA** — Phase 4.
+- **Ride logging** — Phase 4.
 
 ## Suggested order
 
@@ -502,19 +503,19 @@ shippable without waiting on parts.
 
 ## Loose ends carried forward
 
-Small items left open when the phase closed; none block Phase 3.
+Small items left open when the phase closed; none block Phase 2.
 
 - ~~**Cluster → phone media TX**~~ — **done since this list was
   written**: the banner buttons now encode `PHONE_CMD_MEDIA_*` TLVs
   (`phone_data.c` → `ble_peripheral_notify`) and the companion's
   `CommandHandler` dispatches them into `MediaController` /
   `TelecomManager`.
-- ~~**poi modules not in the coverage gate**~~ — **closed at Phase 3
+- ~~**poi modules not in the coverage gate**~~ — **closed at Phase 2
   kickoff**: branch gaps filled (degenerate-argument paths, full-bucket
   drop, directional-camera negative delta, active-alert re-latch, the
   360° float-rounding bearing wrap) and the three files added to the
   lcov filters + policy table.
-- ~~**Companion auto-reconnect-on-advert**~~ — **closed at Phase 3
+- ~~**Companion auto-reconnect-on-advert**~~ — **closed at Phase 2
   kickoff**: on link loss the client arms `connectGatt(autoConnect=
   true)` to the last device (`ReconnectPolicy` gates on GATT status,
   so deliberate disconnects don't re-arm). Uses the controller accept

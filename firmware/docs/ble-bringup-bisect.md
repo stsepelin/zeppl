@@ -377,7 +377,7 @@ entirely (pre-ctor probe already fails).
 
 Interim state: the ADC readout was removed (`screen_bench.c` shows
 level/edges/counters only; pin voltage stays a DMM job). **This
-blocks Phase 6's fuel-level ADC** — run the repro after each
+blocks Phase 3's fuel-level ADC** — run the repro after each
 IDF/toolchain bump; the crash dump plus the analysis above is the
 upstream bug report when it reproduces.
 

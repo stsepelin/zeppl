@@ -16,16 +16,16 @@
 > opt-in onboard module (`CONFIG_VROD_GPS_UART`, off by default, GPIO 21)
 > that feeds *only* the moving-map position, dual-sourced with the phone
 > GPS. Speed, speed-cameras, POI and turn-by-turn stay dropped (speed is
-> the J1850 bus). See `firmware/docs/gps-module.md`. Speed
+> the J1850 bus). See `firmware/docs/reference/gps-module.md`. Speed
 > is calibrated against the **stock speedometer** — read in its native
 > MILES (it runs ~5-10% optimistic), mechanically driven off the same
-> J1850 bus (see `phases/phase3-j1850.md`). A **phone-GPS calibration wizard
+> J1850 bus (see `phases/phase2-j1850.md`). A **phone-GPS calibration wizard
 > over the existing BLE link is built** (Stage 5): the companion correlates its
 > GPS speed with the bus `speed_raw` counts, solves the divisor, and writes it
 > back to NVS — no new hardware. In practice the divisor was **locked at 188 by
 > Ride 2's gear-ratio physics + radar, not GPS** (the GPS wizard's on-bike
 > sampling was fixed only after that ride, so it's still unexercised). See
-> `firmware/docs/ride-2-findings.md`.
+> `firmware/docs/rides/ride-2-findings.md`.
 
 ---
 
@@ -41,7 +41,7 @@ idle state + the moving-map screen — in [`screens/`](screens/README.md).
 ## Hardware Status
 
 - ✅ **Display board acquired and working** — Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C
-- ✅ **Parts arrived** (June 2026, ~€230 from AliExpress): IRLZ44N MOSFETs, 2N2222 transistors, zener diodes, resistor kit, prototyping supplies, T-tap connectors, GT 12-pin connector, buck converter, etc. — Phase 3 is unblocked.
+- ✅ **Parts arrived** (June 2026, ~€230 from AliExpress): IRLZ44N MOSFETs, 2N2222 transistors, zener diodes, resistor kit, prototyping supplies, T-tap connectors, GT 12-pin connector, buck converter, etc. — Phase 2 is unblocked.
 - 🔧 **Local items needed**: Conformal coating spray, junction box
 
 ## Development Environment
@@ -61,21 +61,20 @@ harley/
 │   ├── PROJECT-BRIEF.md               # This file (overview + current status)
 │   ├── ROADMAP.md                     # All phases/stages, status + links
 │   ├── reference/                     # HARDWARE.md (BOM/circuits) + J1850-BUS.md
-│   ├── phases/                        # phase2.5-offbike.md, phase3-j1850.md
+│   ├── phases/                        # phase1-offbike.md, phase2-j1850.md
 │   ├── screens/                       # Real UI renders (gauge + map) from the sim
 │   └── schematics/                    # schemdraw sources + rendered SVGs
 ├── firmware/                          # ESP-IDF cluster firmware
 │   ├── CLAUDE.md                      # Firmware-specific working notes
-│   ├── docs/                          # Firmware-internal docs
-│   │   ├── 01-PHASE2-DISPLAY-PLAN.md  # Phase 2 plan (✅ complete)
+│   ├── docs/                          # Firmware-internal docs (index: README.md)
 │   │   ├── ARCHITECTURE.md            # Threading, render pipeline, boot
 │   │   ├── DISPLAY-PERF-AND-MEMORY.md # Render/RAM rules — read before drawing
-│   │   ├── ble-bringup-bisect.md      # Resolution notes for the link trap
 │   │   ├── PINS.md                    # Header pin map / GPIO assignments
-│   │   ├── bike-power-injection.md    # Protected 12V→5V power chain (bike power)
-│   │   ├── live-gauge-bench-test.md   # Stationary bus→gauge validation
-│   │   ├── ride-1-findings.md         # Ride 1: J1850 decode calibration findings
-│   │   ├── ride-2-calibration-plan.md # Ride 2: GPS divisor lock + live-stack plan
+│   │   ├── ble-bringup-bisect.md      # Resolution notes for the link trap
+│   │   ├── plans/                     # phase1-display-plan.md, map-worldwide-plan.md
+│   │   ├── reference/                 # design + bring-up notes (power, gps, dtc, …)
+│   │   ├── rides/                     # on-bike session logs (ride-1/2/3, stage4 TX)
+│   │   ├── captures/                  # raw serial capture logs
 │   │   └── waveshare-reference/       # Vendor examples kept for reference
 │   ├── CMakeLists.txt                 # ESP-IDF project root
 │   ├── partitions.csv
@@ -99,7 +98,7 @@ harley/
 │   ├── app/                           # Kotlin sources (ble/, cal/, media/, notif/, ui/)
 │   ├── build.gradle.kts
 │   └── gradlew
-├── hardware/                          # Physical build (Phase 6)
+├── hardware/                          # Physical build (Phase 3)
 │   └── enclosure/                     # Parametric OpenSCAD case for the round display
 │       ├── README.md                  # Architecture, tiers, assembly + print order
 │       ├── enclosure.scad             # part = rear_case|bezel|rear_cover|calibration_base
@@ -112,9 +111,9 @@ harley/
 
 ## Current status
 
-- ✅ **Phase 2 — Display & Gauge UI** complete (see `firmware/docs/01-PHASE2-DISPLAY-PLAN.md`).
-- ✅ **Phase 2.5 — Off-bike feature work** complete (see
-  `phases/phase2.5-offbike.md`): touch + screen switching, settings +
+- ✅ **Phase 1 — Display & Gauge UI** complete (see `firmware/docs/plans/phase1-display-plan.md`).
+- ✅ **Phase 1 — Off-bike feature work** complete (see
+  `phases/phase1-offbike.md`): touch + screen switching, settings +
   units toggle, Android BLE phone integration with SC bonding +
   directed advertising, host notification emulator, no-sim build flag
   — plus the BMW-style gauge redesign and the 100% host-test coverage
@@ -123,20 +122,20 @@ harley/
   listed at the bottom of the phase plan; media TX and companion
   auto-reconnect have since been closed. Still open: the Stage 8 +
   reconnect on-hardware E2E record, and the iOS decision.
-- ⏳ **Phase 3 — J1850 bus + IM simulation** is active (see
-  `phases/phase3-j1850.md`). Done: RX transceiver + passive sniff (Ride 1,
-  `firmware/docs/ride-1-findings.md`), decode → `vehicle_data` producer,
+- ⏳ **Phase 2 — J1850 bus + IM simulation** is active (see
+  `phases/phase2-j1850.md`). Done: RX transceiver + passive sniff (Ride 1,
+  `firmware/docs/rides/ride-1-findings.md`), decode → `vehicle_data` producer,
   on-board ride log, and **companion Stage 5** — telemetry stream, GPS speed
   calibration wizard, config write-back to NVS, and fuel economy/range (the
   four "bricks"), plus a per-cluster app restructure and the **Zeppl** rebrand.
   **Stage 4 TX + IM replay is on-bike validated (2026-07-24):** the fabricated
   transceiver PCB does full bidirectional J1850 on the live bike — 312
   consecutive clean TX sends, 0 watchdog faults across engine-off/on + two
-  cold-start cranks (`firmware/docs/stage4-tx-bench-log.md`). **DTC read** is
+  cold-start cranks (`firmware/docs/rides/stage4-tx-bench-log.md`). **DTC read** is
   built + validated live (`dtc.c` codec ported from HarleyDroid +
   `CONFIG_VROD_J1850_DTC_PROBE`; bike reads clean). The **speed divisor is
   locked at 188** (Ride 2, 2026-07-09, PR #27 — physics + radar;
-  `firmware/docs/ride-2-findings.md`) and fuel economy is calibrated.
+  `firmware/docs/rides/ride-2-findings.md`) and fuel economy is calibrated.
   Remaining: the **DTC follow-ups** (real non-zero-code test, clear-codes
   action, phone Diagnostics view); the **stock-cluster-removal** U1255 / TSSM
   checks; and the Phase-6 RX front-end hardening for the engine-EMI bad-CRC
@@ -149,12 +148,12 @@ harley/
   antenna) preferred, the phone's GPS over BLE the fallback; a corner
   `SAT n` / `BT` badge shows which is driving, plus a blue phone-link dot.
   PPA-accelerated render + fixed-point rotozoom at ~30 fps. On-device bring-up
-  is done; **on-bike verification is Ride 3** (`firmware/docs/ride-3-plan.md`).
+  is done; **on-bike verification is Ride 3** (`firmware/docs/rides/ride-3-plan.md`).
   Whole-continent coverage needs the GPS-paged cell tiles in
-  `firmware/docs/map-worldwide-plan.md` (Stage 1 already landed). See also
-  `firmware/docs/gps-module.md`.
+  `firmware/docs/plans/map-worldwide-plan.md` (Stage 1 already landed). See also
+  `firmware/docs/reference/gps-module.md`.
 
-Phase 2 deliverable summary (as redesigned at the end of Phase 2.5,
+Phase 1 deliverable summary (as redesigned at the end of Phase 1,
 BMW-EfficientDynamics styling): working 800×800 round gauge running
 off a synthetic driving cycle. Includes tach (270° scale with inner
 shadow bezel, capsule ticks, two-segment rounded redline, zoom +
@@ -172,9 +171,9 @@ BSP). Everything visual is pre-baked into ARGB sprites (see
 drives a desktop SDL2 simulator under `firmware/simulator/` for
 iteration without flashing.
 
-### Immediate next step: Phase 3 — J1850 bring-up
+### Immediate next step: Phase 2 — J1850 bring-up
 
-Full staged plan in `phases/phase3-j1850.md`. Short version:
+Full staged plan in `phases/phase2-j1850.md`. Short version:
 build the transceiver RX-only on a breadboard → passive J1850 sniff
 through the proxy-box T-taps (bike keeps its stock cluster) → decode
 against the HarleyDroid table → IM message replay via TX (verify no
@@ -184,12 +183,12 @@ the UI.
 
 ## Design Decisions Already Made
 
-- **Architecture**: ESP32-P4 reads V-Rod's J1850 VPW bus (Phase 3), drives 3.4" round display, BLE for phone integration (Phase 4)
+- **Architecture**: ESP32-P4 reads V-Rod's J1850 VPW bus (Phase 2), drives 3.4" round display, BLE for phone integration (Phase 4)
 - **Data abstraction**: `vehicle_data_t` struct as single source of truth — UI doesn't care if data comes from simulator, J1850 bus, or BLE
 - **Dual-core split**: Core 0 = J1850 + BLE + simulator, Core 1 = LVGL rendering at 30 FPS
 - **Cluster replacement strategy**: Build proxy box with T-taps for safe development; final install replaces stock cluster entirely
 - **IM simulation**: P4 must send periodic J1850 messages impersonating stock IM to avoid U1255 DTC and TSSM lockout
-- **Bidirectional J1850 circuit (resolved 2026-07)**: the bus is **standard VPW** — idle/recessive LOW, dominant HIGH. **RX** = passive 10k/4.7k divider + 7.5V zener clamp, **non-inverting** (no 2N2222). **TX** = **high-side** source: a PNP (2N2907A) drives the bus HIGH for dominant, sourced by an IRLZ44N low-side driver (not a lone low-side FET). See `phases/phase3-j1850.md` + `reference/HARDWARE.md`. (The earlier "IRLZ44N TX + 2N2222 RX divider / SwapSmart" note was the pre-bring-up plan.)
+- **Bidirectional J1850 circuit (resolved 2026-07)**: the bus is **standard VPW** — idle/recessive LOW, dominant HIGH. **RX** = passive 10k/4.7k divider + 7.5V zener clamp, **non-inverting** (no 2N2222). **TX** = **high-side** source: a PNP (2N2907A) drives the bus HIGH for dominant, sourced by an IRLZ44N low-side driver (not a lone low-side FET). See `phases/phase2-j1850.md` + `reference/HARDWARE.md`. (The earlier "IRLZ44N TX + 2N2222 RX divider / SwapSmart" note was the pre-bring-up plan.)
 
 ## Reference (moved out of this brief)
 
@@ -209,7 +208,7 @@ automatically — it has the always-true conventions. For project history and
 roadmap context, point at this file plus [`ROADMAP.md`](ROADMAP.md).
 
 If you're picking up at the current state, see **Current status** above and the
-roadmap. Phase 3 is well along: RX sniff, decode → `vehicle_data`, ride log, the
+roadmap. Phase 2 is well along: RX sniff, decode → `vehicle_data`, ride log, the
 whole companion Stage 5 (telemetry, GPS calibration wizard, config write-back,
 fuel economy — the divisor is locked at 188, pinned on Ride 2 by gear-ratio
 physics + radar, **not** by GPS), and **Stage 4 TX + IM replay is on-bike

@@ -52,7 +52,7 @@ awk '$1>=T0 && $1<=T1' ride_00N.log | sort | uniq -c | sort -rn
 
 Confirmed mappings go into `j1850_parse.c` (with the ride/bench evidence in the
 commit), and anything that proves to be **off the bus** (neutral looks likely)
-becomes a discrete-wire tap in Phase 6 — `docs/PINS.md` + the master-plan Phase 6
+becomes a discrete-wire tap in Phase 3 — `docs/PINS.md` + the master-plan Phase 3
 discrete table already reserve the dividers for pins 2/9/10/11.
 
 ## Known so far (this bike)
@@ -65,4 +65,4 @@ discrete table already reserve the dividers for pins 2/9/10/11.
   brake vs clutch.
 - `A8 3B 10` = ECM engine-load/throttle (same function `3B`, different source).
 - Neutral, oil, fuel-level, immobiliser, high/low beam: **not confirmed on the
-  bus**; likely discrete taps (pins 2/9/10/11) per the Phase 6 plan.
+  bus**; likely discrete taps (pins 2/9/10/11) per the Phase 3 plan.

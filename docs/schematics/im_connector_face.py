@@ -12,7 +12,7 @@
 # Pin -> wire color -> signal mapping is from the project connector table
 # (../reference/J1850-BUS.md / ../PROJECT-BRIEF.md). Cavity ring colour encodes
 # the two-board destination: green = signal-board divider, purple = J1850 BUS,
-# red = power board, blue = common GND, tan = Phase 6, grey = unused.
+# red = power board, blue = common GND, tan = Phase 3, grey = unused.
 #
 # CAVEAT (measure, don't guess): verify wire colours against the HD service
 # manual before crimping — colours can vary by year/market. Function follows
@@ -47,8 +47,8 @@ WIRE = {
 }
 SIG = {
     1:"+12V const\nDO NOT USE", 2:"High\nbeam", 3:"Left\nturn", 4:"Right\nturn",
-    5:"Ground\n(GND)", 6:"+12V ign.\n-> POWER", 7:"J1850\nBUS", 8:"VSS\n(Phase 6)",
-    9:"Oil\npress.", 10:"Neutral", 11:"Fuel\n(Phase 6)", 12:"Access.\n(opt.)",
+    5:"Ground\n(GND)", 6:"+12V ign.\n-> POWER", 7:"J1850\nBUS", 8:"VSS\n(Phase 3)",
+    9:"Oil\npress.", 10:"Neutral", 11:"Fuel\n(Phase 3)", 12:"Access.\n(opt.)",
 }
 RING = {
     1:"#999999", 2:"#2f8f4e", 3:"#2f8f4e", 4:"#2f8f4e", 5:"#3b6ea5", 6:"#cf4b2a",
@@ -115,7 +115,7 @@ ax.annotate("pin 7", xy=(x0+5*dx+CELL/2+0.2, y_bot), xytext=(x0+5*dx+2.4, y_bot-
 # legend
 leg = [("#2f8f4e","SIGNAL · divider"), ("#7a5cff","SIGNAL · BUS"),
        ("#cf4b2a","POWER board"), ("#3b6ea5","GND (common)"),
-       ("#b08d3a","Phase 6 (later)"), ("#999999","not used")]
+       ("#b08d3a","Phase 3 (later)"), ("#999999","not used")]
 lx = 2.0
 for i,(co,lab) in enumerate(leg):
     xx = lx + (i%2)*7.6

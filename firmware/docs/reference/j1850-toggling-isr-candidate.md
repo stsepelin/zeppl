@@ -18,7 +18,7 @@
 >   to the tracker. **NOT WIRED** in this merge; enabling it today does
 >   nothing. Reserved so the two-step opt-in is explicit.
 >
-> **Phase 6 follow-up (opt-in, deliberate) — the actual gate-(b) work:**
+> **Phase 3 follow-up (opt-in, deliberate) — the actual gate-(b) work:**
 > wire `j1850_edge` into the sniffer under `TOGGLE_ISR_LIVE` — the ISR
 > stops reading the pin and only timestamps edges; the task reconstructs
 > the level via `j1850_edge_level()`; the idle-flush keeps an honest pin
@@ -29,9 +29,9 @@
 
 ## Why this exists
 
-Phase 3 settled the bus: **standard VPW, idle LOW, dominant HIGH**
+Phase 2 settled the bus: **standard VPW, idle LOW, dominant HIGH**
 (bare-bus DMM ~0.3 V idle + invert-off raw dump + 546 frames / 0 bad CRC
-with the filter off — see `captures/SESSION-2026-07-04.md`).
+with the filter off — see `../captures/SESSION-2026-07-04.md`).
 
 It also proved the **P4 hardware glitch filter is unusable** on this RX
 path. The on-bike sweep decoded **zero frames at every nonzero window**
@@ -42,9 +42,9 @@ recorded for the just-ended pulse is systematically wrong and frames
 never assemble. The delay magnitude barely matters, so no window works.
 
 That leaves the bench build with **no debounce at all**. Fine on short
-clean leads; risky on the Phase 6 permanent harness (longer runs,
+clean leads; risky on the Phase 3 permanent harness (longer runs,
 ignition/coil noise, vibration). The primary fix is a hardware RX
-**comparator / Schmitt** front end (see the master plan Phase 6 note).
+**comparator / Schmitt** front end (see the roadmap Phase 3 note).
 This note describes a *software* change that would additionally let a
 conservative glitch filter coexist — useful defence-in-depth, not a
 substitute for the comparator.
@@ -187,13 +187,13 @@ time.
   the shipping RX path.
 - `j1850_vpw.c` does not change — the codec was never the problem; the
   bug was in the ISR/glue edge capture.
-- This does not replace the Phase 6 comparator front end; it complements
+- This does not replace the Phase 3 comparator front end; it complements
   it.
 
 ## Cross-links
 
-- Sweep data + resolution: `captures/SESSION-2026-07-04.md`
-- Phase 6 hardware requirement: `../../docs/ROADMAP.md`
-  (Phase 6 — "J1850 RX front end — add hysteresis")
+- Sweep data + resolution: `../captures/SESSION-2026-07-04.md`
+- Phase 3 hardware requirement: `../../../docs/ROADMAP.md`
+  (Phase 3 — "J1850 RX front end — add hysteresis")
 - Filter default rationale: `CONFIG_VROD_J1850_GLITCH_NS` help in
   `../main/Kconfig.projbuild`

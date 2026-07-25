@@ -18,7 +18,7 @@ import re
 import statistics
 import sys
 
-# First-bytes prefixes from the master plan's decode table
+# First-bytes prefixes from the roadmap's decode table
 # (docs/reference/J1850-BUS.md, HarleyDroid-derived).
 KNOWN = {
     "28 1B 10": "RPM = (HH<<8|LL)/4",

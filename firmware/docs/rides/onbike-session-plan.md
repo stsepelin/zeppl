@@ -29,7 +29,7 @@ Neither blocks this session, because almost everything rides on the J1850 bus
 - Immobiliser / security key-on handshake frames.
 - **TX step (3)**: emit keep-alives, DTC watch.
 
-**Blocked until the divider zeners arrive (Phase 6 discrete-wire taps):**
+**Blocked until the divider zeners arrive (Phase 3 discrete-wire taps):**
 - Discrete **high beam** (pin 2), **neutral wire** (pin 10), **oil discrete**
   (pin 9) — these need the 6× 10k/2.7k dividers + 3V3 clamps physically built.
   Fold them into a later divider-board session (they only *confirm* what the
@@ -79,4 +79,4 @@ the TX test — don't map stock signals while also transmitting.
 - Stage 4 step (3) verdict (DTCs / no DTCs with both clusters) -> unblocks the
   companion **DTC read/clear** brick.
 - A list of what still needs the **divider board** (beam/neutral-wire/oil
-  discrete) for the later Phase 6 session.
+  discrete) for the later Phase 3 session.

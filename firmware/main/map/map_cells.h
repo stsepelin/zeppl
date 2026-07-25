@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-// Pure cell-paging logic for the worldwide map (firmware/docs/map-worldwide-plan.md).
+// Pure cell-paging logic for the worldwide map (firmware/docs/plans/map-worldwide-plan.md).
 // The card is tiled into a grid of lat/lon cells (one ZMTA per cell); the device
 // keeps only the cells within a small radius of the rider's GPS resident and
 // pages them as it moves. This module is the decision logic - which cell a

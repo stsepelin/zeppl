@@ -11,7 +11,7 @@ or not the module is fitted.
 
 ## Wiring
 
-![NEO-6M -> ESP32-P4 wiring](../../docs/schematics/gps_module.svg)
+![NEO-6M -> ESP32-P4 wiring](../../../docs/schematics/gps_module.svg)
 
 *(source: `docs/schematics/gps_module.py`; regenerate per `docs/schematics/README.md`)*
 
@@ -92,7 +92,7 @@ First on-hardware bring-up on the NEO-6M, then a NEO-M8 + external antenna:
   displacement filter to 0 so the fallback stays fresh at ~1 Hz even at a crawl
   (a distance filter used to leave it stale and slow the `SAT ⇄ BT` handover).
 
-## Antenna placement (Phase 6)
+## Antenna placement (Phase 3)
 
 The one real constraint is **sky view + distance from the board** (see the
 desense finding above). The round cluster is metal-adjacent and RF-noisy; plan
