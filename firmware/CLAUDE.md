@@ -101,6 +101,27 @@ tests when something in the tested scope changes. Config lives at
 
 One-liners — see `docs/ARCHITECTURE.md` for the why.
 
+### Package layout (roles)
+
+`main/` is split into four role packages ([ADR 0001](../docs/adr/0001-engine-display-split.md));
+each has its own `README.md` with the full contents + rules:
+
+- **`engine/`** — the bike node: J1850 + vehicle aggregation + the sim producer +
+  `command_handler`. Produces `vehicle_data`. **No radios, no LVGL, no GPS/media/settings.**
+- **`connectivity/`** — radios + the phone bridge (`ble/`, `phone/`). Brings phone
+  data in, publishes state out. **Never calls engine internals — it emits commands
+  via `contract/`.**
+- **`contract/`** — the shared seam: `command.c` (typed dispatch) today; the
+  versioned protocol is documented in `../docs/reference/CONTRACT.md` + `zeppl.dbc`.
+- **`display/`** — the head unit: widgets, screens, `map/`, `gps/`, `settings/`,
+  `sound/`. Subscribes to state, renders, issues commands back to the engine.
+
+The one rule that keeps this honest: **connectivity and display talk to the engine
+through `contract/command`, not by reaching into its modules.** `main.c` +
+`storage/` are the composition root / shared infra.
+
+### Data flow
+
 - `vehicle_data` is the mutex-guarded latest-value store between
   producer (sim, J1850 later) and UI.
 - Sim + event watcher + audio on **core 0**; LVGL + `ui_update_task`

@@ -4,6 +4,26 @@ How the firmware fits together, and *why* each non-obvious choice is the
 way it is. CLAUDE.md is the day-to-day cheat sheet; this file is the
 context behind it.
 
+## Package layout (roles)
+
+`main/` is organised into four role packages, promoting a boundary that was
+always implicit ([ADR 0001](../../docs/adr/0001-engine-display-split.md)). Each
+directory carries a `README.md` with its full contents and rules:
+
+| Package | Role | Never contains |
+|---|---|---|
+| `engine/` | The bike node: J1850 + vehicle aggregation + sim producer + `command_handler`. Produces `vehicle_data`. | radios, LVGL, GPS, media/settings |
+| `connectivity/` | Radios + the phone bridge (`ble/`, `phone/`). Data in, state out. | direct calls into engine internals |
+| `contract/` | The shared seam — typed `command` dispatch; protocol spec in `docs/reference/CONTRACT.md` + `zeppl.dbc`. | radios, LVGL, driver deps |
+| `display/` | The head unit: widgets, screens, `map/`, `gps/`, `settings/`, `sound/`. | vehicle-source or radio code |
+
+The load-bearing rule: **connectivity and display reach the engine only through
+`contract/command`** (a synchronous dispatch seam), so a display or radio can be
+swapped without the engine knowing. This is what makes "engine here, display
+elsewhere" — and the eventual CAN/DBC interop + board split — tractable. The
+threading model below is orthogonal: it's about *which core* runs each task, not
+*which package* owns the code.
+
 ## Threading model
 
 Two cores on the ESP32-P4. Pinning is deliberate.
