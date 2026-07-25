@@ -209,6 +209,13 @@ class BleClient(
                 else DtcState.apply(r)
                 return
             }
+            // Raw-sniff frame (guided capture); recorded only while a capture is active.
+            if (value.isNotEmpty() && value[0] == RawFrameCodec.TYPE) {
+                val f = RawFrameCodec.decode(value)
+                if (f == null) Log.w(TAG, "dropping unparseable raw frame, ${value.size} bytes")
+                else CaptureState.observe(f)
+                return
+            }
             val cmd = ClientProtocol.decode(value)
             if (cmd == null) {
                 Log.w(TAG, "dropping unparseable TX notify, ${value.size} bytes")
