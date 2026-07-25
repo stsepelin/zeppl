@@ -83,4 +83,86 @@ object LearningCorrelator {
         }
         return best?.takeIf { it.confidencePct >= minConfidencePct }
     }
+
+    /** A proposed value mapping: a scaled numeric field, `eng = raw*scale + bias`. */
+    data class ValueProposal(
+        val header: String,
+        val offset: Int,
+        val width: Int, // 1 or 2 (big-endian)
+        val scale: Double,
+        val bias: Double,
+        val r2Pct: Int, // goodness of fit, 0..100
+    )
+
+    private data class Fit(val slope: Double, val intercept: Double, val r2: Double)
+
+    private fun readBe(bytes: IntArray, offset: Int, width: Int): Int =
+        if (width == 2) (bytes[offset] shl 8) or bytes[offset + 1] else bytes[offset]
+
+    private fun linearFit(x: List<Double>, y: List<Double>): Fit? {
+        val mx = x.average()
+        val my = y.average()
+        var sxx = 0.0
+        var sxy = 0.0
+        var syy = 0.0
+        for (i in x.indices) {
+            val dx = x[i] - mx
+            val dy = y[i] - my
+            sxx += dx * dx
+            sxy += dx * dy
+            syy += dy * dy
+        }
+        if (sxx == 0.0) return null // raw never varied -> no fit
+        val slope = sxy / sxx
+        val r2 = if (syy == 0.0) 0.0 else (sxy * sxy) / (sxx * syy)
+        return Fit(slope, my - slope * mx, r2)
+    }
+
+    /**
+     * Find the numeric field (header, offset, 1/2-byte width) that best fits a set
+     * of engineering-unit reference points — GPS speed, a two-point temperature,
+     * or the already-decoded RPM. Solves `eng = raw*scale + bias` by linear
+     * regression (needs >= 2 reference points); returns the best fit at or above
+     * [minR2Pct], or null. This is the "scaling needs two reference points" path —
+     * it also covers monotonic-with-RPM when the reference is the decoded RPM.
+     */
+    fun proposeValue(
+        container: CaptureContainer,
+        reference: List<Pair<Long, Double>>,
+        minR2Pct: Int = 95,
+    ): ValueProposal? {
+        if (reference.size < 2) return null
+        val frames = container.frames.map { it.tMs to hexToBytes(it.hex) }.filter { it.second.size >= 4 }
+        if (frames.isEmpty()) return null
+
+        var best: ValueProposal? = null
+        val headers = frames.map { it.second.take(3) }.toSet()
+        for (h in headers) {
+            val hframes = frames.filter { it.second.take(3) == h }
+            val maxLen = hframes.maxOf { it.second.size }
+            for (width in 1..2) {
+                for (offset in 3..maxLen - 1 - width) { // width data bytes before the CRC
+                    val xs = ArrayList<Double>()
+                    val ys = ArrayList<Double>()
+                    for ((tRef, vRef) in reference) {
+                        val near = hframes
+                            .filter { offset + width - 1 <= it.second.size - 2 }
+                            .minByOrNull { kotlin.math.abs(it.first - tRef) } ?: continue
+                        xs.add(readBe(near.second, offset, width).toDouble())
+                        ys.add(vRef)
+                    }
+                    if (xs.size < 2) continue
+                    val fit = linearFit(xs, ys) ?: continue
+                    val r2 = (fit.r2 * 100).toInt().coerceIn(0, 100)
+                    if (best == null || r2 > best!!.r2Pct) {
+                        best = ValueProposal(
+                            h.joinToString("") { "%02X".format(it) },
+                            offset, width, fit.slope, fit.intercept, r2,
+                        )
+                    }
+                }
+            }
+        }
+        return best?.takeIf { it.r2Pct >= minR2Pct }
+    }
 }
