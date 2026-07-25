@@ -2,6 +2,8 @@ idf_component_register(
     SRCS
         main.c
         engine/command_handler.c
+        engine/profile/bike_profile.c
+        engine/profile/profile_vrscf_2009.c
         contract/command.c
         connectivity/ble/ble_peripheral.c
         connectivity/ble/ble_visibility.c
@@ -74,6 +76,7 @@ idf_component_register(
         engine/vehicle
         engine/simulator
         engine/j1850
+        engine/profile
         display/gps
         display
         display/widgets
