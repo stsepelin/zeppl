@@ -43,7 +43,13 @@ import ee.zeppl.companion.ble.BleService
 import ee.zeppl.companion.ble.BleState
 import ee.zeppl.companion.ble.BondedClusters
 import ee.zeppl.companion.ble.ClusterNames
+import ee.zeppl.companion.ble.DtcCodec
+import ee.zeppl.companion.ble.DtcState
 import ee.zeppl.companion.ui.theme.StatusColors
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.LinearProgressIndicator
 
 /**
  * Per-cluster detail, pushed from a row on the Cluster hub. Home for everything
@@ -73,6 +79,7 @@ fun ClusterDetailScreen(address: String, onBack: () -> Unit) {
 
     var showRename by remember { mutableStateOf(false) }
     var showForget by remember { mutableStateOf(false) }
+    var showClearDtc by remember { mutableStateOf(false) }
     var firmwareTaps by remember { mutableStateOf(0) }
     val fwToast = remember { Toast.makeText(context, "", Toast.LENGTH_SHORT) }
 
@@ -155,13 +162,54 @@ fun ClusterDetailScreen(address: String, onBack: () -> Unit) {
                 )
             }
 
-            SectionCard(title = "Diagnostics") {
-                InfoRow("Fault codes (DTC)", "Coming soon")
-                Text(
-                    "Read and clear stored diagnostic trouble codes once the cluster exposes them over the link.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            SectionCard(title = "Fault codes (DTC)") {
+                val reading = DtcState.reading
+                val result  = DtcState.result
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Button(
+                        onClick = { DtcState.sendRequest(clear = false) },
+                        enabled = !reading,
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Read codes") }
+                    OutlinedButton(
+                        onClick = { showClearDtc = true },
+                        enabled = !reading && result != null,
+                        modifier = Modifier.weight(1f),
+                    ) { Text("Clear") }
+                }
+                Spacer(Modifier.height(8.dp))
+                when {
+                    reading -> {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Reading from the bus…",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    result == null -> Text(
+                        "Tap Read to fetch stored trouble codes from the ECM, TSM and other modules (run key-on, engine-off).",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    result.op == DtcCodec.OP_CLEAR -> Text(
+                        "Codes cleared. Tap Read to confirm they're gone.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    result.codes.isEmpty() -> Text(
+                        if (result.status == DtcCodec.STATUS_NO_REPLY)
+                            "No stored codes — but a module didn't answer. Check the link / bus."
+                        else "No stored codes.",
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    else -> Column {
+                        result.codes.forEach { InfoRow(it.moduleName, it.text) }
+                    }
+                }
             }
 
             OutlinedButton(
@@ -184,6 +232,23 @@ fun ClusterDetailScreen(address: String, onBack: () -> Unit) {
                 name = ClusterNames.display(context, address, device?.name)
                 showRename = false
             },
+        )
+    }
+
+    if (showClearDtc) {
+        AlertDialog(
+            onDismissRequest = { showClearDtc = false },
+            title = { Text("Clear all codes?") },
+            text = {
+                Text("Erases stored diagnostic trouble codes on every module. This can't be undone.")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showClearDtc = false
+                    DtcState.sendRequest(clear = true)
+                }) { Text("Clear codes") }
+            },
+            dismissButton = { TextButton(onClick = { showClearDtc = false }) { Text("Cancel") } },
         )
     }
 
