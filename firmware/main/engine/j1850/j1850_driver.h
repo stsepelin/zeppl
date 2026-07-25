@@ -5,8 +5,9 @@
 // Phase 2 Stage 3 producer: turns decoded J1850 frames into vehicle_data.
 // It keeps a running aggregate (each broadcast carries one field) and
 // pushes it to vehicle_data_set() whenever a frame updated something.
-// The sniffer's decode path feeds it; enabled by CONFIG_VROD_J1850, which
-// is mutually exclusive with sim_engine (both write vehicle_data).
+// The sniffer's decode path feeds it; enabled by CONFIG_VROD_J1850. It is the
+// sole vehicle_data producer on the P4 (the synthetic drive_model producer
+// lives only in the desktop simulator).
 
 void j1850_driver_init(void);
 

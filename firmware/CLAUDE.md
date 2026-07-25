@@ -94,7 +94,7 @@ tests when something in the tested scope changes. Config lives at
   intentionally off (only the 14-pt size stays, as LVGL's required default).
 - **Pure logic separated from LVGL.** New math / formatting / state-machine
   code goes in its own free-function module under `main/`, so it can be
-  tested on host. That's how `gear_table`, `sim_math`, `format`, `units`,
+  tested on host. That's how `gear_calc`, `drive_model`, `format`, `units`,
   `smooth`, `settings` ended up as their own files.
 
 ## How things fit together
@@ -196,14 +196,14 @@ through `contract/command`, not by reaching into its modules.** `main.c` +
 Full policy in `test_apps/host/README.md`. Short version:
 
 - **In scope (100 % line + branch required):** the pure-logic modules —
-  `gear_table.c`, `sim_math.c`, `format.c`, `gesture.c`, `units.c`,
+  `gear_calc.c`, `drive_model.c`, `format.c`, `gesture.c`, `units.c`,
   `smooth.c`, `fuel_scale.c`, `phone_data.c`, `phone_protocol.c`,
   `settings.c`, `vehicle_data.c`, `ble_visibility.c`, `j1850_vpw.c`,
   `j1850_parse.c`, `j1850_driver.c`, `j1850_edge.c`, `j1850_tx_logic.c`,
   `dtc.c`, `ride_log_format.c` — **plus all the widgets** (including `tach_arc.c`),
   which run against the LVGL stub and sit inside the same gate.
 - **Out of scope:** fonts (generated), boot/screen wiring (BSP glue),
-  `sim_engine.c`'s task body, and the `j1850_sniffer.c` / `j1850_tx.c` /
+  `sim_producer.c`'s task body, and the `j1850_sniffer.c` / `j1850_tx.c` /
   `dtc_probe.c` / `ride_log.c` producers and capture/driver glue.
 
 When you add code:

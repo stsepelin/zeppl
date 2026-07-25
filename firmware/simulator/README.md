@@ -1,9 +1,9 @@
 # Desktop simulator
 
-Runs the real production widget code in an SDL2 window. The synthetic
-driving cycle (`main/engine/simulator/sim_engine.c`) drives `vehicle_data` from
-a real pthread, the LVGL UI thread renders, and what you see is exactly
-what the device would render — minus the GIF boot screen.
+Runs the real production widget code in an SDL2 window. The deterministic
+drive_model cycle (`main/engine/simulator/`, stepped by `sim_producer.c`) drives
+`vehicle_data` from a real pthread, the LVGL UI thread renders, and what you see
+is exactly what the device would render — minus the GIF boot screen.
 
 Iterate on layout, colours, animation timing, etc. without flashing.
 
@@ -38,7 +38,7 @@ Quit by closing the SDL window or hitting Ctrl-C.
 |---|---|---|
 | Widgets | `main/display/widgets/*.c` | Same .c files the firmware compiles |
 | Ride screen | `main/display/screen_ride.c` | Same |
-| Sim cycle | `main/engine/simulator/sim_engine.c` | Real pthread via FreeRTOS shim |
+| Sim cycle | `main/engine/simulator/drive_model.c` + `sim_producer.c` | Real pthread via FreeRTOS shim |
 | Vehicle state | `main/engine/vehicle/vehicle_data.c` | Real pthread mutex |
 | Fonts | `main/display/fonts/*.c` | Same baked tables |
 

@@ -102,11 +102,11 @@ add_executable(vrod_sim
     ${MAIN_DIR}/display/map/map_world.c
     ${MAIN_DIR}/display/screen_map.c
 
-    ${MAIN_DIR}/engine/simulator/sim_engine.c
-    ${MAIN_DIR}/engine/simulator/gear_table.c
-    ${MAIN_DIR}/engine/simulator/sim_math.c
+    ${MAIN_DIR}/engine/simulator/drive_model.c
+    ${MAIN_DIR}/engine/simulator/sim_producer.c
 
     ${MAIN_DIR}/engine/vehicle/vehicle_data.c
+    ${MAIN_DIR}/engine/vehicle/gear_calc.c
 
     ${FONT_SOURCES}
 )
@@ -123,6 +123,7 @@ target_include_directories(vrod_sim PRIVATE
     ${MAIN_DIR}/engine/simulator
     ${MAIN_DIR}/display/sound
     ${MAIN_DIR}/engine/vehicle
+    ${MAIN_DIR}/engine/j1850
     ${SIM_DIR}/external/freertos_shim
     ${SIM_DIR}/external/esp_compat
 )

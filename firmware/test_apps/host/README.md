@@ -56,9 +56,7 @@ Today that's:
 
 | File | Why it's in scope |
 |---|---|
-| `main/engine/simulator/gear_table.c` | Pure math: speed → (gear, RPM) |
-| `main/engine/simulator/sim_math.c` | Distance integrator, clock advance / split, fuel cycle state machine |
-| `main/engine/simulator/drive_model.c` | Deterministic driving cycle → realistic `vehicle_data` (idle/accel/cruise/decel, gear-shaped RPM, temp warm-up). Feeds the profile encoder for the simulator. |
+| `main/engine/simulator/drive_model.c` | Deterministic driving cycle → realistic `vehicle_data` (idle/accel/cruise/decel, gear-shaped RPM, temp warm-up). Drives the desktop simulator and the profile encoder. |
 | `main/display/format.c` | Pure formatters: thousand-separated integer |
 | `main/display/gesture.c` | Long-press + swipe state machine shared by firmware and sim |
 | `main/display/units.c` | Pure math: km/h ↔ mph and metre ↔ km/mi conversions |
@@ -126,7 +124,7 @@ Files **deliberately excluded** from the metric:
   OUTPUT is still verified visually in the simulator + on device, since a
   block glyph can't prove the real font rendering looks right.)
 - `display/boot_screen.c`, `display/ui_manager.c`, `display/screen_ride.c`,
-  `main.c`, `engine/simulator/sim_engine.c` (the task body)
+  `main.c`, `engine/simulator/sim_producer.c` (the task body)
   — BSP / FreeRTOS / LVGL glue. Validated on hardware, not here.
   (`engine/vehicle/vehicle_data.c` used to sit in this list but has been in
   scope since it gained the FreeRTOS-stub test — see the table above.)

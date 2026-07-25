@@ -1,25 +1,5 @@
 menu "V-Rod cluster"
 
-    config VROD_INCLUDE_SIM_ENGINE
-        bool "Compile in the synthetic driving-cycle simulator"
-        default y
-        help
-            When enabled, the cluster firmware includes sim_engine — a
-            32-second synthetic driving cycle that feeds vehicle_data
-            with looping speed / RPM / gear / fuel updates. Useful on
-            the bench (the gauge dial visibly swings during boot tests
-            and notification work) and required while real bike data
-            sources (J1850, etc.) are still on the supply chain.
-
-            Disable for real-bike builds — once Phase 2 lands, the
-            J1850 driver becomes the vehicle_data producer and the
-            sim is just dead weight in flash. Disabling here only
-            affects the cluster firmware; the desktop SDL2 simulator
-            in firmware/simulator/ always builds the sim because it
-            has no other data source.
-
-            Default y while the bike harness is still pending.
-
     config VROD_ADC_REPRO
         bool "esp_adc boot-crash repro instrumentation"
         default n
@@ -125,8 +105,8 @@ menu "V-Rod cluster"
             is parsed and pushed to the gauge via vehicle_data_set. Built on
             the sniffer (which supplies the RX decode), so enable that too.
 
-            Mutually exclusive with the synthetic sim: when this is on,
-            sim_engine is not started (both write vehicle_data). Off by
+            The sole vehicle_data producer on the P4 (the synthetic
+            drive_model lives only in the desktop simulator). Off by
             default; this is the real-bike data source.
 
     config VROD_J1850_BENCH_SPEED

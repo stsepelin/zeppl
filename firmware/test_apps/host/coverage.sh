@@ -34,8 +34,6 @@ fi
 # Files under the coverage policy. Must match CI workflow's `lcov --extract`
 # list and the table in README.md.
 SCOPED=(
-    '*/main/engine/simulator/gear_table.c'
-    '*/main/engine/simulator/sim_math.c'
     '*/main/engine/simulator/drive_model.c'
     '*/main/display/format.c'
     '*/main/display/gesture.c'

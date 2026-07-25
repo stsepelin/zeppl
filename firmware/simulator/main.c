@@ -1,7 +1,7 @@
 // Desktop V-Rod cluster simulator.
 //
 //   - Real production widget code (no mocks) drives the ride screen.
-//   - The synthetic driving cycle from main/simulator/sim_engine.c runs on
+//   - The deterministic drive_model cycle (main/engine/simulator/) runs on
 //     a real pthread (via the FreeRTOS shim) and feeds vehicle_data.
 //   - LVGL renders into an SDL2 window at native 800×800.
 //
@@ -13,7 +13,7 @@
 #include "src/libs/lodepng/lodepng.h"
 
 #include "vehicle_data.h"
-#include "sim_engine.h"
+#include "sim_producer.h"
 #include "screen_ride.h"
 #include "settings_store.h"
 #include "ui_manager.h"
@@ -359,7 +359,7 @@ static void sim_demo_map_build(void)
 }
 
 // Map representation of the SHARED demo state: the readouts come straight from
-// the sim_engine driving cycle (same vehicle_data the classic gauge uses), and
+// the drive_model driving cycle (same vehicle_data the classic gauge uses), and
 // the route advance is scaled by that speed -- so toggling classic<->map only
 // changes how the one demo is drawn, never the numbers.
 static void sim_demo_map_frame(const vehicle_data_t *vd)
@@ -576,7 +576,7 @@ int main(void)
     // 4) Producer for the driving cycle. phone_data has no built-in
     //    producer here — push events from the test bridge (tools/notify.py)
     //    instead.
-    sim_engine_start();
+    sim_producer_start();
 
     // 5) Init settings (desktop shim — defaults only) and build the ride
     //    screen against the running sim. The ui_manager shim caches both

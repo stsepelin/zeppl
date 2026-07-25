@@ -136,7 +136,7 @@ bsp_display_start_with_config   // panel + LVGL up, backlight at LEDC duty 0
 settings_store_init             // NVS open, defaults if first boot
 vehicle_data_init               // data sources must be live before
 phone_data_init                 //   boot_screen_show's safety-timer
-sim_engine_start                //   fast-path into the ride screen
+j1850_driver_init               //   producer; fast-path into the ride screen
 bsp_display_lock                // hold the LVGL lock for the paint sequence
   loop 3×:                      //   triple-partial has 3 PSRAM framebuffers
     invalidate(scr) + lv_refr_now + unlock + 20ms + lock

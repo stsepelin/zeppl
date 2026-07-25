@@ -22,8 +22,6 @@ idf_component_register(
         engine/vehicle/trip_meter.c
         engine/vehicle/odo_meter.c
         display/gps/gps_source.c
-        engine/simulator/gear_table.c
-        engine/simulator/drive_model.c
         display/boot_screen.c
         display/screen_ride.c
         display/screen_settings.c
@@ -77,7 +75,6 @@ idf_component_register(
         display/settings
         display/sound
         engine/vehicle
-        engine/simulator
         engine/j1850
         engine/profile
         display/gps
@@ -117,18 +114,6 @@ endif()
 # Shared microSD mount, used by the ride log and the SD map (whichever is on).
 if(CONFIG_VROD_RIDE_LOG OR CONFIG_VROD_MAP_SD)
     target_sources(${COMPONENT_LIB} PRIVATE storage/sd_mount.c)
-endif()
-
-# Synthetic driving-cycle simulator. Pulled in by default for bench
-# builds where the gauge needs to visibly swing; compiled out when
-# CONFIG_VROD_INCLUDE_SIM_ENGINE=n so real-bike builds (Phase 2 J1850
-# driver as the producer) don't carry dead weight. gear_table.c stays
-# unconditional — the gear indicator widget reads from it independently.
-if(CONFIG_VROD_INCLUDE_SIM_ENGINE)
-    target_sources(${COMPONENT_LIB} PRIVATE
-        engine/simulator/sim_engine.c
-        engine/simulator/sim_math.c
-    )
 endif()
 
 # Bench pin-identification tool — see docs/PINS.md.
