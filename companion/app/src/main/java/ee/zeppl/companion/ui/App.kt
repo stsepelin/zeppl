@@ -109,13 +109,17 @@ private fun MainContent(navController: NavHostController, modifier: Modifier = M
         }
         composable<History> { HistoryScreen() }
         composable<Developer> {
-            DeveloperScreen(onExit = {
-                AppPrefs.developerMode = false
-                navController.navigateTopLevel(Ride)
-            })
+            DeveloperScreen(
+                onExit = {
+                    AppPrefs.developerMode = false
+                    navController.navigateTopLevel(Ride)
+                },
+                onOpenCapture = { navController.navigate(Capture) },
+            )
         }
         composable<Scan> { ScanScreen(onBack = { navController.popBackStack() }) }
         composable<AppList> { AppListScreen(onBack = { navController.popBackStack() }) }
+        composable<Capture> { CaptureScreen(onBack = { navController.popBackStack() }) }
     }
 }
 
