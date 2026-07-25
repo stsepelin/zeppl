@@ -75,6 +75,13 @@ over the same notify characteristic and are dispatched by `ble/CommandHandler`
 into Android `TelecomManager` (call accept / reject / end) and media transport
 (prev / play / pause / next), plus notification dismiss.
 
+**Raw-sniff frame** — `type = 0x50`, payload = `u32 LE t_ms` + verbatim J1850
+bytes (header + payload + CRC). Streamed by the cluster's capture build
+(`CONFIG_VROD_J1850_RAW_SNIFF`) for the multi-V-Rod adaptive layer's guided
+capture; decoded by `ble/RawFrameCodec` (mirrors the firmware
+`raw_sniff_encode`). High-rate — a capture-mode concern, not the normal stream.
+See [`../../docs/multi-vrod-adaptive-layer.md`](../../docs/multi-vrod-adaptive-layer.md).
+
 ## Calibration collectors
 
 Two collectors ride on top of the telemetry stream (they don't add wire types —
