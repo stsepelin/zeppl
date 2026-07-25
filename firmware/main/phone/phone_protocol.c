@@ -173,6 +173,19 @@ phone_parse_result_t phone_protocol_parse(const uint8_t  *buf,
         return PHONE_PARSE_OK;
     }
 
+    case PHONE_EVT_DTC: {
+        // 1-byte sub-command: read or clear. The cluster answers asynchronously
+        // with a 0x41 result frame.
+        if (payload_len < 1) {
+            *consumed = total_len;
+            return PHONE_PARSE_BAD_FIELD;
+        }
+        out->type    = PHONE_EVT_DTC;
+        out->dtc_cmd = p[0];
+        *consumed    = total_len;
+        return PHONE_PARSE_OK;
+    }
+
     default:
         *consumed = total_len;
         return PHONE_PARSE_BAD_TYPE;

@@ -195,14 +195,17 @@ if(CONFIG_VROD_J1850_TX)
     )
 endif()
 
-# DTC read probe (Stage 5): TX the HD read-codes request + collect responses
-# off the sniffer. dtc.c is the host-tested request/response/format codec; the
-# probe glue is the task that drives it. Only this build compiles them in.
+# DTC (Stage 5): the host-tested request/response/format/result codec (dtc.c)
+# is shared by the standalone serial probe (dtc_probe.c, VROD_J1850_DTC_PROBE)
+# and the phone-facing read/clear service (dtc_service.c, VROD_J1850_DTC).
+if(CONFIG_VROD_J1850_DTC_PROBE OR CONFIG_VROD_J1850_DTC)
+    target_sources(${COMPONENT_LIB} PRIVATE j1850/dtc.c)
+endif()
 if(CONFIG_VROD_J1850_DTC_PROBE)
-    target_sources(${COMPONENT_LIB} PRIVATE
-        j1850/dtc.c
-        j1850/dtc_probe.c
-    )
+    target_sources(${COMPONENT_LIB} PRIVATE j1850/dtc_probe.c)
+endif()
+if(CONFIG_VROD_J1850_DTC)
+    target_sources(${COMPONENT_LIB} PRIVATE j1850/dtc_service.c)
 endif()
 
 # Bus-amplitude ADC probe (Stage 4 TX prep) — dedicated ADC pin, see

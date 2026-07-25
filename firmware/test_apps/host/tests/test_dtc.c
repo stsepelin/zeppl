@@ -86,6 +86,43 @@ static void test_dtc_response_rejects_non_responses(void)
     TEST_ASSERT_FALSE(dtc_response(bad3, sizeof(bad3), NULL, NULL, NULL));
 }
 
+// The 0x41 result frame the cluster sends the phone: TLV header + op/status/
+// count + {module,hi,lo} triplets.
+static void test_dtc_result_encode(void)
+{
+    dtc_entry_t codes[2] = {
+        {DTC_MODULE_ECM, 0xD2, 0x55},  // U1255
+        {DTC_MODULE_TSM, 0x01, 0x07},  // P0107
+    };
+    uint8_t out[32];
+    size_t  n =
+        dtc_result_encode(DTC_RESULT_OP_READ, DTC_RESULT_STATUS_OK, codes, 2, out, sizeof(out));
+    TEST_ASSERT_EQUAL_UINT(12, n);  // 3 header + 3 body-hdr + 2*3
+    const uint8_t want[12] = {0x41,
+                              0x09,
+                              0x00,
+                              DTC_RESULT_OP_READ,
+                              DTC_RESULT_STATUS_OK,
+                              2,
+                              DTC_MODULE_ECM,
+                              0xD2,
+                              0x55,
+                              DTC_MODULE_TSM,
+                              0x01,
+                              0x07};
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(want, out, 12);
+
+    // Clean bike: no codes -> a 6-byte frame with count 0.
+    n = dtc_result_encode(DTC_RESULT_OP_READ, DTC_RESULT_STATUS_OK, NULL, 0, out, sizeof(out));
+    TEST_ASSERT_EQUAL_UINT(6, n);
+    TEST_ASSERT_EQUAL_HEX8(0x41, out[0]);
+    TEST_ASSERT_EQUAL_HEX8(3, out[1]);  // len = 3
+    TEST_ASSERT_EQUAL_HEX8(0, out[5]);  // count = 0
+
+    // Too small a buffer refuses (returns 0), never overflows.
+    TEST_ASSERT_EQUAL_UINT(0, dtc_result_encode(DTC_RESULT_OP_READ, 0, codes, 2, out, 5));
+}
+
 void RunTests(void)
 {
     RUN_TEST(test_dtc_format_known_codes);
@@ -93,4 +130,5 @@ void RunTests(void)
     RUN_TEST(test_dtc_request_framing);
     RUN_TEST(test_dtc_response_decode);
     RUN_TEST(test_dtc_response_rejects_non_responses);
+    RUN_TEST(test_dtc_result_encode);
 }

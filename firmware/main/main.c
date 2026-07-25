@@ -41,6 +41,9 @@
 #if CONFIG_VROD_J1850_DTC_PROBE
 #include "dtc_probe.h"
 #endif
+#if CONFIG_VROD_J1850_DTC
+#include "dtc_service.h"
+#endif
 #endif
 #if CONFIG_VROD_PIN_WIGGLE_GPIO >= 0
 #include "pin_wiggle.h"
@@ -137,6 +140,9 @@ void app_main(void)
 #endif
 #if CONFIG_VROD_J1850_TX
     j1850_tx_init();
+#if CONFIG_VROD_J1850_DTC
+    dtc_service_start();  // phone-triggered read/clear (runs with the gauge)
+#endif
 #if CONFIG_VROD_J1850_DTC_PROBE
     dtc_probe_start();
 #elif CONFIG_VROD_J1850_TX_BIKE_REPLAY

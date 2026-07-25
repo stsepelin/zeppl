@@ -98,6 +98,10 @@ typedef enum {
     PHONE_EVT_CALL_ACTIVE = 0x06,
     PHONE_EVT_CALL_END    = 0x07,
     PHONE_EVT_LOCATION    = 0x08,  // GPS position for the map view
+    // Diagnostics: the phone asks the cluster to read or clear J1850 DTCs. The
+    // cluster answers with a 0x41 result frame (see dtc.h). Payload = 1 byte
+    // sub-command (DTC_CMD_READ / DTC_CMD_CLEAR).
+    PHONE_EVT_DTC = 0x09,
 } phone_event_type_t;
 
 typedef struct {
@@ -109,6 +113,7 @@ typedef struct {
         vehicle_config_t config;      // PHONE_EVT_CONFIG
         icon_chunk_t     icon;        // PHONE_EVT_ICON
         location_t       location;    // PHONE_EVT_LOCATION
+        uint8_t          dtc_cmd;     // PHONE_EVT_DTC (DTC_CMD_READ/_CLEAR)
     };
 } phone_event_t;
 

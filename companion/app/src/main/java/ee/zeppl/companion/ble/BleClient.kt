@@ -202,6 +202,13 @@ class BleClient(
                 }
                 return
             }
+            // DTC read/clear result (answer to a Diagnostics request).
+            if (value.isNotEmpty() && value[0] == DtcCodec.TYPE) {
+                val r = DtcCodec.decode(value)
+                if (r == null) Log.w(TAG, "dropping unparseable DTC result, ${value.size} bytes")
+                else DtcState.apply(r)
+                return
+            }
             val cmd = ClientProtocol.decode(value)
             if (cmd == null) {
                 Log.w(TAG, "dropping unparseable TX notify, ${value.size} bytes")
