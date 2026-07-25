@@ -28,8 +28,8 @@ target_compile_definitions(unity PUBLIC UNITY_EXCLUDE_CONFIG_H)
 # Exactly the files extracted as pure-logic helpers. Adding anything else
 # here should be a deliberate, reviewed choice — see tests/README.md.
 add_library(vrod_pure STATIC
-    ${MAIN_DIR}/simulator/gear_table.c
-    ${MAIN_DIR}/simulator/sim_math.c
+    ${MAIN_DIR}/engine/simulator/gear_table.c
+    ${MAIN_DIR}/engine/simulator/sim_math.c
     ${MAIN_DIR}/display/format.c
     ${MAIN_DIR}/display/gesture.c
     ${MAIN_DIR}/display/units.c
@@ -42,17 +42,17 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/phone/telemetry_codec.c
     ${MAIN_DIR}/contract/command.c
     ${MAIN_DIR}/settings/settings.c
-    ${MAIN_DIR}/vehicle/vehicle_data.c
-    ${MAIN_DIR}/vehicle/gear_calc.c
-    ${MAIN_DIR}/vehicle/trip_meter.c
-    ${MAIN_DIR}/vehicle/odo_meter.c
-    ${MAIN_DIR}/j1850/j1850_vpw.c
-    ${MAIN_DIR}/j1850/j1850_tx_logic.c
-    ${MAIN_DIR}/j1850/j1850_parse.c
-    ${MAIN_DIR}/j1850/dtc.c
-    ${MAIN_DIR}/j1850/j1850_driver.c
-    ${MAIN_DIR}/j1850/j1850_edge.c
-    ${MAIN_DIR}/j1850/ride_log_format.c
+    ${MAIN_DIR}/engine/vehicle/vehicle_data.c
+    ${MAIN_DIR}/engine/vehicle/gear_calc.c
+    ${MAIN_DIR}/engine/vehicle/trip_meter.c
+    ${MAIN_DIR}/engine/vehicle/odo_meter.c
+    ${MAIN_DIR}/engine/j1850/j1850_vpw.c
+    ${MAIN_DIR}/engine/j1850/j1850_tx_logic.c
+    ${MAIN_DIR}/engine/j1850/j1850_parse.c
+    ${MAIN_DIR}/engine/j1850/dtc.c
+    ${MAIN_DIR}/engine/j1850/j1850_driver.c
+    ${MAIN_DIR}/engine/j1850/j1850_edge.c
+    ${MAIN_DIR}/engine/j1850/ride_log_format.c
     ${MAIN_DIR}/ble/ble_visibility.c
     ${MAIN_DIR}/gps/nmea.c
     ${MAIN_DIR}/gps/gps_source.c
@@ -61,14 +61,14 @@ add_library(vrod_pure STATIC
     external/lvgl_tick_stub/lv_tick_stub.c
 )
 target_include_directories(vrod_pure PUBLIC
-    ${MAIN_DIR}/simulator
+    ${MAIN_DIR}/engine/simulator
     ${MAIN_DIR}/contract
     ${MAIN_DIR}/display
     ${MAIN_DIR}/display/widgets
     ${MAIN_DIR}/phone
     ${MAIN_DIR}/settings
-    ${MAIN_DIR}/vehicle
-    ${MAIN_DIR}/j1850
+    ${MAIN_DIR}/engine/vehicle
+    ${MAIN_DIR}/engine/j1850
     ${MAIN_DIR}/ble
     ${MAIN_DIR}/gps
     ${MAIN_DIR}/map
@@ -104,7 +104,7 @@ add_library(vrod_widgets STATIC
 target_include_directories(vrod_widgets PUBLIC
     ${MAIN_DIR}/display
     ${MAIN_DIR}/display/widgets
-    ${MAIN_DIR}/vehicle
+    ${MAIN_DIR}/engine/vehicle
     external/lvgl_stub
     external/esp_compat
 )

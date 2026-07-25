@@ -1,7 +1,7 @@
 idf_component_register(
     SRCS
         main.c
-        command_handler.c
+        engine/command_handler.c
         contract/command.c
         ble/ble_peripheral.c
         ble/ble_visibility.c
@@ -13,12 +13,12 @@ idf_component_register(
         settings/settings.c
         settings/settings_store.c
         sound/sound.c
-        vehicle/vehicle_data.c
-        vehicle/gear_calc.c
-        vehicle/trip_meter.c
-        vehicle/odo_meter.c
+        engine/vehicle/vehicle_data.c
+        engine/vehicle/gear_calc.c
+        engine/vehicle/trip_meter.c
+        engine/vehicle/odo_meter.c
         gps/gps_source.c
-        simulator/gear_table.c
+        engine/simulator/gear_table.c
         display/boot_screen.c
         display/screen_ride.c
         display/screen_settings.c
@@ -66,13 +66,14 @@ idf_component_register(
     INCLUDE_DIRS
         .
         contract
+        engine
         ble
         phone
         settings
         sound
-        vehicle
-        simulator
-        j1850
+        engine/vehicle
+        engine/simulator
+        engine/j1850
         gps
         display
         display/widgets
@@ -125,8 +126,8 @@ endif()
 # unconditional — the gear indicator widget reads from it independently.
 if(CONFIG_VROD_INCLUDE_SIM_ENGINE)
     target_sources(${COMPONENT_LIB} PRIVATE
-        simulator/sim_engine.c
-        simulator/sim_math.c
+        engine/simulator/sim_engine.c
+        engine/simulator/sim_math.c
     )
 endif()
 
@@ -152,14 +153,14 @@ endif()
 # decoder, shared by the passive sniffer (Stage 2) and the TX driver
 # (Stage 4); pull it in once if either side is compiled.
 if(CONFIG_VROD_J1850_SNIFFER OR CONFIG_VROD_J1850_TX)
-    target_sources(${COMPONENT_LIB} PRIVATE j1850/j1850_vpw.c)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/j1850_vpw.c)
 endif()
 
 # Passive capture (Stage 2): GPIO-edge glue + the bench diagnostics screen.
 if(CONFIG_VROD_J1850_SNIFFER)
     target_sources(${COMPONENT_LIB} PRIVATE
-        j1850/j1850_sniffer.c
-        j1850/ride_log_format.c   # frame->line formatter; also the shared gear label
+        engine/j1850/j1850_sniffer.c
+        engine/j1850/ride_log_format.c   # frame->line formatter; also the shared gear label
         display/screen_bench.c
     )
 endif()
@@ -167,7 +168,7 @@ endif()
 # On-board ride log (laptop-free capture): SD/FATFS sink + flush task. Pure
 # formatting lives in ride_log_format.c (compiled with the sniffer above).
 if(CONFIG_VROD_RIDE_LOG)
-    target_sources(${COMPONENT_LIB} PRIVATE j1850/ride_log.c)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/ride_log.c)
 endif()
 
 # Toggling edge->level tracker (Phase 3 RX experiment prep). Gate (a):
@@ -175,17 +176,17 @@ endif()
 # wired into the live ISR here — that is gate (b) VROD_J1850_TOGGLE_ISR_LIVE,
 # deferred to Phase 3. See docs/reference/j1850-toggling-isr-candidate.md.
 if(CONFIG_VROD_J1850_TOGGLE_ISR)
-    target_sources(${COMPONENT_LIB} PRIVATE j1850/j1850_edge.c)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/j1850_edge.c)
 endif()
 
 # Vehicle-data producer (Stage 3): pure decode table + the driver glue
 # that feeds the sniffer's decoded frames into vehicle_data.
 if(CONFIG_VROD_J1850)
     target_sources(${COMPONENT_LIB} PRIVATE
-        j1850/j1850_parse.c
-        j1850/j1850_driver.c
-        j1850/j1850_bench_feed.c   # bench-only synthetic SPEED/RPM (self-guarded)
-        vehicle/odo_store.c   # NVS persistence for the driver's odometer/trips
+        engine/j1850/j1850_parse.c
+        engine/j1850/j1850_driver.c
+        engine/j1850/j1850_bench_feed.c   # bench-only synthetic SPEED/RPM (self-guarded)
+        engine/vehicle/odo_store.c   # NVS persistence for the driver's odometer/trips
     )
 endif()
 
@@ -193,8 +194,8 @@ endif()
 # is the host-tested pure part (CRC frame build + dominant-time guard).
 if(CONFIG_VROD_J1850_TX)
     target_sources(${COMPONENT_LIB} PRIVATE
-        j1850/j1850_tx_logic.c
-        j1850/j1850_tx.c
+        engine/j1850/j1850_tx_logic.c
+        engine/j1850/j1850_tx.c
     )
 endif()
 
@@ -202,22 +203,22 @@ endif()
 # is shared by the standalone serial probe (dtc_probe.c, VROD_J1850_DTC_PROBE)
 # and the phone-facing read/clear service (dtc_service.c, VROD_J1850_DTC).
 if(CONFIG_VROD_J1850_DTC_PROBE OR CONFIG_VROD_J1850_DTC)
-    target_sources(${COMPONENT_LIB} PRIVATE j1850/dtc.c)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/dtc.c)
 endif()
 if(CONFIG_VROD_J1850_DTC_PROBE)
-    target_sources(${COMPONENT_LIB} PRIVATE j1850/dtc_probe.c)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/dtc_probe.c)
 endif()
 if(CONFIG_VROD_J1850_DTC)
-    target_sources(${COMPONENT_LIB} PRIVATE j1850/dtc_service.c)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/dtc_service.c)
 endif()
 
 # Bus-amplitude ADC probe (Stage 4 TX prep) — dedicated ADC pin, see
-# main/j1850/j1850_adc_probe.c. VROD_J1850_ADC_GPIO only exists when the
+# main/engine/j1850/j1850_adc_probe.c. VROD_J1850_ADC_GPIO only exists when the
 # sniffer is on (it depends on it), so gate on the sniffer too — an
 # undefined symbol is not -1, and would otherwise compile the probe into
 # default builds where the symbol doesn't exist.
 if(CONFIG_VROD_J1850_SNIFFER AND NOT CONFIG_VROD_J1850_ADC_GPIO EQUAL -1)
-    target_sources(${COMPONENT_LIB} PRIVATE j1850/j1850_adc_probe.c)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/j1850_adc_probe.c)
 endif()
 
 # Generated font files (from lv_font_conv) use `#ifdef LV_LVGL_H_INCLUDE_SIMPLE`

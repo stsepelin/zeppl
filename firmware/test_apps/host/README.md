@@ -56,8 +56,8 @@ Today that's:
 
 | File | Why it's in scope |
 |---|---|
-| `main/simulator/gear_table.c` | Pure math: speed → (gear, RPM) |
-| `main/simulator/sim_math.c` | Distance integrator, clock advance / split, fuel cycle state machine |
+| `main/engine/simulator/gear_table.c` | Pure math: speed → (gear, RPM) |
+| `main/engine/simulator/sim_math.c` | Distance integrator, clock advance / split, fuel cycle state machine |
 | `main/display/format.c` | Pure formatters: thousand-separated integer |
 | `main/display/gesture.c` | Long-press + swipe state machine shared by firmware and sim |
 | `main/display/units.c` | Pure math: km/h ↔ mph and metre ↔ km/mi conversions |
@@ -70,25 +70,25 @@ Today that's:
 | `main/phone/telemetry_codec.c` | Cluster -> phone telemetry frame encoder (vehicle_data -> TLV) |
 | `main/contract/command.c` | Command-dispatch seam: register one handler, route typed commands (config / DTC) to it. Decouples the BLE bridge from engine internals (ADR 0001). |
 | `main/settings/settings.c` | Defaults + validate for the persisted prefs struct |
-| `main/vehicle/vehicle_data.c` | Mutex-guarded latest-value store. Tested with a FreeRTOS stub. |
-| `main/vehicle/gear_calc.c` | Gear from the RPM:speed ratio (no gear sensor on the bike): match to the spec's exact overall ratios + boundary hysteresis. |
-| `main/vehicle/trip_meter.c` | Rolling 16-bit bus counter (odometer/fuel ticks) -> per-frame delta, wrap-safe + reset-clamp. |
-| `main/vehicle/odo_meter.c` | Odometer + dual-trip totals: add distance/fuel, reset a trip, set the odometer. Pure (odo_store owns NVS). |
+| `main/engine/vehicle/vehicle_data.c` | Mutex-guarded latest-value store. Tested with a FreeRTOS stub. |
+| `main/engine/vehicle/gear_calc.c` | Gear from the RPM:speed ratio (no gear sensor on the bike): match to the spec's exact overall ratios + boundary hysteresis. |
+| `main/engine/vehicle/trip_meter.c` | Rolling 16-bit bus counter (odometer/fuel ticks) -> per-frame delta, wrap-safe + reset-clamp. |
+| `main/engine/vehicle/odo_meter.c` | Odometer + dual-trip totals: add distance/fuel, reset a trip, set the odometer. Pure (odo_store owns NVS). |
 | `main/ble/ble_visibility.c` | Pure decision: `(has_bond, override) → adv_mode`. Stage 8. |
 | `main/gps/nmea.c` | NMEA 0183 sentence framing + RMC parse (NEO-6M) → lat/lon/speed/heading |
 | `main/gps/gps_source.c` | Mutex-guarded latest-fix store (module producer, map consumer) |
 | `main/map/map_cells.c` | Cell-paging decision logic: which lat/lon cell a position is in (floor division), the working-set window, heading-ahead prefetch. Pure (cell manager owns the SD open/close). |
-| `main/j1850/j1850_vpw.c` | J1850 VPW symbol codec: pulse-width decoder + encoder + CRC-8/SAE-J1850. Round-trip tested. |
-| `main/j1850/j1850_parse.c` | J1850 message decoder: frame -> vehicle_data (RPM/temp/speed/turns/CEL/immobiliser), calibrated against real captures. Gear is not on the bus (see gear_calc). |
-| `main/j1850/dtc.c` | SAE J2012 DTC codec: text formatting (raw 2 bytes -> "U1255") + the HD J1850 read/clear request framing and the response-frame decode (ported from HarleyDroid). The `dtc_probe.c` task that keys them onto the bus is driver glue, out of the gate. |
-| `main/j1850/j1850_driver.c` | J1850 producer glue: decoded frame -> j1850_parse (+ gear_calc, + odometer/fuel tick accumulation) -> vehicle_data_set (running aggregate). |
-| `main/j1850/j1850_edge.c` | Toggling edge->level tracker (no pin read): toggle + recessive-idle re-sync anchor; a missed/spurious edge self-limits to one frame. |
-| `main/j1850/j1850_tx_logic.c` | J1850 TX pure logic: CRC frame build (round-tripped through encode→decode) + the watchdog dominant-length guard + on-air duration. |
-| `main/j1850/ride_log_format.c` | Ride-log line/header formatting: frame -> one plain-text line (sec.ms, hex, CRC, IFR, decoded speed/temp/gear suffix), capture.py-compatible. |
+| `main/engine/j1850/j1850_vpw.c` | J1850 VPW symbol codec: pulse-width decoder + encoder + CRC-8/SAE-J1850. Round-trip tested. |
+| `main/engine/j1850/j1850_parse.c` | J1850 message decoder: frame -> vehicle_data (RPM/temp/speed/turns/CEL/immobiliser), calibrated against real captures. Gear is not on the bus (see gear_calc). |
+| `main/engine/j1850/dtc.c` | SAE J2012 DTC codec: text formatting (raw 2 bytes -> "U1255") + the HD J1850 read/clear request framing and the response-frame decode (ported from HarleyDroid). The `dtc_probe.c` task that keys them onto the bus is driver glue, out of the gate. |
+| `main/engine/j1850/j1850_driver.c` | J1850 producer glue: decoded frame -> j1850_parse (+ gear_calc, + odometer/fuel tick accumulation) -> vehicle_data_set (running aggregate). |
+| `main/engine/j1850/j1850_edge.c` | Toggling edge->level tracker (no pin read): toggle + recessive-idle re-sync anchor; a missed/spurious edge self-limits to one frame. |
+| `main/engine/j1850/j1850_tx_logic.c` | J1850 TX pure logic: CRC frame build (round-tripped through encode→decode) + the watchdog dominant-length guard + on-air duration. |
+| `main/engine/j1850/ride_log_format.c` | Ride-log line/header formatting: frame -> one plain-text line (sec.ms, hex, CRC, IFR, decoded speed/temp/gear suffix), capture.py-compatible. |
 
-`main/j1850/j1850_sniffer.c` (GPIO-ISR capture glue),
-`main/j1850/j1850_tx.c` (RMT/gptimer TX driver + watchdog), and
-`main/j1850/ride_log.c` (SD/FATFS mount + flush-task glue) are
+`main/engine/j1850/j1850_sniffer.c` (GPIO-ISR capture glue),
+`main/engine/j1850/j1850_tx.c` (RMT/gptimer TX driver + watchdog), and
+`main/engine/j1850/ride_log.c` (SD/FATFS mount + flush-task glue) are
 FreeRTOS/driver glue and stay out of the gate.
 
 ### Widgets — also gated at 100 %
