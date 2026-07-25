@@ -1,6 +1,7 @@
 #include "j1850_driver.h"
+#include "bike_profile.h"
 #include "gear_calc.h"
-#include "j1850_parse.h"
+#include "j1850_parse.h"  // J1850_SPEED_DIVISOR (default), + the frozen decode oracle
 #include "odo_meter.h"
 #include "trip_meter.h"
 #include "vehicle_data.h"
@@ -18,6 +19,12 @@ static trip_meter_t   s_fuel_meter;  // A8 83 10 rolling counter -> fuel ticks
 // companion's GPS calibration), persisted by the caller; defaults to the
 // provisional constant until calibrated.
 static uint16_t s_speed_divisor = J1850_SPEED_DIVISOR;
+
+// The active bike decode profile. Fixed to the 2009 VRSCF reference for now;
+// the registry / fingerprint step selects it per bike later. bike_profile_decode
+// against it is proven byte-identical to the old hardcoded j1850_parse
+// (test_bike_profile), so this swap is behaviour-preserving.
+static const bike_profile_t *s_profile;
 
 // A per-frame counter delta beyond this is an ECM reset or a dropped-frame gap,
 // not a real 16-bit wrap (odo steps ~100 ticks/frame, fuel ~20), so the meter
@@ -67,6 +74,7 @@ static bool accumulate(const j1850_frame_t *f)
 
 void j1850_driver_init(void)
 {
+    s_profile = bike_profile_vrscf_2009();
     vehicle_data_get(&s_vd);  // seed from whatever the boot state left
     s_odo        = (odo_meter_t){0};
     s_dist_meter = (trip_meter_t){0};
@@ -75,7 +83,7 @@ void j1850_driver_init(void)
 
 void j1850_driver_feed(const j1850_frame_t *f)
 {
-    bool updated = j1850_parse(f, &s_vd);
+    bool updated = bike_profile_decode(s_profile, f, &s_vd);
     updated |= accumulate(f);
     if (updated) {
         // Re-apply the runtime divisor to the raw ECM count (parse used the
