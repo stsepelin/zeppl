@@ -41,7 +41,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/connectivity/phone/phone_protocol.c
     ${MAIN_DIR}/connectivity/phone/telemetry_codec.c
     ${MAIN_DIR}/contract/command.c
-    ${MAIN_DIR}/settings/settings.c
+    ${MAIN_DIR}/display/settings/settings.c
     ${MAIN_DIR}/engine/vehicle/vehicle_data.c
     ${MAIN_DIR}/engine/vehicle/gear_calc.c
     ${MAIN_DIR}/engine/vehicle/trip_meter.c
@@ -54,9 +54,9 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/engine/j1850/j1850_edge.c
     ${MAIN_DIR}/engine/j1850/ride_log_format.c
     ${MAIN_DIR}/connectivity/ble/ble_visibility.c
-    ${MAIN_DIR}/gps/nmea.c
-    ${MAIN_DIR}/gps/gps_source.c
-    ${MAIN_DIR}/map/map_cells.c
+    ${MAIN_DIR}/display/gps/nmea.c
+    ${MAIN_DIR}/display/gps/gps_source.c
+    ${MAIN_DIR}/display/map/map_cells.c
     external/freertos_stub/freertos_stub.c
     external/lvgl_tick_stub/lv_tick_stub.c
 )
@@ -66,12 +66,12 @@ target_include_directories(vrod_pure PUBLIC
     ${MAIN_DIR}/display
     ${MAIN_DIR}/display/widgets
     ${MAIN_DIR}/connectivity/phone
-    ${MAIN_DIR}/settings
+    ${MAIN_DIR}/display/settings
     ${MAIN_DIR}/engine/vehicle
     ${MAIN_DIR}/engine/j1850
     ${MAIN_DIR}/connectivity/ble
-    ${MAIN_DIR}/gps
-    ${MAIN_DIR}/map
+    ${MAIN_DIR}/display/gps
+    ${MAIN_DIR}/display/map
     external/freertos_stub
     external/lvgl_tick_stub
 )
@@ -163,14 +163,14 @@ add_widget_test(test_tach_arc)
 # Map tile parser: regression tests only (map_tile.c allocates, so it is not in
 # the 100% branch gate - it compiles straight into the test, not vrod_pure).
 add_executable(test_map_tile tests/test_map_tile.c tests/test_runner.c
-    ${MAIN_DIR}/map/map_tile.c)
-target_include_directories(test_map_tile PRIVATE ${MAIN_DIR}/map external/unity)
+    ${MAIN_DIR}/display/map/map_tile.c)
+target_include_directories(test_map_tile PRIVATE ${MAIN_DIR}/display/map external/unity)
 target_link_libraries(test_map_tile PRIVATE unity m)
 add_test(NAME test_map_tile COMMAND test_map_tile)
 
 # world.hdr manifest reader: also allocates, so regression-only (not in the gate).
 add_executable(test_map_world tests/test_map_world.c tests/test_runner.c
-    ${MAIN_DIR}/map/map_world.c)
-target_include_directories(test_map_world PRIVATE ${MAIN_DIR}/map external/unity)
+    ${MAIN_DIR}/display/map/map_world.c)
+target_include_directories(test_map_world PRIVATE ${MAIN_DIR}/display/map external/unity)
 target_link_libraries(test_map_world PRIVATE unity)
 add_test(NAME test_map_world COMMAND test_map_world)

@@ -66,7 +66,7 @@ add_executable(vrod_sim
     ${MAIN_DIR}/display/gesture.c
     ${MAIN_DIR}/display/units.c
     ${MAIN_DIR}/display/widget_util.c
-    ${MAIN_DIR}/settings/settings.c
+    ${MAIN_DIR}/display/settings/settings.c
     ui_manager_shim.c
     ble_peripheral_shim.c
     test_bridge.c
@@ -95,11 +95,11 @@ add_executable(vrod_sim
     ${MAIN_DIR}/connectivity/phone/phone_protocol.c
     ${MAIN_DIR}/connectivity/phone/icon_cache.c
 
-    ${MAIN_DIR}/map/map_tile.c
-    ${MAIN_DIR}/map/map_render.c
-    ${MAIN_DIR}/map/map_source.c
-    ${MAIN_DIR}/map/map_cells.c
-    ${MAIN_DIR}/map/map_world.c
+    ${MAIN_DIR}/display/map/map_tile.c
+    ${MAIN_DIR}/display/map/map_render.c
+    ${MAIN_DIR}/display/map/map_source.c
+    ${MAIN_DIR}/display/map/map_cells.c
+    ${MAIN_DIR}/display/map/map_world.c
     ${MAIN_DIR}/display/screen_map.c
 
     ${MAIN_DIR}/engine/simulator/sim_engine.c
@@ -118,10 +118,10 @@ target_include_directories(vrod_sim PRIVATE
     ${MAIN_DIR}/display/widgets
     ${MAIN_DIR}/display/fonts
     ${MAIN_DIR}/connectivity/phone
-    ${MAIN_DIR}/map
-    ${MAIN_DIR}/settings
+    ${MAIN_DIR}/display/map
+    ${MAIN_DIR}/display/settings
     ${MAIN_DIR}/engine/simulator
-    ${MAIN_DIR}/sound
+    ${MAIN_DIR}/display/sound
     ${MAIN_DIR}/engine/vehicle
     ${SIM_DIR}/external/freertos_shim
     ${SIM_DIR}/external/esp_compat

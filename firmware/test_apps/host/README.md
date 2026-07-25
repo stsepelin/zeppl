@@ -69,15 +69,15 @@ Today that's:
 | `main/connectivity/phone/phone_protocol.c` | Binary TLV parser for the companion-app BLE wire format |
 | `main/connectivity/phone/telemetry_codec.c` | Cluster -> phone telemetry frame encoder (vehicle_data -> TLV) |
 | `main/contract/command.c` | Command-dispatch seam: register one handler, route typed commands (config / DTC) to it. Decouples the BLE bridge from engine internals (ADR 0001). |
-| `main/settings/settings.c` | Defaults + validate for the persisted prefs struct |
+| `main/display/settings/settings.c` | Defaults + validate for the persisted prefs struct |
 | `main/engine/vehicle/vehicle_data.c` | Mutex-guarded latest-value store. Tested with a FreeRTOS stub. |
 | `main/engine/vehicle/gear_calc.c` | Gear from the RPM:speed ratio (no gear sensor on the bike): match to the spec's exact overall ratios + boundary hysteresis. |
 | `main/engine/vehicle/trip_meter.c` | Rolling 16-bit bus counter (odometer/fuel ticks) -> per-frame delta, wrap-safe + reset-clamp. |
 | `main/engine/vehicle/odo_meter.c` | Odometer + dual-trip totals: add distance/fuel, reset a trip, set the odometer. Pure (odo_store owns NVS). |
 | `main/connectivity/ble/ble_visibility.c` | Pure decision: `(has_bond, override) → adv_mode`. Stage 8. |
-| `main/gps/nmea.c` | NMEA 0183 sentence framing + RMC parse (NEO-6M) → lat/lon/speed/heading |
-| `main/gps/gps_source.c` | Mutex-guarded latest-fix store (module producer, map consumer) |
-| `main/map/map_cells.c` | Cell-paging decision logic: which lat/lon cell a position is in (floor division), the working-set window, heading-ahead prefetch. Pure (cell manager owns the SD open/close). |
+| `main/display/gps/nmea.c` | NMEA 0183 sentence framing + RMC parse (NEO-6M) → lat/lon/speed/heading |
+| `main/display/gps/gps_source.c` | Mutex-guarded latest-fix store (module producer, map consumer) |
+| `main/display/map/map_cells.c` | Cell-paging decision logic: which lat/lon cell a position is in (floor division), the working-set window, heading-ahead prefetch. Pure (cell manager owns the SD open/close). |
 | `main/engine/j1850/j1850_vpw.c` | J1850 VPW symbol codec: pulse-width decoder + encoder + CRC-8/SAE-J1850. Round-trip tested. |
 | `main/engine/j1850/j1850_parse.c` | J1850 message decoder: frame -> vehicle_data (RPM/temp/speed/turns/CEL/immobiliser), calibrated against real captures. Gear is not on the bus (see gear_calc). |
 | `main/engine/j1850/dtc.c` | SAE J2012 DTC codec: text formatting (raw 2 bytes -> "U1255") + the HD J1850 read/clear request framing and the response-frame decode (ported from HarleyDroid). The `dtc_probe.c` task that keys them onto the bus is driver glue, out of the gate. |
@@ -122,18 +122,18 @@ Files **deliberately excluded** from the metric:
   OUTPUT is still verified visually in the simulator + on device, since a
   block glyph can't prove the real font rendering looks right.)
 - `display/boot_screen.c`, `display/ui_manager.c`, `display/screen_ride.c`,
-  `main.c`, `simulator/sim_engine.c` (the task body)
+  `main.c`, `engine/simulator/sim_engine.c` (the task body)
   — BSP / FreeRTOS / LVGL glue. Validated on hardware, not here.
-  (`vehicle/vehicle_data.c` used to sit in this list but has been in
+  (`engine/vehicle/vehicle_data.c` used to sit in this list but has been in
   scope since it gained the FreeRTOS-stub test — see the table above.)
 - `assets/boot.gif`, `managed_components/**` — not source code we own.
-- `map/map_tile.c` — the vector-map tile parser. Regression-tested
+- `display/map/map_tile.c` — the vector-map tile parser. Regression-tested
   (`test_map_tile`, compiled straight into the test, not `vrod_pure`) since it
   decodes untrusted embedded/SD bytes, but it allocates (per-tile buffers), so
-  it can't reach the 100% branch bar the same way `phone/icon_cache.c` can't.
-  `map/map_render.c` (rasteriser) and `map/screen_map.c` (LVGL) are verified in
+  it can't reach the 100% branch bar the same way `connectivity/phone/icon_cache.c` can't.
+  `display/map/map_render.c` (rasteriser) and `display/screen_map.c` (LVGL) are verified in
   the simulator + on device.
-- `map/map_world.c` — the `world.hdr` manifest reader for the GPS-paged cell grid
+- `display/map/map_world.c` — the `world.hdr` manifest reader for the GPS-paged cell grid
   (`tools/maptiles/world.py` writes it). Same story as `map_tile.c`: regression-
   tested (`test_map_world`, compiled straight in) since it decodes untrusted SD
   bytes, but it allocates the present-cell set, so it is out of the branch gate.
