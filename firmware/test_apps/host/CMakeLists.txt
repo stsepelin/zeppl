@@ -30,6 +30,7 @@ target_compile_definitions(unity PUBLIC UNITY_EXCLUDE_CONFIG_H)
 add_library(vrod_pure STATIC
     ${MAIN_DIR}/engine/simulator/gear_table.c
     ${MAIN_DIR}/engine/simulator/sim_math.c
+    ${MAIN_DIR}/engine/simulator/drive_model.c
     ${MAIN_DIR}/display/format.c
     ${MAIN_DIR}/display/gesture.c
     ${MAIN_DIR}/display/units.c
@@ -126,6 +127,7 @@ endfunction()
 
 add_unit_test(test_gear_table)
 add_unit_test(test_sim_math)
+add_unit_test(test_drive_model)
 add_unit_test(test_format)
 add_unit_test(test_smooth)
 add_unit_test(test_display_filter)

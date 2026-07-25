@@ -36,6 +36,7 @@ fi
 SCOPED=(
     '*/main/engine/simulator/gear_table.c'
     '*/main/engine/simulator/sim_math.c'
+    '*/main/engine/simulator/drive_model.c'
     '*/main/display/format.c'
     '*/main/display/gesture.c'
     '*/main/display/units.c'

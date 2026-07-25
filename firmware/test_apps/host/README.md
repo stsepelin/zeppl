@@ -58,6 +58,7 @@ Today that's:
 |---|---|
 | `main/engine/simulator/gear_table.c` | Pure math: speed → (gear, RPM) |
 | `main/engine/simulator/sim_math.c` | Distance integrator, clock advance / split, fuel cycle state machine |
+| `main/engine/simulator/drive_model.c` | Deterministic driving cycle → realistic `vehicle_data` (idle/accel/cruise/decel, gear-shaped RPM, temp warm-up). Feeds the profile encoder for the simulator. |
 | `main/display/format.c` | Pure formatters: thousand-separated integer |
 | `main/display/gesture.c` | Long-press + swipe state machine shared by firmware and sim |
 | `main/display/units.c` | Pure math: km/h ↔ mph and metre ↔ km/mi conversions |
