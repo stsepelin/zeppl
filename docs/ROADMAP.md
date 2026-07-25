@@ -109,6 +109,23 @@ Full detail: [`phases/phase4-polish.md`](phases/phase4-polish.md).
 - Auto-brightness (BH1750), colour themes, handlebar media button, Wi-Fi config
   portal, voice commands via the onboard mics.
 
+## Architecture — engine / connectivity / display split
+
+Cross-cutting refactor ([ADR 0001](adr/0001-engine-display-split.md), **Accepted**):
+`firmware/main/` is organised into role packages — **engine** (bike signals →
+canonical state), **connectivity** (radios + phone bridge), **display** (the head
+unit) — over a shared **contract** (a command seam + the versioned protocol in
+[`reference/CONTRACT.md`](reference/CONTRACT.md) + [`zeppl.dbc`](reference/zeppl.dbc)).
+
+- **A + B — ✅ done** (Jul 2026): contract spec + DBC, the command seam
+  (connectivity no longer reaches into the engine), the package split.
+  Behaviour- and hardware-neutral.
+- **C — CAN/DBC interop output** ◻: the engine emits a CAN broadcast described by
+  the versioned DBC so a motorsport dash/logger can read it. Bench-validatable
+  with a ~€2 CAN transceiver + a USB-CAN dongle — **no bike, no second board**.
+- **D — physical board split** ◻: separate engine + head-unit boards over CAN,
+  only once a real second display exists.
+
 ## Near-term open follow-ups
 1. **DTC — real non-zero code test** (unplug the IM → `U1255`).
 2. **DTC — clear-codes action** (service `14`, host-tested, not yet wired) + the
@@ -135,5 +152,7 @@ Full detail: [`phases/phase4-polish.md`](phases/phase4-polish.md).
   [`../firmware/docs/`](../firmware/docs/) (index)
 - **Rides / bring-up:** [`../firmware/docs/rides/`](../firmware/docs/rides/) —
   ride findings, calibration + session plans, the Stage-4 TX bench log.
-- **Architecture decisions:** [`adr/`](adr/README.md) — e.g. the proposed
-  [engine / display separation](adr/0001-engine-display-split.md).
+- **Architecture decisions:** [`adr/`](adr/README.md) — the
+  [engine / connectivity / display split](adr/0001-engine-display-split.md)
+  (ADR 0001, Accepted; Phases A+B done, C+D pending). See the Architecture
+  section above.

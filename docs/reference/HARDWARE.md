@@ -59,6 +59,20 @@ Solder-seal connectors (~€2), insulated bullet connectors (~€2), waterproof
 22mm handlebar momentary button (~€3), BH1750 ambient-light sensor for
 auto-brightness (~€1), ML1220 RTC battery (~€2), 3M VHB tape (~€3).
 
+**CAN/DBC interop (Phase C — [ADR 0001](../adr/0001-engine-display-split.md)).**
+For the engine to broadcast its state on the motorsport-standard bus so a
+third-party dash/logger can read it (validated on the bench — **no bike, no second
+board required**):
+
+- **3.3V CAN transceiver** — SN65HVD230 breakout (~€2). The ESP32-P4's TWAI
+  peripheral outputs logic-level TX/RX; this converts it to differential
+  CANH/CANL. 3.3V part, so no level shifting.
+- **USB-CAN dongle** — a CANable / candleLight running SocketCAN (~€15) or a
+  PEAK PCAN-USB (~€30), plus a 120Ω terminator. Decodes the P4's broadcast on a
+  laptop with `zeppl.dbc`.
+
+Not needed until Phase C; the interop is designed but not yet implemented.
+
 ## System architecture
 
 ```
