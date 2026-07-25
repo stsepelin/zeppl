@@ -40,6 +40,7 @@ Flash the one named per test. All are `idf.py -p /dev/cu.usbmodem5B5F0299541 fla
 | B2 | `…_TX=y` + `VROD_J1850_DTC_PROBE=y` | Test C (DTC read) |
 | B3 | `…_TX=y` + `VROD_J1850_TX_BIKE_REPLAY=y` | Test D (IM replay / stock-cluster removal) |
 | B4 | map + `VROD_GPS_UART=y` (if onboard module) | Test G (Ride 3 map) |
+| B5 | raw-sniff capture: `VROD_J1850_SNIFFER=y` + `VROD_J1850_RAW_SNIFF=y` (conflicts with DTC — one observer) | Test I2 (companion guided capture) |
 
 ---
 
@@ -173,6 +174,36 @@ one variable at a time. Name them `YYYY-MM-DD-frames-H<n>-<state>.log`.
       decoded (or refute the guesses). **After:** fold results into
       `j1850-undecoded-frames.md` and, for anything decoded, `j1850_parse.c`.
 
+## Test I — adaptive decode layer ◻ (validate the on-bike-gated pieces)
+
+The multi-V-Rod adaptive layer shipped software-only
+([`../../../docs/multi-vrod-adaptive-layer.md`](../../../docs/multi-vrod-adaptive-layer.md));
+these are the pieces that were deliberately gated on a real bus.
+
+- [ ] **I1 — profile-decode parity (regression).** Build B1. The engine now
+      decodes through the 2009 profile instead of the old hardcoded path (proven
+      byte-identical in host tests + the 106k-frame corpus). Confirm on the **live
+      bus** that the gauge still reads right — RPM, speed, temp, turns (2=L/1=R),
+      CEL, immobiliser — exactly as before the refactor. Any divergence is a
+      profile bug; capture the frame + expected value.
+- [ ] **I2 — raw-sniff capture pipeline (end to end).** Build **B5** (raw-sniff
+      capture). Connect the companion, open **Developer → Guided capture**, run
+      the "Switches & lamps" procedure. **Expected:** the `frames` counter climbs
+      as you work the switches, `dropped` stays low, each step's start/confirm is
+      recorded, and **Finish & export** produces a dump. This validates the whole
+      `0x50` path (firmware forwarder → phone → labelled container) on the real
+      bus. Save the exported dump.
+- [ ] **I3 — feed the dump to learning mode (bench, after).** Off-bike: run the
+      I2 dump through `LearningCorrelator.proposeFlag` for each switch step and
+      confirm it re-derives the known bits (e.g. turns → `48 DA 40`, offset 4,
+      bit1) — proof the capture→learn loop closes on real data.
+- [ ] **Prerequisite for live auto-select (do NOT flip on yet):** the
+      fingerprint/registry select is pure logic, not wired into the running
+      driver. Before enabling runtime auto-select, add a **fingerprint-log build**
+      (log the detected profile + confidence from the live sniff) and confirm the
+      2009 bus scores ≥ the threshold against the reference profile. Only then is
+      it safe to hot-wire auto-select — a mis-select shows wrong numbers.
+
 ---
 
 ## Bench prep (before the bike, optional) — watchdog frame-2 scope test
@@ -202,5 +233,8 @@ scope triggers — details in the watchdog discussion / bench log.
 1. **C** (real DTC) + **D** (stock-cluster removal) — these unblock the most.
 2. **B** (discrete polarity) — cheap, needed for Phase 3.
 3. **A** (anti-jitter) — quick visual confirm.
-4. **E / F / G / H** — data-gathering / optional (**H2 rolling** + **H6 key-on**
-   are the ones that actually need the bike; the rest piggyback on any capture).
+4. **I1** (profile-decode parity) — free; it rides on any B1 test, and it's the
+   regression check that the adaptive-layer refactor is truly identical on the bus.
+5. **E / F / G / H / I2** — data-gathering / optional (**H2 rolling**, **H6
+   key-on**, and **I2 raw-sniff capture** are the ones that actually need the bike;
+   the rest piggyback on any capture).
