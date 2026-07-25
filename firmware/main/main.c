@@ -25,6 +25,7 @@
 #endif
 #if CONFIG_VROD_J1850_SNIFFER
 #include "j1850_sniffer.h"
+#include "raw_sniff.h"
 #endif
 #if CONFIG_VROD_RIDE_LOG
 #include "ride_log.h"
@@ -132,6 +133,9 @@ void app_main(void)
 #if CONFIG_VROD_J1850_SNIFFER
     // Read-only capture; also feeds the producer when CONFIG_VROD_J1850.
     j1850_sniffer_start();
+#if CONFIG_VROD_J1850_RAW_SNIFF
+    raw_sniff_start();  // forward every frame to the phone (adaptive-layer capture)
+#endif
 #endif
 #if CONFIG_VROD_GPS_UART
     gps_uart_start();  // NMEA reader -> gps_source (map prefers it over phone GPS)

@@ -101,6 +101,20 @@ menu "V-Rod cluster"
             Capture with:  script -q capture.log idf.py -p PORT monitor
             Off by default; only the bench capture build sets it.
 
+    config VROD_J1850_RAW_SNIFF
+        bool "Stream raw J1850 frames to the phone (adaptive-layer capture)"
+        depends on VROD_J1850_SNIFFER
+        default n
+        help
+            Forwards every sniffed J1850 frame to the companion over BLE as a
+            0x50 TLV (device timestamp + verbatim bus bytes), for the
+            multi-V-Rod adaptive layer's guided capture. A queue decouples the
+            frame rate from BLE so the decode task never stalls; frames drop on
+            overflow (capture is best-effort).
+
+            Uses the single sniffer observer, so it conflicts with the DTC
+            service — this is a dedicated capture build. Off by default.
+
     config VROD_J1850
         bool "J1850 vehicle-data producer (Phase 2 Stage 3)"
         depends on VROD_J1850_SNIFFER
