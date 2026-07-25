@@ -217,6 +217,12 @@ if(CONFIG_VROD_J1850_DTC)
     target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/dtc_service.c)
 endif()
 
+# Raw-sniff capture (adaptive layer): forwards every sniffed frame to the phone
+# as a 0x50 TLV. Needs the sniffer.
+if(CONFIG_VROD_J1850_RAW_SNIFF)
+    target_sources(${COMPONENT_LIB} PRIVATE engine/j1850/raw_sniff.c)
+endif()
+
 # Bus-amplitude ADC probe (Stage 4 TX prep) — dedicated ADC pin, see
 # main/engine/j1850/j1850_adc_probe.c. VROD_J1850_ADC_GPIO only exists when the
 # sniffer is on (it depends on it), so gate on the sniffer too — an
