@@ -2,7 +2,10 @@ package ee.zeppl.companion.ui
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -15,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -33,7 +37,7 @@ import ee.zeppl.companion.ble.TelemetryState
  */
 @SuppressLint("MissingPermission")
 @Composable
-fun DeveloperScreen(onExit: () -> Unit) {
+fun DeveloperScreen(onExit: () -> Unit, onOpenCapture: () -> Unit = {}) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
 
@@ -103,6 +107,19 @@ fun DeveloperScreen(onExit: () -> Unit) {
             InfoRow("odometer_m", TelemetryState.odometerM?.toString() ?: DASH)
             InfoRow("trip1_fuel", TelemetryState.trip1FuelTicks?.toString() ?: DASH)
             InfoRow("last_frame_ms", TelemetryState.lastFrameMs?.toString() ?: DASH)
+        }
+
+        SectionCard(title = "Guided bus capture") {
+            Text(
+                "Record a labelled J1850 dump to help build a decode profile for a " +
+                    "V-Rod we haven't mapped. Needs a raw-sniff capture build on the cluster.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            Button(onClick = onOpenCapture, modifier = Modifier.fillMaxWidth()) {
+                Text("Open guided capture")
+            }
         }
 
         OutlinedButton(onClick = onExit, modifier = Modifier.fillMaxWidth()) {

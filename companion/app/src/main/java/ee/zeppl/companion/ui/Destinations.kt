@@ -22,6 +22,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable object Scan       // pushed from Cluster: pick a cluster to connect
 @Serializable object AppList    // pushed from Settings: choose forwarding apps
+@Serializable object Capture    // pushed from Developer: guided bus capture (adaptive layer)
 
 /** Pushed from Cluster: per-cluster detail (rename, firmware, diagnostics, forget). */
 @Serializable data class ClusterDetail(val address: String)
