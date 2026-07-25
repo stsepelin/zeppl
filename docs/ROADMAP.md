@@ -133,3 +133,5 @@ Full detail: [`phases/phase4-polish.md`](phases/phase4-polish.md).
   [`../firmware/docs/`](../firmware/docs/) (index)
 - **Rides / bring-up:** [`../firmware/docs/rides/`](../firmware/docs/rides/) —
   ride findings, calibration + session plans, the Stage-4 TX bench log.
+- **Architecture decisions:** [`adr/`](adr/README.md) — e.g. the proposed
+  [engine / display separation](adr/0001-engine-display-split.md).
