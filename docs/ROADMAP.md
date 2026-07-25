@@ -124,7 +124,9 @@ Full detail: [`phases/phase4-polish.md`](phases/phase4-polish.md).
   [`phases/phase3-cluster.md`](phases/phase3-cluster.md) ·
   [`phases/phase4-polish.md`](phases/phase4-polish.md)
 - **Reference:** [`reference/HARDWARE.md`](reference/HARDWARE.md) ·
-  [`reference/J1850-BUS.md`](reference/J1850-BUS.md) · [`schematics/`](schematics/) ·
+  [`reference/J1850-BUS.md`](reference/J1850-BUS.md) ·
+  [`reference/CONTRACT.md`](reference/CONTRACT.md) (engine↔display protocol v1 +
+  [`zeppl.dbc`](reference/zeppl.dbc)) · [`schematics/`](schematics/) ·
   [`screens/`](screens/README.md)
 - **Firmware engineering:** [`../firmware/docs/ARCHITECTURE.md`](../firmware/docs/ARCHITECTURE.md) ·
   [`../firmware/docs/DISPLAY-PERF-AND-MEMORY.md`](../firmware/docs/DISPLAY-PERF-AND-MEMORY.md) ·
