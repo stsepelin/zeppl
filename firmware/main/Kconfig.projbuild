@@ -352,6 +352,21 @@ menu "V-Rod cluster"
             and TX is clean. Takes precedence over the replay/self-test
             builds when set. On-bike (or bench with a responding module).
 
+    config VROD_J1850_TX_WD_DEBUG
+        bool "TX watchdog trip trace (debug the frame-2 false-trip)"
+        depends on VROD_J1850_TX
+        default n
+        help
+            Diagnostic instrumentation for the watchdog false-trip seen once
+            around frame 2 on a floating/unpowered bus (bench, USB-powered,
+            bus disconnected). Records every 50 us pad sample of the faulting
+            transmit into a ring buffer and, when a trip latches, dumps a
+            run-length trace (e.g. "L80 H8 L4 ...", each unit = 50 us) plus the
+            accumulated dominant time at the trip. Compare the trace to a scope
+            on the TX GPIO to tell a genuine stuck-HIGH (real electrical / RMT)
+            from a lying input-readback (P4 pad quirk / timer artifact). Bench
+            only; adds a little ISR + log overhead.
+
     config VROD_BLE_INSECURE
         bool "Skip BLE pairing — any central can connect"
         default n

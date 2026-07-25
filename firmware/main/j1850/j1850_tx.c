@@ -37,6 +37,17 @@ static bool                 s_ready;
 static volatile uint32_t s_dom_us;
 static volatile bool     s_faulted;
 
+#if CONFIG_VROD_J1850_TX_WD_DEBUG
+// Per-transmit pad-sample trace, frozen on a watchdog trip so the replay task
+// can dump what the readback actually saw. Each entry is one 50 us sample.
+#define WD_TRACE_N 160
+static volatile uint8_t  s_wd_trace[WD_TRACE_N];
+static volatile uint16_t s_wd_trace_n;      // samples recorded this transmit
+static volatile uint32_t s_wd_send_seq;     // transmit counter
+static volatile uint32_t s_wd_dom_at_trip;  // s_dom_us when it latched
+static volatile uint16_t s_wd_trip_idx;     // sample index at the trip (0 = none)
+#endif
+
 // Watchdog: sampled every WD_SAMPLE_US off the (input-enabled) TX pad. A
 // dominant (HIGH) that outlasts the longest valid symbol is a stuck bus.
 // The release is deliberately independent of RMT and the TX task: detach
@@ -49,9 +60,18 @@ static bool IRAM_ATTR wd_on_alarm(gptimer_handle_t t, const gptimer_alarm_event_
     (void)t;
     (void)ed;
     (void)arg;
-    if (gpio_get_level(TX_GPIO)) {
+    int lvl = gpio_get_level(TX_GPIO);
+#if CONFIG_VROD_J1850_TX_WD_DEBUG
+    if (s_wd_trace_n < WD_TRACE_N)
+        s_wd_trace[s_wd_trace_n++] = (uint8_t)lvl;
+#endif
+    if (lvl) {
         s_dom_us += WD_SAMPLE_US;
         if (s_dom_us > J1850_TX_DOMINANT_MAX_US && !s_faulted) {
+#if CONFIG_VROD_J1850_TX_WD_DEBUG
+            s_wd_dom_at_trip = s_dom_us;
+            s_wd_trip_idx    = s_wd_trace_n;
+#endif
             gpio_set_level(TX_GPIO, 0);
             esp_rom_gpio_connect_out_signal(TX_GPIO, SIG_GPIO_OUT_IDX, false, false);
             s_faulted = true;
@@ -198,6 +218,12 @@ bool j1850_tx_send(const uint8_t *payload, size_t n)
     // aborts): log, leave the bus recessive, and let the caller decide.
     // Refusing to key without the watchdog armed is the safe default.
     s_dom_us = 0;
+#if CONFIG_VROD_J1850_TX_WD_DEBUG
+    s_wd_trace_n     = 0;
+    s_wd_trip_idx    = 0;
+    s_wd_dom_at_trip = 0;
+    s_wd_send_seq++;
+#endif
     if (gptimer_start(s_wd) != ESP_OK) {
         ESP_LOGE(TAG, "watchdog arm failed; refusing TX this frame");
         return false;
@@ -329,6 +355,31 @@ void j1850_tx_selftest_start(void)
 // stock IM's traffic, which would flap that verdict. The RX sniffer logs the
 // whole bus separately; judge from its per-frame CRC log + stats, not from a
 // PASS/FAIL line here.
+#if CONFIG_VROD_J1850_TX_WD_DEBUG
+// Dump the frozen pad-sample trace of the faulting transmit as run-lengths
+// (each unit = 50 us). A run like "H8" = 400 us stuck HIGH is the trip cause;
+// compare it to a scope on the TX GPIO to tell real electrical from a lying
+// readback.
+static void wd_trace_dump(void)
+{
+    char     buf[220];
+    int      pos = 0;
+    uint16_t n   = s_wd_trace_n;
+    uint16_t i   = 0;
+    while (i < n && pos < (int)sizeof(buf) - 12) {
+        uint8_t  v   = s_wd_trace[i];
+        uint16_t run = 0;
+        while (i < n && s_wd_trace[i] == v) {
+            i++;
+            run++;
+        }
+        pos += snprintf(buf + pos, sizeof(buf) - (size_t)pos, "%c%u ", v ? 'H' : 'L', run);
+    }
+    ESP_LOGW(TAG, "wd-trace send#%lu n=%u trip@%u dom=%luus | %s", (unsigned long)s_wd_send_seq, n,
+             s_wd_trip_idx, (unsigned long)s_wd_dom_at_trip, buf);
+}
+#endif
+
 static void bike_replay_task(void *arg)
 {
     (void)arg;
@@ -346,6 +397,9 @@ static void bike_replay_task(void *arg)
                 // a reset re-arms (persistent noise -> reset fails / re-faults
                 // instantly; intermittent collision -> recovers and runs on).
                 ++faults;
+#if CONFIG_VROD_J1850_TX_WD_DEBUG
+                wd_trace_dump();  // what the pad readback saw during this transmit
+#endif
                 bool rec = j1850_tx_reset();
                 ESP_LOGW(TAG, "replay: frame %lu TX FAULT (#%lu, %lu ok) -> reset %s",
                          (unsigned long)n, (unsigned long)faults, (unsigned long)ok,
