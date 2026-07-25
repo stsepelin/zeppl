@@ -55,6 +55,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/engine/j1850/ride_log_format.c
     ${MAIN_DIR}/engine/profile/bike_profile.c
     ${MAIN_DIR}/engine/profile/profile_vrscf_2009.c
+    ${MAIN_DIR}/engine/profile/profile_registry.c
     ${MAIN_DIR}/connectivity/ble/ble_visibility.c
     ${MAIN_DIR}/display/gps/nmea.c
     ${MAIN_DIR}/display/gps/gps_source.c
@@ -140,6 +141,7 @@ add_unit_test(test_telemetry_codec)
 add_unit_test(test_phone_data)
 add_unit_test(test_command)
 add_unit_test(test_bike_profile)
+add_unit_test(test_profile_registry)
 add_unit_test(test_gesture)
 add_unit_test(test_j1850_vpw)
 add_unit_test(test_j1850_tx_logic)

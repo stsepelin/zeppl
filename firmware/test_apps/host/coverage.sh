@@ -64,6 +64,7 @@ SCOPED=(
     '*/main/engine/j1850/j1850_edge.c'
     '*/main/engine/j1850/ride_log_format.c'
     '*/main/engine/profile/bike_profile.c'
+    '*/main/engine/profile/profile_registry.c'
     '*/main/display/widgets/sprite_raster.h'
     '*/main/display/widgets/fuel_arc.c'
     '*/main/display/widgets/rpm_bar.c'
