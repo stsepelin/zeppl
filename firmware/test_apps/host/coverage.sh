@@ -46,6 +46,7 @@ SCOPED=(
     '*/main/connectivity/phone/phone_data.c'
     '*/main/connectivity/phone/phone_protocol.c'
     '*/main/connectivity/phone/telemetry_codec.c'
+    '*/main/connectivity/phone/raw_sniff_codec.c'
     '*/main/contract/command.c'
     '*/main/display/settings/settings.c'
     '*/main/engine/vehicle/vehicle_data.c'

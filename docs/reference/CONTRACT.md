@@ -107,6 +107,7 @@ the `type` byte namespaces everything. Allocation:
 | `0x30` | engine → phone | NOTIF_DISMISS | dismiss command |
 | `0x40` | engine → consumer | TELEMETRY | vehicle state (section 2) |
 | `0x41` | engine → consumer | DTC_RESULT | DTC read result / clear ack |
+| `0x50` | engine → consumer | RAW_FRAME | raw J1850 frame for guided capture (see below) |
 
 > **Note (a v1 wart to unify, not fix now):** the split above is *historical*, not
 > a clean "state below 0x40, commands 0x10-0x30" line — CONFIG (`0x04`) and DTC
@@ -133,6 +134,16 @@ Body after the TLV header: `op` u8 (0 read result, 1 clear ack) · `status` u8
 (0 ok, 1 no-reply) · `count` u8 · then `count` × { `module` u8, `hi` u8, `lo` u8 }.
 `module`: `0x10` ECM · `0x40` TSM/TSSM · `0x60` other. `(hi,lo)` is the raw
 SAE J2012 pair; format with `dtc_format()` (e.g. `0xD2,0x55` → `"U1255"`).
+
+### `0x50` RAW_FRAME (variable) — guided capture
+
+Body after the TLV header: `t_ms` u32 LE (device timestamp) · then the **exact
+bus bytes** (header + payload + CRC). Streams every sniffed frame to the phone
+for the adaptive-layer guided-capture / learning flow (`raw_sniff_codec.c`, see
+[`multi-vrod-adaptive-layer.md`](../multi-vrod-adaptive-layer.md) §4). Because the
+frame is verbatim, a submitted dump re-decodes byte-identically on the bench
+(the capture-corpus harness). High-rate — a capture-mode concern, not the normal
+telemetry stream.
 
 ## 4. Phone / external state (connectivity producer)
 

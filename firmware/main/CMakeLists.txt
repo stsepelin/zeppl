@@ -13,6 +13,7 @@ idf_component_register(
         connectivity/phone/icon_cache.c
         connectivity/phone/telemetry_codec.c
         connectivity/phone/telemetry_publisher.c
+        connectivity/phone/raw_sniff_codec.c
         display/settings/settings.c
         display/settings/settings_store.c
         display/sound/sound.c

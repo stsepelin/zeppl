@@ -46,6 +46,7 @@ jobs:
                '*/firmware/main/connectivity/phone/phone_data.c' \
                '*/firmware/main/connectivity/phone/phone_protocol.c' \
                '*/firmware/main/connectivity/phone/telemetry_codec.c' \
+               '*/firmware/main/connectivity/phone/raw_sniff_codec.c' \
                '*/firmware/main/contract/command.c' \
                '*/firmware/main/display/settings/settings.c' \
                '*/firmware/main/engine/vehicle/vehicle_data.c' \
