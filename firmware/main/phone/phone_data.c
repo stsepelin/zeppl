@@ -175,7 +175,8 @@ void phone_data_apply(const phone_event_t *evt)
         break;
     case PHONE_EVT_CONFIG:
     case PHONE_EVT_ICON:
-        break;  // handled in ble_peripheral (config -> NVS; icon -> cache)
+    case PHONE_EVT_DTC:
+        break;  // handled in ble_peripheral (config -> NVS; icon -> cache; dtc -> service)
     }
 
     xSemaphoreGive(s_mutex);

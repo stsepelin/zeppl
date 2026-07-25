@@ -45,6 +45,7 @@ object Protocol {
     private const val TYPE_CALL_ACTIVE   : Byte = 0x06
     private const val TYPE_CALL_END      : Byte = 0x07
     private const val TYPE_LOCATION      : Byte = 0x08
+    private const val TYPE_DTC           : Byte = 0x09
 
     /** Course-over-ground sentinel for a stationary / unknown-bearing fix. */
     const val HEADING_UNKNOWN = 0xFFFF
@@ -112,6 +113,14 @@ object Protocol {
 
     /** Phone-side call ended (answered elsewhere / hung up / rejected). No payload. */
     fun encodeCallEnd(): ByteArray = byteArrayOf(TYPE_CALL_END, 0x00, 0x00)
+
+    /**
+     * Ask the cluster to read (`clear=false`) or clear (`clear=true`) stored
+     * J1850 DTCs. Mirrors `PHONE_EVT_DTC`: 1-byte sub-command. The cluster keys
+     * the bus and answers asynchronously with a [DtcCodec.TYPE] result frame.
+     */
+    fun encodeDtcRequest(clear: Boolean): ByteArray =
+        byteArrayOf(TYPE_DTC, 0x01, 0x00, if (clear) 1 else 0)
 
     /**
      * Rider GPS position for the map view. Mirrors `PHONE_EVT_LOCATION`:

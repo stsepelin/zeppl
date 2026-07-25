@@ -352,6 +352,19 @@ menu "V-Rod cluster"
             and TX is clean. Takes precedence over the replay/self-test
             builds when set. On-bike (or bench with a responding module).
 
+    config VROD_J1850_DTC
+        bool "DTC read/clear over the phone BLE link (companion Diagnostics)"
+        depends on VROD_J1850 && VROD_J1850_TX
+        default n
+        help
+            Integrates DTC read/clear into the normal live-gauge build so the
+            companion's Diagnostics screen can trigger it over BLE. On a
+            PHONE_EVT_DTC request, a dedicated task keys the HD read (or clear)
+            request on the bus, collects the responses off the sniffer, and
+            sends a 0x41 result frame back to the phone. Runs alongside the
+            gauge; unlike VROD_J1850_DTC_PROBE (a standalone serial-log build),
+            this is the phone-facing feature. Needs the TX driver.
+
     config VROD_BLE_INSECURE
         bool "Skip BLE pairing — any central can connect"
         default n

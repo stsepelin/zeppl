@@ -23,6 +23,9 @@
 #include "icon_cache.h"
 #include "settings.h"
 #include "settings_store.h"
+#if CONFIG_VROD_J1850_DTC
+#include "dtc_service.h"
+#endif
 #include "ui_manager.h"  // request a layout switch when the phone sets it
 #if CONFIG_VROD_J1850
 #include "j1850_driver.h"  // apply calibrated speed divisor live
@@ -172,6 +175,15 @@ static int access_rx_cb(uint16_t conn_handle, uint16_t attr_handle,
             icon_cache_feed(&evt.icon);
             return 0;
         }
+#if CONFIG_VROD_J1850_DTC
+        if (evt.type == PHONE_EVT_DTC) {
+            // Diagnostics: hand off to the DTC service task (non-blocking); it
+            // keys the bus and answers with a 0x41 result frame.
+            ESP_LOGI(TAG, "rx DTC cmd=%u", (unsigned)evt.dtc_cmd);
+            dtc_service_request(evt.dtc_cmd);
+            return 0;
+        }
+#endif
         switch (evt.type) {
         case PHONE_EVT_NOTIF:
             ESP_LOGI(TAG, "rx NOTIF id=%08lx kind=%d sender='%s' msg='%.40s'",
@@ -192,7 +204,8 @@ static int access_rx_cb(uint16_t conn_handle, uint16_t attr_handle,
             break;  // ~1 Hz GPS stream for the map; skip per-fix logging (chatty)
         case PHONE_EVT_CONFIG:
         case PHONE_EVT_ICON:
-            break;  // handled above
+        case PHONE_EVT_DTC:
+            break;  // handled above (DTC only when CONFIG_VROD_J1850_DTC)
         }
         phone_data_apply(&evt);
     } else {

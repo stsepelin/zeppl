@@ -230,6 +230,27 @@ static void test_parse_location_too_short_rejected(void)
     TEST_ASSERT_EQUAL_INT(PHONE_PARSE_BAD_FIELD, phone_protocol_parse(buf, 10, &consumed, &evt));
 }
 
+static void test_parse_dtc(void)
+{
+    // 1-byte sub-command (1 = clear).
+    uint8_t buf[8];
+    size_t  i = 0;
+    buf[i++]  = PHONE_EVT_DTC;
+    i += put_u16(buf + i, 1);
+    buf[i++] = 1;
+
+    size_t        consumed = 0;
+    phone_event_t evt;
+    TEST_ASSERT_EQUAL_INT(PHONE_PARSE_OK, phone_protocol_parse(buf, i, &consumed, &evt));
+    TEST_ASSERT_EQUAL_INT(PHONE_EVT_DTC, evt.type);
+    TEST_ASSERT_EQUAL_UINT8(1, evt.dtc_cmd);
+
+    // Empty payload is rejected (needs the sub-command byte).
+    buf[1] = 0;
+    buf[2] = 0;
+    TEST_ASSERT_EQUAL_INT(PHONE_PARSE_BAD_FIELD, phone_protocol_parse(buf, 3, &consumed, &evt));
+}
+
 static void test_parse_dismiss(void)
 {
     uint8_t       buf[16];
@@ -680,4 +701,5 @@ void RunTests(void)
     RUN_TEST(test_parse_location);
     RUN_TEST(test_parse_location_no_heading);
     RUN_TEST(test_parse_location_too_short_rejected);
+    RUN_TEST(test_parse_dtc);
 }

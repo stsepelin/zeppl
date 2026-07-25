@@ -42,3 +42,32 @@ size_t dtc_clear_request(uint8_t module, uint8_t out[4]);
 // - still a valid response; the caller decides whether to format it. Mirrors
 // HarleyDroid's (x & 0xffff0fff) == 0x6cf10059 header match.
 bool dtc_response(const uint8_t *f, size_t len, uint8_t *module, uint8_t *hi, uint8_t *lo);
+
+// --- Phone (BLE) diagnostics protocol ------------------------------------
+// The companion asks the cluster to read or clear codes and gets a result
+// frame back over the same GATT link the telemetry uses.
+
+// Inbound request sub-command (PHONE_EVT_DTC payload byte 0).
+#define DTC_CMD_READ  0
+#define DTC_CMD_CLEAR 1
+
+// Outbound result: a TLV frame on the TX notify characteristic, sibling of the
+// 0x40 telemetry frame. Body after the 3-byte TLV header (type + u16 LE len):
+//   op (0 = read result, 1 = clear ack), status (0 = ok), count,
+//   then count x {module, hi, lo}.
+#define DTC_RESULT_TYPE            0x41
+#define DTC_RESULT_OP_READ         0
+#define DTC_RESULT_OP_CLEAR        1
+#define DTC_RESULT_STATUS_OK       0
+#define DTC_RESULT_STATUS_NO_REPLY 1  // a module never answered the request
+
+// One decoded code as it travels to the phone (before dtc_format).
+typedef struct {
+    uint8_t module;  // DTC_MODULE_ECM / _TSM / _OTHER
+    uint8_t hi, lo;  // raw J2012 code pair
+} dtc_entry_t;
+
+// Build the full 0x41 result frame (TLV header + body) into out[]. Returns the
+// frame length, or 0 if it wouldn't fit out_sz. `count` <= what out_sz holds.
+size_t dtc_result_encode(uint8_t op, uint8_t status, const dtc_entry_t *codes, uint8_t count,
+                         uint8_t *out, size_t out_sz);

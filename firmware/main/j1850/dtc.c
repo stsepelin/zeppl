@@ -42,3 +42,24 @@ bool dtc_response(const uint8_t *f, size_t len, uint8_t *module, uint8_t *hi, ui
         *lo = f[5];
     return true;
 }
+
+size_t dtc_result_encode(uint8_t op, uint8_t status, const dtc_entry_t *codes, uint8_t count,
+                         uint8_t *out, size_t out_sz)
+{
+    size_t body  = 3u + 3u * (size_t)count;  // op, status, count, then triplets
+    size_t frame = 3u + body;                // TLV header (type + u16 len) + body
+    if (frame > out_sz)
+        return 0;
+    out[0] = DTC_RESULT_TYPE;
+    out[1] = (uint8_t)(body & 0xFFu);  // u16 LE payload length
+    out[2] = (uint8_t)(body >> 8);
+    out[3] = op;
+    out[4] = status;
+    out[5] = count;
+    for (uint8_t i = 0; i < count; i++) {
+        out[6 + 3 * i]     = codes[i].module;
+        out[6 + 3 * i + 1] = codes[i].hi;
+        out[6 + 3 * i + 2] = codes[i].lo;
+    }
+    return frame;
+}
