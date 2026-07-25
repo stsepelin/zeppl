@@ -180,3 +180,13 @@ add_executable(test_map_world tests/test_map_world.c tests/test_runner.c
 target_include_directories(test_map_world PRIVATE ${MAIN_DIR}/display/map external/unity)
 target_link_libraries(test_map_world PRIVATE unity)
 add_test(NAME test_map_world COMMAND test_map_world)
+
+# Capture-corpus regression: replays every real captured frame through the
+# profile decoder vs the frozen j1850_parse oracle. Data-driven, not in the
+# coverage gate (the modules it exercises are gated by their own unit tests).
+# CAPTURES_DIR is the checked-in on-bike log directory.
+add_executable(test_capture_corpus tests/test_capture_corpus.c tests/test_runner.c)
+target_link_libraries(test_capture_corpus PRIVATE vrod_pure unity)
+target_compile_definitions(test_capture_corpus PRIVATE
+    CAPTURES_DIR="${REPO_ROOT}/docs/captures")
+add_test(NAME test_capture_corpus COMMAND test_capture_corpus)
