@@ -27,6 +27,7 @@ brief, roadmap, hardware/bus reference) live at the repo root in
 
 ## rides/ — on-bike sessions + bring-up logs
 
+- [`rides/next-onbike-plan.md`](rides/next-onbike-plan.md) — **step-by-step plan for the next bike visit** (all open tests, in order).
 - [`rides/ride-1-findings.md`](rides/ride-1-findings.md) — J1850 decode calibration.
 - [`rides/ride-2-findings.md`](rides/ride-2-findings.md) — speed-divisor lock (188) + live-stack review.
 - [`rides/ride-2-calibration-plan.md`](rides/ride-2-calibration-plan.md) — the Ride-2 plan (completed).
