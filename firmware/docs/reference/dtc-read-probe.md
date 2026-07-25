@@ -41,10 +41,10 @@ Clear stored codes (built as `dtc_clear_request`, not yet wired to an action):
 
 ## Firmware layout
 
-- `main/j1850/dtc.c` / `dtc.h` — pure codec, in the 100% host-test gate
+- `main/engine/j1850/dtc.c` / `dtc.h` — pure codec, in the 100% host-test gate
   (`test_dtc.c`): `dtc_request`, `dtc_clear_request`, `dtc_response`,
   `dtc_format`.
-- `main/j1850/dtc_probe.c` — the FreeRTOS task (driver glue, out of the gate).
+- `main/engine/j1850/dtc_probe.c` — the FreeRTOS task (driver glue, out of the gate).
   Registers a per-frame observer on the sniffer
   (`j1850_sniffer_set_observer`), then for each module: arms collection, keys
   the request 3x inside a ~360 ms window, de-dupes the responses, and logs the

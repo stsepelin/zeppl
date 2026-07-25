@@ -152,6 +152,13 @@ harley/
   Whole-continent coverage needs the GPS-paged cell tiles in
   `firmware/docs/plans/map-worldwide-plan.md` (Stage 1 already landed). See also
   `firmware/docs/reference/gps-module.md`.
+- 🏗 **Architecture — engine / connectivity / display split** (July 2026,
+  [ADR 0001](adr/0001-engine-display-split.md)). `firmware/main/` reorganised into
+  role packages over a shared, versioned **contract** (`docs/reference/CONTRACT.md`
+  + a cantools-validated `zeppl.dbc`), with a command seam so connectivity/display
+  never reach into the engine. Behaviour- and hardware-neutral. Next: **CAN/DBC
+  interop output** so a motorsport dash/logger can read the engine (a ~€2 CAN
+  transceiver + USB-CAN dongle, bench-only), then an eventual board split.
 
 Phase 1 deliverable summary (as redesigned at the end of Phase 1,
 BMW-EfficientDynamics styling): working 800×800 round gauge running

@@ -1,7 +1,7 @@
 # Companion ↔ cluster BLE protocol
 
 The wire format between the Zeppl Android app and the cluster firmware. The
-firmware side is the **ground truth** — `firmware/main/phone/phone_protocol.c`
+firmware side is the **ground truth** — `firmware/main/connectivity/phone/phone_protocol.c`
 (inbound) and `telemetry_codec.c` (outbound) — with host tests
 (`test_phone_protocol.c`, `test_telemetry_codec.c`) as the canonical fixtures.
 The Kotlin side (`ble/Protocol.kt`, `ble/TelemetryCodec.kt`) mirrors them

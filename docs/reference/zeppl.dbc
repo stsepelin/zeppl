@@ -1,0 +1,84 @@
+VERSION "zeppl-contract-v1"
+
+
+NS_ :
+	NS_DESC_
+	CM_
+	BA_DEF_
+	BA_
+	VAL_
+	CAT_DEF_
+	CAT_
+	FILTER
+	BA_DEF_DEF_
+	EV_DATA_
+	ENVVAR_DATA_
+	SGTYPE_
+	SGTYPE_VAL_
+	BA_DEF_SGTYPE_
+	BA_SGTYPE_
+	SIG_TYPE_REF_
+	VAL_TABLE_
+	SIG_GROUP_
+	SIG_VALTYPE_
+	SIGTYPE_VALTYPE_
+	BO_TX_BU_
+	BA_DEF_REL_
+	BA_REL_
+	BA_DEF_DEF_REL_
+	BU_SG_REL_
+	BU_EV_REL_
+	BU_BO_REL_
+	SG_MUL_VAL_
+
+BS_:
+
+BU_: ZEPPL_ENGINE DASH
+
+
+BO_ 1312 ZEPPL_Dynamics: 8 ZEPPL_ENGINE
+ SG_ EngineRPM : 0|16@1+ (1,0) [0|16383] "rpm" DASH
+ SG_ SpeedMPH : 16|16@1+ (1,0) [0|65535] "mph" DASH
+ SG_ SpeedRaw : 32|16@1+ (1,0) [0|65535] "count" DASH
+ SG_ Gear : 48|8@1+ (1,0) [0|7] "" DASH
+ SG_ EngineTempC : 56|8@1- (1,0) [-128|127] "degC" DASH
+
+BO_ 1313 ZEPPL_Status: 4 ZEPPL_ENGINE
+ SG_ TurnLeft : 0|1@1+ (1,0) [0|1] "" DASH
+ SG_ TurnRight : 1|1@1+ (1,0) [0|1] "" DASH
+ SG_ LowBeam : 2|1@1+ (1,0) [0|1] "" DASH
+ SG_ HighBeam : 3|1@1+ (1,0) [0|1] "" DASH
+ SG_ Neutral : 4|1@1+ (1,0) [0|1] "" DASH
+ SG_ OilPressureWarn : 5|1@1+ (1,0) [0|1] "" DASH
+ SG_ CheckEngine : 6|1@1+ (1,0) [0|1] "" DASH
+ SG_ ABSWarn : 7|1@1+ (1,0) [0|1] "" DASH
+ SG_ BatteryWarn : 8|1@1+ (1,0) [0|1] "" DASH
+ SG_ ImmobiliserWarn : 9|1@1+ (1,0) [0|1] "" DASH
+ SG_ FuelLevel : 16|8@1+ (1,0) [0|6] "level" DASH
+ SG_ MapSupported : 24|1@1+ (1,0) [0|1] "" DASH
+ SG_ LayoutMap : 25|1@1+ (1,0) [0|1] "" DASH
+ SG_ MapAvailable : 26|1@1+ (1,0) [0|1] "" DASH
+
+BO_ 1314 ZEPPL_Odo: 8 ZEPPL_ENGINE
+ SG_ Odometer : 0|32@1+ (1,0) [0|4294967295] "m" DASH
+ SG_ Trip1 : 32|32@1+ (1,0) [0|4294967295] "m" DASH
+
+BO_ 1315 ZEPPL_Trip: 8 ZEPPL_ENGINE
+ SG_ Trip2 : 0|32@1+ (1,0) [0|4294967295] "m" DASH
+ SG_ Trip1FuelTicks : 32|32@1+ (1,0) [0|4294967295] "tick" DASH
+
+BO_ 1316 ZEPPL_Fuel: 8 ZEPPL_ENGINE
+ SG_ Trip2FuelTicks : 0|32@1+ (1,0) [0|4294967295] "tick" DASH
+ SG_ ClockHours : 32|8@1+ (1,0) [0|23] "h" DASH
+ SG_ ClockMinutes : 40|8@1+ (1,0) [0|59] "min" DASH
+
+
+CM_ "Zeppl engine broadcast, contract v1. Mirrors docs/reference/CONTRACT.md";
+CM_ BU_ ZEPPL_ENGINE "The engine node: aggregates the J1850 vehicle state.";
+CM_ BU_ DASH "Any consumer: our display, or a third-party motorsport dash/logger.";
+CM_ BO_ 1312 "Fast dynamics: rpm/speed/gear/temp.";
+CM_ SG_ 1312 SpeedRaw "Raw ECM count before the speed divisor; pairs with SpeedMPH.";
+CM_ SG_ 1313 FuelLevel "Raw J1850 0..6 bars, uncalibrated.";
+CM_ SG_ 1315 Trip1FuelTicks "Uncalibrated fuel-consumption ticks; economy = ticks/distance.";
+
+VAL_ 1312 Gear 0 "Neutral" 1 "Gear1" 2 "Gear2" 3 "Gear3" 4 "Gear4" 5 "Gear5" 6 "Gear6" 7 "Unknown" ;

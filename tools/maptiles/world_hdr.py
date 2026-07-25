@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 world.hdr writer - the manifest for a GPS-paged cell-grid map (see
-firmware/main/map/map_world.h for the reader and the authoritative byte layout).
+firmware/main/display/map/map_world.h for the reader and the authoritative byte layout).
 
 world.hdr is the small always-resident metadata the cell manager reads at boot:
 the zoom, the cell size, and exactly which lat/lon cells were baked (the "present
@@ -21,7 +21,7 @@ Layout, little-endian:
     (i16 lat, i16 lon) * ncells   present cells, sorted ascending by (lat,lon)
 
 A cell index maps to its SW corner as idx * cell_size_256 in 1/256 deg, matching
-firmware/main/map/map_cells.c (cell_of).
+firmware/main/display/map/map_cells.c (cell_of).
 """
 import struct
 

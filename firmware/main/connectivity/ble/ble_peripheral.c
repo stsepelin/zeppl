@@ -23,13 +23,7 @@
 #include "icon_cache.h"
 #include "settings.h"
 #include "settings_store.h"
-#if CONFIG_VROD_J1850_DTC
-#include "dtc_service.h"
-#endif
-#include "ui_manager.h"  // request a layout switch when the phone sets it
-#if CONFIG_VROD_J1850
-#include "j1850_driver.h"  // apply calibrated speed divisor live
-#endif
+#include "command.h"  // config / DTC go out as commands, not direct engine calls
 
 static const char *TAG = "ble_peripheral";
 
@@ -108,31 +102,6 @@ static void start_advertising(void);
 
 // --- RX (phone → cluster) -------------------------------------------------
 
-// Apply a config write-back: push the calibrated divisor to the live decoder
-// and persist it. Runs on the NimBLE host task; settings_store_apply is only
-// NVS I/O (no display/LVGL work), so it's safe here. Rare (a calibration), so
-// the brief NVS write is fine.
-static void apply_config(const vehicle_config_t *cfg)
-{
-    settings_t s = *settings_store_current();
-    if (cfg->has_speed_divisor) {
-#if CONFIG_VROD_J1850
-        j1850_driver_set_speed_divisor(cfg->speed_divisor);
-#endif
-        s.speed_divisor = cfg->speed_divisor;
-    }
-    bool layout_changed = false;
-    if (cfg->has_layout && cfg->layout != (uint8_t)s.layout) {
-        s.layout       = (layout_t)cfg->layout;
-        layout_changed = true;
-    }
-    settings_store_apply(&s);  // validates + writes NVS
-    // Switch the view off the NimBLE host task (show_home may load the map);
-    // ui_manager_request_home defers the actual swap to the UI task.
-    if (layout_changed)
-        ui_manager_request_home();
-}
-
 static int access_rx_cb(uint16_t conn_handle, uint16_t attr_handle,
                         struct ble_gatt_access_ctxt *ctxt, void *arg)
 {
@@ -161,12 +130,14 @@ static int access_rx_cb(uint16_t conn_handle, uint16_t attr_handle,
         // the bytes" without it. Cheap: a few notifs per minute at
         // most.
         if (evt.type == PHONE_EVT_CONFIG) {
-            // Config write-back is cluster state, not a phone_data event:
-            // apply the calibrated divisor live and persist it to NVS.
+            // Config write-back: emit a command; the engine-side handler applies
+            // the divisor live + persists it. Connectivity never touches the
+            // decoder or NVS itself.
             ESP_LOGI(TAG, "rx CONFIG divisor=%u(%d) layout=%u(%d)",
                      (unsigned)evt.config.speed_divisor, evt.config.has_speed_divisor,
                      (unsigned)evt.config.layout, evt.config.has_layout);
-            apply_config(&evt.config);
+            command_t cmd = {.verb = COMMAND_SET_CONFIG, .config = evt.config};
+            command_dispatch(&cmd);
             return 0;
         }
         if (evt.type == PHONE_EVT_ICON) {
@@ -175,15 +146,15 @@ static int access_rx_cb(uint16_t conn_handle, uint16_t attr_handle,
             icon_cache_feed(&evt.icon);
             return 0;
         }
-#if CONFIG_VROD_J1850_DTC
         if (evt.type == PHONE_EVT_DTC) {
-            // Diagnostics: hand off to the DTC service task (non-blocking); it
-            // keys the bus and answers with a 0x41 result frame.
+            // Diagnostics: emit a command; the engine-side handler keys the bus
+            // (non-blocking) and answers with a 0x41 result frame. A no-op when
+            // the DTC feature isn't compiled in.
             ESP_LOGI(TAG, "rx DTC cmd=%u", (unsigned)evt.dtc_cmd);
-            dtc_service_request(evt.dtc_cmd);
+            command_t cmd = {.verb = COMMAND_DTC, .dtc_cmd = evt.dtc_cmd};
+            command_dispatch(&cmd);
             return 0;
         }
-#endif
         switch (evt.type) {
         case PHONE_EVT_NOTIF:
             ESP_LOGI(TAG, "rx NOTIF id=%08lx kind=%d sender='%s' msg='%.40s'",

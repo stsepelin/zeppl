@@ -111,7 +111,7 @@ Phase 2 kickoff — the old drawing would jam the bus:
 
 - T-tap pin 7 (LGN/V, J1850 data) through the proxy box; RX-only
   transceiver → P4 GPIO.
-- **VPW symbol codec — ✅ landed** (`firmware/main/j1850/j1850_vpw.c`):
+- **VPW symbol codec — ✅ landed** (`firmware/main/engine/j1850/j1850_vpw.c`):
   pure-logic pulse-width decoder (SOF/bit/EOD/EOF classification, IFR
   sections, CRC-8/SAE-J1850) plus the matching encoder for Stage 4 TX;
   encode → decode round-trip tested at 100% line/branch.

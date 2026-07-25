@@ -128,8 +128,8 @@ If the phone shows live RPM/temp, the decode -> display -> BLE telemetry chain
    stock).
 2. **Promote the locked divisor** for fresh flashes (this unit's NVS already
    holds it): update `SETTINGS_SPEED_DIVISOR_DEFAULT` in
-   `main/settings/settings.h` and `J1850_SPEED_DIVISOR` in
-   `main/j1850/j1850_parse.h`, and replace the "provisional 195" notes in
+   `main/display/settings/settings.h` and `J1850_SPEED_DIVISOR` in
+   `main/engine/j1850/j1850_parse.h`, and replace the "provisional 195" notes in
    `ride-1-findings.md` and the Phase 2 plan with the locked value.
 3. Turn `VROD_RIDE_LOG_DUMP` on only to pull the capture, then back **off**
    (it blocks boot ~1 min).
