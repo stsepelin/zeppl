@@ -4,6 +4,7 @@ idf_component_register(
         engine/command_handler.c
         engine/profile/bike_profile.c
         engine/profile/profile_vrscf_2009.c
+        engine/profile/profile_registry.c
         contract/command.c
         connectivity/ble/ble_peripheral.c
         connectivity/ble/ble_visibility.c
