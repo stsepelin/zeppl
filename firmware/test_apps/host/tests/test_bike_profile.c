@@ -163,9 +163,59 @@ static void test_bad_crc_touches_nothing(void)
     TEST_ASSERT_EQUAL_UINT16(0, vd.rpm);
 }
 
+// --- encode: the inverse round-trips through decode ----------------------
+
+static void test_encode_decode_round_trip(void)
+{
+    P = bike_profile_vrscf_2009();
+    vehicle_data_t vd;
+    memset(&vd, 0, sizeof(vd));
+    vd.rpm                 = 1265;
+    vd.speed_raw           = 515;
+    vd.speed_mph           = 2;  // 515 / 188
+    vd.engine_temp_c       = 23;
+    vd.turn_left           = true;
+    vd.turn_right          = false;
+    vd.check_engine        = true;
+    vd.immobiliser_warning = false;
+
+    j1850_frame_t frames[16];
+    size_t        n = bike_profile_encode(P, &vd, frames, 16);
+    TEST_ASSERT_EQUAL_UINT(6, n);  // 6 distinct signal frames
+
+    vehicle_data_t got;
+    memset(&got, 0, sizeof(got));
+    for (size_t i = 0; i < n; i++) {
+        // each frame carries a real CRC (checkable independently of crc_ok)
+        TEST_ASSERT_EQUAL_UINT8(j1850_crc(frames[i].data, frames[i].len - 1),
+                                frames[i].data[frames[i].len - 1]);
+        TEST_ASSERT_TRUE(bike_profile_decode(P, &frames[i], &got));
+    }
+    // every field the profile covers survives encode -> decode
+    TEST_ASSERT_EQUAL_UINT16(1265, got.rpm);
+    TEST_ASSERT_EQUAL_UINT16(515, got.speed_raw);
+    TEST_ASSERT_EQUAL_UINT16(2, got.speed_mph);
+    TEST_ASSERT_EQUAL_INT8(23, got.engine_temp_c);
+    TEST_ASSERT_TRUE(got.turn_left);
+    TEST_ASSERT_FALSE(got.turn_right);
+    TEST_ASSERT_TRUE(got.check_engine);
+    TEST_ASSERT_FALSE(got.immobiliser_warning);
+}
+
+static void test_encode_respects_max_frames(void)
+{
+    P = bike_profile_vrscf_2009();
+    vehicle_data_t vd;
+    memset(&vd, 0, sizeof(vd));
+    j1850_frame_t frames[3];
+    TEST_ASSERT_EQUAL_UINT(3, bike_profile_encode(P, &vd, frames, 3));  // capped
+}
+
 void RunTests(void)
 {
     RUN_TEST(test_reference_profile_present);
+    RUN_TEST(test_encode_decode_round_trip);
+    RUN_TEST(test_encode_respects_max_frames);
     RUN_TEST(test_identical_rpm);
     RUN_TEST(test_identical_temp);
     RUN_TEST(test_identical_speed);
