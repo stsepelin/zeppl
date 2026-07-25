@@ -40,6 +40,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/connectivity/phone/phone_data.c
     ${MAIN_DIR}/connectivity/phone/phone_protocol.c
     ${MAIN_DIR}/connectivity/phone/telemetry_codec.c
+    ${MAIN_DIR}/connectivity/phone/raw_sniff_codec.c
     ${MAIN_DIR}/contract/command.c
     ${MAIN_DIR}/display/settings/settings.c
     ${MAIN_DIR}/engine/vehicle/vehicle_data.c
@@ -138,6 +139,7 @@ add_unit_test(test_units)
 add_unit_test(test_settings)
 add_unit_test(test_phone_protocol)
 add_unit_test(test_telemetry_codec)
+add_unit_test(test_raw_sniff_codec)
 add_unit_test(test_phone_data)
 add_unit_test(test_command)
 add_unit_test(test_bike_profile)

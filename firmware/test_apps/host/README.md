@@ -68,6 +68,7 @@ Today that's:
 | `main/connectivity/phone/phone_data.c` | Mutex-guarded latest-value store + notification queue. FreeRTOS-stubbed. |
 | `main/connectivity/phone/phone_protocol.c` | Binary TLV parser for the companion-app BLE wire format |
 | `main/connectivity/phone/telemetry_codec.c` | Cluster -> phone telemetry frame encoder (vehicle_data -> TLV) |
+| `main/connectivity/phone/raw_sniff_codec.c` | Raw J1850 frame -> `0x50` TLV for phone-side guided capture (adaptive layer). |
 | `main/contract/command.c` | Command-dispatch seam: register one handler, route typed commands (config / DTC) to it. Decouples the BLE bridge from engine internals (ADR 0001). |
 | `main/display/settings/settings.c` | Defaults + validate for the persisted prefs struct |
 | `main/engine/vehicle/vehicle_data.c` | Mutex-guarded latest-value store. Tested with a FreeRTOS stub. |
