@@ -3,13 +3,13 @@ idf_component_register(
         main.c
         engine/command_handler.c
         contract/command.c
-        ble/ble_peripheral.c
-        ble/ble_visibility.c
-        phone/phone_data.c
-        phone/phone_protocol.c
-        phone/icon_cache.c
-        phone/telemetry_codec.c
-        phone/telemetry_publisher.c
+        connectivity/ble/ble_peripheral.c
+        connectivity/ble/ble_visibility.c
+        connectivity/phone/phone_data.c
+        connectivity/phone/phone_protocol.c
+        connectivity/phone/icon_cache.c
+        connectivity/phone/telemetry_codec.c
+        connectivity/phone/telemetry_publisher.c
         settings/settings.c
         settings/settings_store.c
         sound/sound.c
@@ -67,8 +67,8 @@ idf_component_register(
         .
         contract
         engine
-        ble
-        phone
+        connectivity/ble
+        connectivity/phone
         settings
         sound
         engine/vehicle

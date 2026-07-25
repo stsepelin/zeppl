@@ -65,16 +65,16 @@ Today that's:
 | `main/display/widgets/display_filter.c` | Damped-hysteresis anti-jitter filter: kills last-digit dither on a readout parked on a rounding edge (speed/temp) |
 | `main/display/widgets/fuel_scale.c` | Fuel band grid quantization + gap-split segments |
 | `main/display/widgets/rpm_scale.c` | RPM -> lit-segment count + redline segment for the shift-light bar |
-| `main/phone/phone_data.c` | Mutex-guarded latest-value store + notification queue. FreeRTOS-stubbed. |
-| `main/phone/phone_protocol.c` | Binary TLV parser for the companion-app BLE wire format |
-| `main/phone/telemetry_codec.c` | Cluster -> phone telemetry frame encoder (vehicle_data -> TLV) |
+| `main/connectivity/phone/phone_data.c` | Mutex-guarded latest-value store + notification queue. FreeRTOS-stubbed. |
+| `main/connectivity/phone/phone_protocol.c` | Binary TLV parser for the companion-app BLE wire format |
+| `main/connectivity/phone/telemetry_codec.c` | Cluster -> phone telemetry frame encoder (vehicle_data -> TLV) |
 | `main/contract/command.c` | Command-dispatch seam: register one handler, route typed commands (config / DTC) to it. Decouples the BLE bridge from engine internals (ADR 0001). |
 | `main/settings/settings.c` | Defaults + validate for the persisted prefs struct |
 | `main/engine/vehicle/vehicle_data.c` | Mutex-guarded latest-value store. Tested with a FreeRTOS stub. |
 | `main/engine/vehicle/gear_calc.c` | Gear from the RPM:speed ratio (no gear sensor on the bike): match to the spec's exact overall ratios + boundary hysteresis. |
 | `main/engine/vehicle/trip_meter.c` | Rolling 16-bit bus counter (odometer/fuel ticks) -> per-frame delta, wrap-safe + reset-clamp. |
 | `main/engine/vehicle/odo_meter.c` | Odometer + dual-trip totals: add distance/fuel, reset a trip, set the odometer. Pure (odo_store owns NVS). |
-| `main/ble/ble_visibility.c` | Pure decision: `(has_bond, override) → adv_mode`. Stage 8. |
+| `main/connectivity/ble/ble_visibility.c` | Pure decision: `(has_bond, override) → adv_mode`. Stage 8. |
 | `main/gps/nmea.c` | NMEA 0183 sentence framing + RMC parse (NEO-6M) → lat/lon/speed/heading |
 | `main/gps/gps_source.c` | Mutex-guarded latest-fix store (module producer, map consumer) |
 | `main/map/map_cells.c` | Cell-paging decision logic: which lat/lon cell a position is in (floor division), the working-set window, heading-ahead prefetch. Pure (cell manager owns the SD open/close). |

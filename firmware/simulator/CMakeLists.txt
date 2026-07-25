@@ -91,9 +91,9 @@ add_executable(vrod_sim
     ${MAIN_DIR}/display/widgets/smooth.c
     ${MAIN_DIR}/display/widgets/display_filter.c
 
-    ${MAIN_DIR}/phone/phone_data.c
-    ${MAIN_DIR}/phone/phone_protocol.c
-    ${MAIN_DIR}/phone/icon_cache.c
+    ${MAIN_DIR}/connectivity/phone/phone_data.c
+    ${MAIN_DIR}/connectivity/phone/phone_protocol.c
+    ${MAIN_DIR}/connectivity/phone/icon_cache.c
 
     ${MAIN_DIR}/map/map_tile.c
     ${MAIN_DIR}/map/map_render.c
@@ -113,11 +113,11 @@ add_executable(vrod_sim
 
 target_include_directories(vrod_sim PRIVATE
     ${MAIN_DIR}
-    ${MAIN_DIR}/ble
+    ${MAIN_DIR}/connectivity/ble
     ${MAIN_DIR}/display
     ${MAIN_DIR}/display/widgets
     ${MAIN_DIR}/display/fonts
-    ${MAIN_DIR}/phone
+    ${MAIN_DIR}/connectivity/phone
     ${MAIN_DIR}/map
     ${MAIN_DIR}/settings
     ${MAIN_DIR}/engine/simulator

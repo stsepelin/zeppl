@@ -37,9 +37,9 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/display/widgets/display_filter.c
     ${MAIN_DIR}/display/widgets/fuel_scale.c
     ${MAIN_DIR}/display/widgets/rpm_scale.c
-    ${MAIN_DIR}/phone/phone_data.c
-    ${MAIN_DIR}/phone/phone_protocol.c
-    ${MAIN_DIR}/phone/telemetry_codec.c
+    ${MAIN_DIR}/connectivity/phone/phone_data.c
+    ${MAIN_DIR}/connectivity/phone/phone_protocol.c
+    ${MAIN_DIR}/connectivity/phone/telemetry_codec.c
     ${MAIN_DIR}/contract/command.c
     ${MAIN_DIR}/settings/settings.c
     ${MAIN_DIR}/engine/vehicle/vehicle_data.c
@@ -53,7 +53,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/engine/j1850/j1850_driver.c
     ${MAIN_DIR}/engine/j1850/j1850_edge.c
     ${MAIN_DIR}/engine/j1850/ride_log_format.c
-    ${MAIN_DIR}/ble/ble_visibility.c
+    ${MAIN_DIR}/connectivity/ble/ble_visibility.c
     ${MAIN_DIR}/gps/nmea.c
     ${MAIN_DIR}/gps/gps_source.c
     ${MAIN_DIR}/map/map_cells.c
@@ -65,11 +65,11 @@ target_include_directories(vrod_pure PUBLIC
     ${MAIN_DIR}/contract
     ${MAIN_DIR}/display
     ${MAIN_DIR}/display/widgets
-    ${MAIN_DIR}/phone
+    ${MAIN_DIR}/connectivity/phone
     ${MAIN_DIR}/settings
     ${MAIN_DIR}/engine/vehicle
     ${MAIN_DIR}/engine/j1850
-    ${MAIN_DIR}/ble
+    ${MAIN_DIR}/connectivity/ble
     ${MAIN_DIR}/gps
     ${MAIN_DIR}/map
     external/freertos_stub
