@@ -92,7 +92,7 @@ void app_main(void)
     gps_source_init();  // shared GPS fix store (module producer, map consumer)
     icon_cache_init();  // PSRAM buffers for streamed app-notification icons
 #if CONFIG_VROD_INCLUDE_SIM_ENGINE
-#if !CONFIG_VROD_J1850 || CONFIG_VROD_MAP_DEMO
+#if !CONFIG_VROD_J1850
     // The J1850 producer and the sim both write vehicle_data; the real bus
     // wins whenever it's compiled in - except in the bench demo, where the sim
     // drives the gauge + the map's instrument strip regardless (no live bus at
