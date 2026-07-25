@@ -133,6 +133,20 @@ typedef struct bike_profile {
 // nothing. Pure; host-tested.
 bool bike_profile_decode(const bike_profile_t *p, const j1850_frame_t *f, vehicle_data_t *vd);
 
+// Inverse of decode: build the J1850 frames a profile's signal map implies from
+// a vehicle_data snapshot — one frame per distinct signal frame, with a valid
+// CRC. The frames decode back to the same vehicle_data for every field the
+// profile covers (a round-trip identity, proven in test_bike_profile). Lets a
+// simulator drive the real decode path with realistic frames instead of faking
+// vehicle_data. Writes up to `max_frames`; returns the number written.
+//
+// Note: reconstruction is decode-faithful, not byte-exact — only the bits/bytes
+// the profile reads are set, so a frame carrying undecoded side-bits (e.g. the
+// CEL frame's low status bits) won't match the real bus verbatim, but it decodes
+// identically.
+size_t bike_profile_encode(const bike_profile_t *p, const vehicle_data_t *vd, j1850_frame_t *out,
+                           size_t max_frames);
+
 // The reference profile: 2009 Harley VRSCF Muscle, populated only from
 // on-bike-confirmed data (docs/multi-vrod-adaptive-layer.md §2).
 const bike_profile_t *bike_profile_vrscf_2009(void);
