@@ -40,6 +40,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/phone/phone_data.c
     ${MAIN_DIR}/phone/phone_protocol.c
     ${MAIN_DIR}/phone/telemetry_codec.c
+    ${MAIN_DIR}/contract/command.c
     ${MAIN_DIR}/settings/settings.c
     ${MAIN_DIR}/vehicle/vehicle_data.c
     ${MAIN_DIR}/vehicle/gear_calc.c
@@ -61,6 +62,7 @@ add_library(vrod_pure STATIC
 )
 target_include_directories(vrod_pure PUBLIC
     ${MAIN_DIR}/simulator
+    ${MAIN_DIR}/contract
     ${MAIN_DIR}/display
     ${MAIN_DIR}/display/widgets
     ${MAIN_DIR}/phone
@@ -133,6 +135,7 @@ add_unit_test(test_settings)
 add_unit_test(test_phone_protocol)
 add_unit_test(test_telemetry_codec)
 add_unit_test(test_phone_data)
+add_unit_test(test_command)
 add_unit_test(test_gesture)
 add_unit_test(test_j1850_vpw)
 add_unit_test(test_j1850_tx_logic)

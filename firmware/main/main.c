@@ -8,6 +8,7 @@
 #include "lvgl.h"
 
 #include "ble_peripheral.h"
+#include "command_handler.h"
 #include "boot_screen.h"
 #include "emoji_font.h"
 #include "phone_data.h"
@@ -194,6 +195,7 @@ void app_main(void)
     // so a paired phone reconnecting at boot doesn't briefly hit a
     // null callback during the SM exchange.
     ble_peripheral_pair_set_callback(screen_pairing_show);
+    command_handler_init();  // register the engine-side handler before commands can arrive
     ble_peripheral_init();
     telemetry_publisher_start();
 

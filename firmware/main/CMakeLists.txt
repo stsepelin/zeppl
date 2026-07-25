@@ -1,6 +1,8 @@
 idf_component_register(
     SRCS
         main.c
+        command_handler.c
+        contract/command.c
         ble/ble_peripheral.c
         ble/ble_visibility.c
         phone/phone_data.c
@@ -63,6 +65,7 @@ idf_component_register(
         display/fonts/mdi_96.c
     INCLUDE_DIRS
         .
+        contract
         ble
         phone
         settings
