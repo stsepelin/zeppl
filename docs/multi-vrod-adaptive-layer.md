@@ -1,6 +1,7 @@
 # Multi-V-Rod adaptive decode layer — design
 
-**Status:** Proposed (design only — no code). Companion to
+**Status:** Implemented (2026-07) — landed as PR series #42–#52; see the phased
+plan at the end for what's done vs. deliberately deferred. Companion to
 [ADR 0001](adr/0001-engine-display-split.md) (the engine/connectivity/display
 split that makes this tractable) and
 [`reference/CONTRACT.md`](reference/CONTRACT.md) (the canonical, bike-agnostic
@@ -483,17 +484,29 @@ QA of a new profile. Flagged, not required.
 
 ---
 
-## Implementation path (phased — not part of this design's approval)
+## Implementation path (phased) — implemented 2026-07
 
-1. **Introduce the profile struct + the 2009 reference table** (`engine/profile/`),
-   const/XIP, populated exactly as §2. No behaviour change (the current hardcoded
-   `j1850_parse.c` is the fallback).
-2. **Make `j1850_driver` walk the active profile** instead of the hardcoded header
-   matches — the reference profile must produce byte-identical `vehicle_data` to
-   today (guarded by the existing host tests = the regression corpus's first entry).
-3. **Fingerprint + registry select + degraded mode** (listen-only, TX gate off).
-4. **Raw-sniff GATT + companion guided-capture** (§4).
-5. **Decode-replay harness + corpus in CI** (§5).
-6. Learning mode (§3) last — it depends on 1–5.
+Landed as a PR series (#42–#52), each step tested + reviewed, zero hardware change:
 
-Steps 1–2 are the load-bearing refactor; everything else is additive.
+1. ✅ **Profile struct + 2009 reference table** (`engine/profile/`), const/XIP,
+   populated as §2; `j1850_parse.c` kept as the frozen decode oracle (#42).
+2. ✅ **`j1850_driver` walks the active profile** — byte-identical to the old
+   hardcoded decode, guarded by the corpus (#42, #44).
+3. ✅ **Fingerprint + registry select + degraded mode** + the never-transmit
+   listen-only gate (#43).
+4. ✅ **Raw-sniff (`0x50`) codec + BLE forwarder** (#45, #46) and the **companion
+   guided-capture** — decoder, capture container, guided-script engine, and the
+   capture screen (#47–#49, #51).
+5. ✅ **Decode-replay corpus in CI** — 106k real frames replayed vs the oracle (#44).
+6. ✅ **Learning mode** — the toggle detector *and* the continuous linear-fit
+   detector (#50, #52).
+
+**Deliberately deferred (on-bike-gated / future), not blockers:**
+- **Live profile auto-select** into the running `j1850_driver` — the selection
+  machinery ships (#43), but hot-wiring it on a real bike waits on on-bike
+  validation (a mis-select is worse than the fixed reference).
+- **Raw-sniff as a runtime command** — today it's a build flag
+  (`CONFIG_VROD_J1850_RAW_SNIFF`), not a phone-triggered capture mode.
+- The server-side **submit → review-queue → shipped-profile** return path (§4).
+
+Steps 1–2 were the load-bearing refactor; everything else was additive.
