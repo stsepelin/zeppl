@@ -36,6 +36,7 @@ jobs:
           lcov --extract coverage.info \
                '*/firmware/main/engine/simulator/gear_table.c' \
                '*/firmware/main/engine/simulator/sim_math.c' \
+               '*/firmware/main/engine/simulator/drive_model.c' \
                '*/firmware/main/display/format.c' \
                '*/firmware/main/display/gesture.c' \
                '*/firmware/main/display/units.c' \

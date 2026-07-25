@@ -23,6 +23,7 @@ idf_component_register(
         engine/vehicle/odo_meter.c
         display/gps/gps_source.c
         engine/simulator/gear_table.c
+        engine/simulator/drive_model.c
         display/boot_screen.c
         display/screen_ride.c
         display/screen_settings.c
