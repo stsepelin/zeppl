@@ -52,6 +52,7 @@ add_library(vrod_pure STATIC
     ${MAIN_DIR}/engine/j1850/dtc.c
     ${MAIN_DIR}/engine/j1850/j1850_driver.c
     ${MAIN_DIR}/engine/j1850/j1850_edge.c
+    ${MAIN_DIR}/engine/j1850/frame_inject.c
     ${MAIN_DIR}/engine/j1850/ride_log_format.c
     ${MAIN_DIR}/engine/profile/bike_profile.c
     ${MAIN_DIR}/engine/profile/profile_vrscf_2009.c
@@ -124,6 +125,7 @@ function(add_unit_test name)
 endfunction()
 
 add_unit_test(test_drive_model)
+add_unit_test(test_frame_inject)
 add_unit_test(test_format)
 add_unit_test(test_smooth)
 add_unit_test(test_display_filter)
@@ -190,3 +192,9 @@ target_link_libraries(test_capture_corpus PRIVATE vrod_pure unity)
 target_compile_definitions(test_capture_corpus PRIVATE
     CAPTURES_DIR="${REPO_ROOT}/docs/captures")
 add_test(NAME test_capture_corpus COMMAND test_capture_corpus)
+
+# Host tool (not a test): emits the USB-injector line stream from drive_model +
+# the real profile encoder. Reuses the exact tested C, so no logic diverges.
+# Build:  cmake --build build --target frame_inject_gen
+add_executable(frame_inject_gen EXCLUDE_FROM_ALL tools/frame_inject_gen.c)
+target_link_libraries(frame_inject_gen PRIVATE vrod_pure)

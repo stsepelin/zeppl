@@ -92,6 +92,7 @@ idf_component_register(
     REQUIRES waveshare__esp32_p4_wifi6_touch_lcd_xc lvgl__lvgl nvs_flash
              espressif__esp_codec_dev bt spi_flash esp_adc
              esp_driver_rmt esp_driver_gptimer
+             esp_driver_usb_serial_jtag  # USB frame injector (usb_inject.c)
              fatfs esp_driver_sdmmc sdmmc  # ride-log SD sink (CONFIG_VROD_RIDE_LOG)
     LDFRAGMENTS linker.lf
 )
@@ -171,6 +172,8 @@ if(CONFIG_VROD_J1850)
         engine/j1850/j1850_parse.c
         engine/j1850/j1850_driver.c
         engine/j1850/j1850_bench_feed.c   # bench-only synthetic SPEED/RPM (self-guarded)
+        engine/j1850/frame_inject.c       # host-tested wire codec for the USB injector
+        engine/j1850/usb_inject.c         # always-on USB frame reader -> j1850_driver_feed
         engine/vehicle/odo_store.c   # NVS persistence for the driver's odometer/trips
     )
 endif()

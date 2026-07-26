@@ -62,6 +62,7 @@ jobs:
                '*/firmware/main/engine/j1850/dtc.c' \
                '*/firmware/main/engine/j1850/j1850_driver.c' \
                '*/firmware/main/engine/j1850/j1850_edge.c' \
+               '*/firmware/main/engine/j1850/frame_inject.c' \
                '*/firmware/main/engine/j1850/ride_log_format.c' \
                '*/firmware/main/engine/profile/bike_profile.c' \
                '*/firmware/main/engine/profile/profile_registry.c' \
