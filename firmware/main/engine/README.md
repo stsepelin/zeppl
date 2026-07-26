@@ -28,6 +28,8 @@ tiny board near the harness. See [ADR 0001](../../../docs/adr/0001-engine-displa
 - `j1850_tx.c` — RMT-timed symbol TX + gptimer watchdog. *(driver glue)*
 - `j1850_tx_logic.c` — pure TX logic: CRC frame build + watchdog dominant-length guard + on-air duration. *(host-tested)*
 - `j1850_bench_feed.c` — bench-only synthetic SPEED/RPM (self-guarded).
+- `frame_inject.c` — USB-injector wire codec: frame <-> `#F <hex>` line, CRC-validated. *(host-tested)*
+- `usb_inject.c` — always-on task: reads `#F` lines off USB-Serial-JTAG -> `j1850_driver_feed`. *(transport glue, out of gate)*
 - `j1850_adc_probe.c` — ADC bring-up repro.
 - `dtc.c` — SAE J2012 DTC codec + HD J1850 read/clear request framing + response decode. *(host-tested)*
 - `dtc_service.c` — phone-triggered DTC read/clear service task (keys the bus, answers a `0x41` frame).

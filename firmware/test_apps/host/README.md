@@ -84,6 +84,7 @@ Today that's:
 | `main/engine/j1850/j1850_driver.c` | J1850 producer glue: decoded frame -> j1850_parse (+ gear_calc, + odometer/fuel tick accumulation) -> vehicle_data_set (running aggregate). |
 | `main/engine/j1850/j1850_edge.c` | Toggling edge->level tracker (no pin read): toggle + recessive-idle re-sync anchor; a missed/spurious edge self-limits to one frame. |
 | `main/engine/j1850/j1850_tx_logic.c` | J1850 TX pure logic: CRC frame build (round-tripped through encode→decode) + the watchdog dominant-length guard + on-air duration. |
+| `main/engine/j1850/frame_inject.c` | USB-injector wire codec: frame ↔ `#F <hex>` line (CRC-validated on parse). End-to-end tested drive_model → encode → line → parse → driver. |
 | `main/engine/j1850/ride_log_format.c` | Ride-log line/header formatting: frame -> one plain-text line (sec.ms, hex, CRC, IFR, decoded speed/temp/gear suffix), capture.py-compatible. |
 | `main/engine/profile/bike_profile.c` | Profile-driven J1850 decoder: walks a bike profile's signal map -> vehicle_data. Reproduces `j1850_parse` byte-for-byte (cross-checked). The reference table `profile_vrscf_2009.c` is data (out of gate). |
 | `main/engine/profile/profile_registry.c` | Profile identification: passive bus fingerprint, confidence-scored select vs the registry (auto-select or degraded mode), and the never-transmit listen-only gate. |

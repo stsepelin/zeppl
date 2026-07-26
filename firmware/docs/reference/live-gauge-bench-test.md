@@ -9,11 +9,13 @@ divider node on **GPIO 20**.
 ## The one flag that matters
 
 **`CONFIG_VROD_J1850=y`** makes the J1850 decode the live `vehicle_data`
-producer instead of the synthetic simulator. `main.c` starts `sim_engine`
-only `#if !CONFIG_VROD_J1850`, so turning this on suppresses the sim; the
-sniffer's decoded frames flow `j1850_driver -> vehicle_data_set`, and the
-gauge UI (which always renders from `vehicle_data`) shows real bus values.
-It depends on `CONFIG_VROD_J1850_SNIFFER=y` (the RX capture/decode).
+producer. The firmware has no compiled-in simulator (the on-P4 sim engine was
+removed in the "single prod build" rework); the sniffer's decoded frames flow
+`j1850_driver -> vehicle_data_set`, and the gauge UI (which always renders from
+`vehicle_data`) shows real bus values. It depends on
+`CONFIG_VROD_J1850_SNIFFER=y` (the RX capture/decode). For a bench with **no
+bus at all**, drive the same path from a Mac - see the USB-injector check
+below.
 
 ## Build config (menuconfig -> "V-Rod cluster")
 
@@ -89,3 +91,24 @@ before committing to a ride.
   producer / with the ride log) stays available separately — this is the
   gauge/live variant, driven by the single `VROD_J1850` producer flag.
 - `j1850_vpw.c` and the RX capture path are untouched by this build.
+
+## USB-injector check (no bus needed) — UNVERIFIED on hardware
+
+For UI work away from the bike, drive the gauge from the Mac instead of a live
+bus (see `usb-frame-injector.md` for the full design). This exercises the
+always-on `usb_inject.c` reader, which has **not yet been confirmed on
+hardware** — run this once to validate it, then treat it as the standard bench
+loop.
+
+1. Build the generator: `cd test_apps/host && cmake -B build -S . &&
+   cmake --build build --target frame_inject_gen`.
+2. Flash a normal prod build (`CONFIG_VROD_J1850=y`; the injector is always
+   compiled in). No bus, laptop USB power.
+3. **Close `idf.py monitor`** (it holds the port), then
+   `cd tools && ./inject_stream.py`.
+4. **Expect:** the dials run the drive_model cycle — RPM sawtooths through the
+   gears, speed ramps 0→60→0, temperature warms 20→90, left blinker in the
+   decel window. This is the same cycle the desktop simulator shows.
+5. **If the console fights the shared USB-Serial-JTAG peripheral** (no frames
+   land, or logging breaks): note it here; the fallback is a dedicated UART or
+   gating the reader. The host-tested codec/generator are unaffected.

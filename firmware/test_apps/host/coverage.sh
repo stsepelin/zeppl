@@ -62,6 +62,7 @@ SCOPED=(
     '*/main/engine/j1850/dtc.c'
     '*/main/engine/j1850/j1850_driver.c'
     '*/main/engine/j1850/j1850_edge.c'
+    '*/main/engine/j1850/frame_inject.c'
     '*/main/engine/j1850/ride_log_format.c'
     '*/main/engine/profile/bike_profile.c'
     '*/main/engine/profile/profile_registry.c'

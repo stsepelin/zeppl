@@ -30,6 +30,7 @@
 #if CONFIG_VROD_J1850
 #include "j1850_driver.h"
 #include "j1850_bench_feed.h"
+#include "usb_inject.h"
 #include "odo_store.h"
 #endif
 #if defined(CONFIG_VROD_J1850_ADC_GPIO) && CONFIG_VROD_J1850_ADC_GPIO >= 0
@@ -112,6 +113,9 @@ void app_main(void)
 #if CONFIG_VROD_J1850_BENCH_SPEED
     j1850_bench_feed_start();
 #endif
+    // Always-on USB frame injector: a Mac tool can stream a drive_model cycle
+    // over USB to drive the gauge on a bench with no live bus. Inert otherwise.
+    usb_inject_start();
 #endif
 #if CONFIG_VROD_RIDE_LOG
     // Mount the SD sink + start its flush task before frames arrive; a missing
