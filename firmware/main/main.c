@@ -20,9 +20,6 @@
 #if CONFIG_VROD_GPS_UART
 #include "gps_uart.h"
 #endif
-#if CONFIG_VROD_INCLUDE_SIM_ENGINE
-#include "sim_engine.h"
-#endif
 #if CONFIG_VROD_J1850_SNIFFER
 #include "j1850_sniffer.h"
 #include "raw_sniff.h"
@@ -91,15 +88,6 @@ void app_main(void)
     phone_data_init();
     gps_source_init();  // shared GPS fix store (module producer, map consumer)
     icon_cache_init();  // PSRAM buffers for streamed app-notification icons
-#if CONFIG_VROD_INCLUDE_SIM_ENGINE
-#if !CONFIG_VROD_J1850 || CONFIG_VROD_MAP_DEMO
-    // The J1850 producer and the sim both write vehicle_data; the real bus
-    // wins whenever it's compiled in - except in the bench demo, where the sim
-    // drives the gauge + the map's instrument strip regardless (no live bus at
-    // a desk, so gear/rpm would otherwise read empty).
-    sim_engine_start();
-#endif
-#endif
 #if CONFIG_VROD_J1850
     // Producer: the sniffer's decode feeds vehicle_data via the driver.
     // Init before the sniffer task so it can consume frames immediately.
@@ -209,7 +197,7 @@ void app_main(void)
     // (ble is up), so the lazy load keeps nimble's RAM ordering.
     ESP_LOGI(TAG, "boot complete");
     // app_main can return — all the real work runs in the FreeRTOS tasks
-    // we spawned (ui_update_task, event_watcher_task, sim_engine_task,
+    // we spawned (ui_update_task, event_watcher_task, j1850 producer,
     // NimBLE host, LVGL render). The previous busy-log loop here would
     // also block any future TWDT IDLE-task feed on core 0.
 }

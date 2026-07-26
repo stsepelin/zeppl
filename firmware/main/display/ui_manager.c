@@ -16,9 +16,7 @@
 #include "freertos/task.h"
 #include "lvgl.h"
 
-#if CONFIG_VROD_MAP_DEMO
-#include "map_demo.h"
-#elif CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
 #include "map_sd.h"
 #endif
 
@@ -26,9 +24,7 @@
 // only the compiled driver's loader exists, and neither in a classic-only build.
 static void map_load(void)
 {
-#if CONFIG_VROD_MAP_DEMO
-    map_demo_load();
-#elif CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
     map_sd_load();
 #endif
 }
@@ -239,7 +235,7 @@ void ui_manager_request_home(void)
 
 void ui_manager_show_home(void)
 {
-#if CONFIG_VROD_MAP_DEMO || CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
     // Load the map on demand the first time it is the selected view - the heavy
     // tileset/SD work happens off the display lock inside map_load().
     bool want_map = settings_store_current()->layout == LAYOUT_MAP;
@@ -248,7 +244,7 @@ void ui_manager_show_home(void)
 #endif
     bsp_display_lock(-1);
     ensure_ride_and_tasks();
-#if CONFIG_VROD_MAP_DEMO || CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
     lv_screen_load(want_map && s_map ? s_map : s_ride);
 #else
     lv_screen_load(s_ride);

@@ -42,10 +42,9 @@ tiny board near the harness. See [ADR 0001](../../../docs/adr/0001-engine-displa
 - `odo_meter.c` — odometer + dual-trip totals. *(host-tested)*
 - `odo_store.c` — NVS persistence for the odometer/trips.
 
-### `simulator/` — the synthetic producer (off-bike)
-- `sim_engine.c` — synthetic driving-cycle task; drives `vehicle_data` when there's no bus. *(task body out of gate)*
-- `sim_math.c` — distance integrator, clock advance/split, fuel-cycle state machine. *(host-tested)*
-- `gear_table.c` — speed → (gear, RPM) pure math. *(host-tested)*
+### `simulator/` — the synthetic model (desktop only, not on the P4)
+- `drive_model.c` — deterministic idle→accel→cruise→decel cycle: `drive_model_at(t)` → a `vehicle_data` snapshot. *(host-tested)*
+- `sim_producer.c` — FreeRTOS task that steps `drive_model` and publishes it (gear via `gear_calc`). Built only into the desktop SDL2 simulator; the P4 always runs the real bus / USB injector. *(task body out of gate)*
 
 ### command handling
 - `command_handler.c` — the engine-side command handler. Registered at boot; when
@@ -56,7 +55,7 @@ tiny board near the harness. See [ADR 0001](../../../docs/adr/0001-engine-displa
 ## How it connects
 
 ```
-J1850 bus / sim ──► j1850_driver / sim_engine ──► vehicle_data (canonical store)
+J1850 bus / sim ──► j1850_driver / sim_producer ──► vehicle_data (canonical store)
                                                         ▲
 contract/command ──► command_handler ───────────────────┘ (divisor, DTC)
 ```
@@ -67,12 +66,13 @@ contract/command ──► command_handler ────────────�
 ## Build gating
 
 Most J1850 / TX / DTC sources are Kconfig-gated (`CONFIG_VROD_J1850*` in
-`main/Kconfig.projbuild`); the simulator producer is the default off-bike source.
+`main/Kconfig.projbuild`). The synthetic `drive_model` producer is desktop-only
+(`firmware/simulator/`); the P4 firmware always runs the live bus / USB injector.
 
 ## Testing
 
 The pure modules above (`j1850_vpw`, `j1850_edge`, `j1850_parse`, `j1850_driver`,
-`j1850_tx_logic`, `dtc`, `gear_calc`, `gear_table`, `sim_math`, `trip_meter`,
+`j1850_tx_logic`, `dtc`, `gear_calc`, `drive_model`, `trip_meter`,
 `odo_meter`, `vehicle_data`) sit inside the **100% line+branch host-test gate**
 (`firmware/test_apps/host/`). Capture/driver/task glue is deliberately out of it.
 

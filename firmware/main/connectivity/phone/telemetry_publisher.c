@@ -12,7 +12,7 @@
 static uint8_t telemetry_status(void)
 {
     uint8_t status = 0;
-#if CONFIG_VROD_MAP_DEMO || CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
     status |= TELEMETRY_STATUS_MAP_SUPPORTED;
     if (settings_store_current()->layout == LAYOUT_MAP)
         status |= TELEMETRY_STATUS_LAYOUT_MAP;

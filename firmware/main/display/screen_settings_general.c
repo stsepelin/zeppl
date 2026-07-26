@@ -22,7 +22,7 @@ static lv_obj_t *s_temp_units_value;
 static lv_obj_t *s_sound_badge;
 static lv_obj_t *s_brightness_value;
 static lv_obj_t *s_volume_value;
-#if CONFIG_VROD_MAP_DEMO || CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
 static lv_obj_t *s_layout_value;
 #endif
 
@@ -116,7 +116,7 @@ static void temp_units_row_clicked_cb(lv_event_t *e)
     settings_store_apply(&s_pending);
 }
 
-#if CONFIG_VROD_MAP_DEMO || CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
 static void layout_row_clicked_cb(lv_event_t *e)
 {
     (void)e;
@@ -228,7 +228,7 @@ lv_obj_t *screen_settings_general_create(void)
         s_brightness_value = b.value;
     }
 
-#if CONFIG_VROD_MAP_DEMO || CONFIG_VROD_MAP_SD
+#if CONFIG_VROD_MAP_SD
     // LAYOUT — tap to toggle the driving view; applied on BACK (show_home).
     // y=530 keeps the same 20 px gap as the rows above (brightness ends at 510).
     lv_obj_t *layout_row = make_row(scr, 80, 530);

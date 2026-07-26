@@ -36,7 +36,7 @@ unit later. See [ADR 0001](../../../docs/adr/0001-engine-display-split.md).
 - `map_cells.c` — cell-paging decision logic. *(host-tested)*
 - `map_tile.c` / `map_world.c` — tile + `world.hdr` parsers. *(regression-tested; allocate, so out of the branch gate)*
 - `map_render.c` — RGB565 rotozoom rasteriser (raw buffer math, not LVGL draws).
-- `map_source.c` / `map_sd.c` — SD-streamed tile source. `map_demo.c`, `map_style.h`, `screen_map.c`.
+- `map_source.c` / `map_sd.c` — SD-streamed tile source. `map_style.h`, `screen_map.c`.
 
 ### `gps/` — position input for the map
 - `nmea.c` — NMEA 0183 framer + RMC parse. *(host-tested)*
