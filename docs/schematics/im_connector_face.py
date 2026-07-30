@@ -9,8 +9,8 @@
 # View is the WIRE-ENTRY side (where terminals are inserted). The mating
 # face mirrors left-right relative to this drawing.
 #
-# Pin -> wire color -> signal mapping is from the project connector table
-# (../reference/J1850-BUS.md / ../PROJECT-BRIEF.md). Cavity ring colour encodes
+# Pin -> wire color -> signal mapping is from the project connector table in
+# ../reference/J1850-BUS.md (PROJECT-BRIEF.md has no connector table). Cavity ring colour encodes
 # the two-board destination: green = signal-board divider, purple = J1850 BUS,
 # red = power board, blue = common GND, tan = Phase 3, grey = unused.
 #
