@@ -76,3 +76,16 @@ policy scope, inside `firmware/test_apps/host/`), and
 
 Firmware-specific conventions (caches on every widget setter, V-Rod
 palette, JBM Bold font discipline, etc.) are in `firmware/CLAUDE.md`.
+
+## Process gotchas
+
+- **A modification abutting a deletion conflicts even when the content is
+  byte-identical on both sides** — git merges by region, not by line identity.
+  Expect it whenever a legibility fix sits next to a structural deletion.
+- **The `trailing-whitespace` pre-commit hook rewrites matplotlib SVGs and aborts
+  the commit** — verify the hook's edit is whitespace-only under normalization,
+  then re-add and re-commit. Never `git add` a hook-modified file blind: it will
+  silently absorb any other unstaged change to the same file.
+- **`for f in *.py` in the `docs/schematics/` regenerate command rewrites all
+  nine SVGs** — always confirm which SVGs actually changed under normalization
+  before staging.
