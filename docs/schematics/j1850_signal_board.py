@@ -1,5 +1,8 @@
 import matplotlib
 matplotlib.use("Agg")
+# Fixed salt + no Date stamp so a re-render with no source change is byte-identical
+# and real drift shows up in a plain git diff. Covers the matplotlib drawings only.
+matplotlib.rcParams["svg.hashsalt"] = "zeppl-schematics"
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle, Circle
 import matplotlib.patheffects as pe
@@ -176,5 +179,5 @@ ax.text(9,0.05,"P4: RX=GPIO20 · TX=J1850 drive · GND · 6 outputs = turn-L/R, 
 
 plt.tight_layout()
 fig.savefig("j1850_signal_board.png", dpi=150, facecolor="white", bbox_inches="tight")
-fig.savefig("j1850_signal_board.svg", facecolor="white", bbox_inches="tight")
+fig.savefig("j1850_signal_board.svg", facecolor="white", bbox_inches="tight", metadata={"Date": None})
 print("ok")

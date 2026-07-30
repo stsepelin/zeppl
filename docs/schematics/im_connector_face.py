@@ -21,6 +21,9 @@
 # Regenerate: python3 im_connector_face.py  (writes .png + .svg)
 import matplotlib
 matplotlib.use("Agg")
+# Fixed salt + no Date stamp so a re-render with no source change is byte-identical
+# and real drift shows up in a plain git diff. Covers the matplotlib drawings only.
+matplotlib.rcParams["svg.hashsalt"] = "zeppl-schematics"
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle, Circle
 import matplotlib.patheffects as pe
@@ -140,5 +143,5 @@ ax.text(18.1, 2.45,
 
 plt.tight_layout()
 fig.savefig("im_connector_face.png", dpi=150, facecolor="white", bbox_inches="tight")
-fig.savefig("im_connector_face.svg", facecolor="white", bbox_inches="tight")
+fig.savefig("im_connector_face.svg", facecolor="white", bbox_inches="tight", metadata={"Date": None})
 print("ok")

@@ -21,6 +21,9 @@
 #   .venv/bin/python j1850_perfboard.py
 import matplotlib
 matplotlib.use("Agg")
+# Fixed salt + no Date stamp so a re-render with no source change is byte-identical
+# and real drift shows up in a plain git diff. Covers the matplotlib drawings only.
+matplotlib.rcParams["svg.hashsalt"] = "zeppl-schematics"
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle, Circle
 import matplotlib.patheffects as pe
@@ -154,5 +157,5 @@ ax.text(0.6,-16.9,
 
 plt.tight_layout()
 fig.savefig("j1850_perfboard.png", dpi=140, bbox_inches="tight")
-fig.savefig("j1850_perfboard.svg", bbox_inches="tight")
+fig.savefig("j1850_perfboard.svg", bbox_inches="tight", metadata={"Date": None})
 print("ok")
