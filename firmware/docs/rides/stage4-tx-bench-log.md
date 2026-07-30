@@ -6,6 +6,13 @@ transceiver bench ladder (Phase 2, `../../../docs/phases/phase2-j1850.md`).
 
 ## Board under test
 
+> **Which board, when.** Everything **before the 2026-07-19 entry is breadboard**.
+> From 2026-07-19 onward — the Step 2 re-test and the 2026-07-24 on-bike session —
+> the board is the **`j1850_signal_board` (v4) build**
+> ([`../../../docs/schematics/j1850_signal_board.md`](../../../docs/schematics/j1850_signal_board.md)).
+> Where this log says "fabricated PCB" it means that v4 perfboard assembly, not a
+> fab-house PCB.
+
 RX front end + TX cascade on breadboard:
 
 - **RX front end** (`../../../docs/schematics/j1850_rx.svg`): R1 10k / R2 4.7k
@@ -206,6 +213,12 @@ committed on its own (see the `fix(j1850)` commit on this branch).
 
 #### PCB re-test (2026-07-19) — Step 2 GREEN on the fabricated board
 
+> **Which board (owner-confirmed):** the "fabricated PCB" here is the
+> **`j1850_signal_board` (v4)** build
+> ([`../../../docs/schematics/j1850_signal_board.md`](../../../docs/schematics/j1850_signal_board.md))
+> — a perfboard assembly, not a fab-house PCB. The original phrasing is left in
+> place below as history rather than rewritten.
+
 Re-ran Step 2 on the **fabricated PCB** (replacing the breadboard) — same
 selftest firmware (`j1850_tx_reset()` fix in), fresh hard-reset, verbatim:
 ```
@@ -227,7 +240,8 @@ I (5596) j1850tx: self-sniff tally: 4 pass, 0 fail
 #### On-bike TX behaviour log (2026-07-24) — engine-off + engine-on
 
 Ran the `VROD_J1850_TX_BIKE_REPLAY` tally build (IM keep-alive replay + fault
-tally + fault-reset recovery) on the fabricated PCB, wired to the bike, Mac on
+tally + fault-reset recovery) on the fabricated PCB (the `j1850_signal_board` v4
+build), wired to the bike, Mac on
 USB (charged). Three phases, board hard-reset at the start of each so the tally
 counters start clean. Captures in `docs/captures/2026-07-24-tx-*.log`.
 

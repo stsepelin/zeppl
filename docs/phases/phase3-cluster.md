@@ -71,6 +71,38 @@ path is already clean. Software alternative under evaluation:
 - **Power** — the protected 12V→5V chain
   ([`../../firmware/docs/reference/bike-power-injection.md`](../../firmware/docs/reference/bike-power-injection.md))
   feeding the header 5V; 470µF on the 5V rail for cranking spikes.
+  Full path (split point **S2**): IM pin 6 → **F1 2A inline in the harness** →
+  signal board terminal (1,3) → **row-1 rail** (Q2's emitter taps off it; the
+  rail *is* the split and carries the full power-board current) → transit (18,2)
+  → power board → D2 → TVS1 → mini560 → D4 → P4 header 5V. The power board
+  sources nothing back. The signal board sits upstream of D2 and is therefore
+  **fused but not reverse-protected** — accepted trade-off.
+
+### OPEN: pin 6 does double duty
+
+IM pin 6 (Grey, switched +12V) is both the **board's power feed** and, per
+[`../schematics/discrete_divider.py`](../schematics/discrete_divider.py) and
+[`../reference/HARDWARE.md`](../reference/HARDWARE.md), the sixth **divider
+input** (lane G6, "ignition"). Those cannot both be useful: the board is
+unpowered whenever pin 6 is low, so **G6 can only ever read "on"** — a tautology,
+not a signal. Note that
+[`../schematics/im_connector_face.py`](../schematics/im_connector_face.py) already
+rings pin 6 as *power* and shows only **five** green divider pins; it is the one
+file that is already S2-correct.
+
+Options, none chosen — this waits for the harness work:
+
+| # | Option | Notes |
+|---|---|---|
+| **O1** | Repurpose lane G6 | The lane hardware is already soldered. Candidates: pin 12 O/W "Accessories" (currently ringed unused). Pin 8 VSS is a pulse train on a 3-pin sub-connector, so divider conditioning may not suit it. Requires rewiring the G6 screw position. |
+| **O2** | Keep G6, document as intentional | Zero physical work. Value is a built-in self-test channel: a known-good always-on input that proves the divider + GPIO path end to end. |
+| **O3** | Leave the lane unterminated, reserve it | Zero risk, zero benefit until decided. |
+
+Deciding needs two things only the bike owner can establish: whether the G6 tap
+and the power feed are physically the same wire, and whether a self-test channel
+is wanted. Until then the six-input lists in `discrete_divider.py` and
+`HARDWARE.md` are left as-is deliberately — trimming them to five would be
+choosing O1 or O3.
 - **Final install** — connect the P4 directly to the bike harness (bypass the
   proxy); keep the proxy box as a toolbox backup for reversion.
 

@@ -9,8 +9,8 @@
 # View is the WIRE-ENTRY side (where terminals are inserted). The mating
 # face mirrors left-right relative to this drawing.
 #
-# Pin -> wire color -> signal mapping is from the project connector table
-# (../reference/J1850-BUS.md / ../PROJECT-BRIEF.md). Cavity ring colour encodes
+# Pin -> wire color -> signal mapping is from the project connector table in
+# ../reference/J1850-BUS.md (PROJECT-BRIEF.md has no connector table). Cavity ring colour encodes
 # the two-board destination: green = signal-board divider, purple = J1850 BUS,
 # red = power board, blue = common GND, tan = Phase 3, grey = unused.
 #
@@ -21,6 +21,9 @@
 # Regenerate: python3 im_connector_face.py  (writes .png + .svg)
 import matplotlib
 matplotlib.use("Agg")
+# Fixed salt + no Date stamp so a re-render with no source change is byte-identical
+# and real drift shows up in a plain git diff. Covers the matplotlib drawings only.
+matplotlib.rcParams["svg.hashsalt"] = "zeppl-schematics"
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, Rectangle, Circle
 import matplotlib.patheffects as pe
@@ -140,5 +143,5 @@ ax.text(18.1, 2.45,
 
 plt.tight_layout()
 fig.savefig("im_connector_face.png", dpi=150, facecolor="white", bbox_inches="tight")
-fig.savefig("im_connector_face.svg", facecolor="white", bbox_inches="tight")
+fig.savefig("im_connector_face.svg", facecolor="white", bbox_inches="tight", metadata={"Date": None})
 print("ok")

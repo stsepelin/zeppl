@@ -1,7 +1,9 @@
 # Stage 4 — step (3): J1850 transceiver on the bike (stock cluster attached)
 
 The last bench-free gate before removing the stock cluster. Goal: prove the
-**fabricated transceiver board** behaves on the *real* J1850 bus with the stock
+**fabricated transceiver board** (the `j1850_signal_board` v4 build —
+[`../../../docs/schematics/j1850_signal_board.md`](../../../docs/schematics/j1850_signal_board.md))
+behaves on the *real* J1850 bus with the stock
 Instrument Module (IM) still connected — RX decodes the live bus, TX emits the
 IM keep-alive set, and **no DTCs / warning lights** appear while both talk.
 
