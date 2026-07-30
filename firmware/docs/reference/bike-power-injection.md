@@ -1,5 +1,17 @@
 # Bike power injection — protected 12V → 5V chain
 
+> ## ⚠ CURRENT DEVIATION — F1 is NOT installed
+>
+> F1 (2 A blade, inline holder) is **specified** inline in the harness at the IM
+> pin-6 tap, upstream of the signal board. **It is not fitted.** The
+> `j1850_signal_board` (v4) is presently drawing from pin 6 **unfused**, backed
+> only by the vehicle's own IM-circuit fuse — which is sized to protect the
+> instrument module, not our conductor.
+>
+> **Blocking. Fit F1 before the next on-bike session, and unconditionally before
+> the power board is connected** — the power board raises the current on that same
+> conductor from ~1 mA to ~0.5 A continuous / ~1.0 A peak.
+
 How to power the Waveshare ESP32-P4-WIFI6-Touch-LCD-3.4C from a **mini560 buck
 (12V→5V)** off a 2009 Harley V-Rod, safely, with a USB-C data cable still
 connected. This is the first vehicle power tap for this project — the design is

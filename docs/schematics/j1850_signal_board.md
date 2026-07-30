@@ -36,6 +36,34 @@ bench bus pull-down is bench-only; on the bike the other nodes hold recessive
 The power chain lives on a **separate board**. This board only transits +12V/GND
 through to it.
 
+## As-built / in-service status
+
+**This board is fitted to the bike and is the transceiver that carries every
+logged on-bike result.** Owner-confirmed. Dates are given only where the log
+records them.
+
+| Gate | Status |
+|---|---|
+| DMM ring-out (pre-power) | **PASS** — date unrecorded |
+| Diode-test, all seven zeners (D1 + six Dz) | **PASS** — date unrecorded. Independently corroborated by the 312 clean sends below: a reversed D1 would forward-conduct and jam the bus, and nothing would decode. |
+| Bench self-sniff | **PASS 2026-07-19** — watchdog trigger + all four IM keep-alive frames CRC OK, tally 32/0 |
+| On-bike, engine-off / engine-on / two cold-start cranks | **PASS 2026-07-24** — 312 consecutive clean sends, 0 watchdog faults, stock cluster attached, no DTCs |
+| Ridden | **NOT YET** — the only remaining gate. See [`../../firmware/docs/rides/ride-3-plan.md`](../../firmware/docs/rides/ride-3-plan.md) |
+
+Current intermediate state:
+
+- **Transceiver half in service.** The six divider lanes are **populated but
+  unconnected at both ends** — no input wire at the screw terminals, no comb pin
+  wired to the P4. Nothing live is floating. Their GPIOs are still unassigned.
+- **F1 is NOT installed.** The board is tapped to IM pin 6 with no 2 A inline
+  fuse, backed only by the vehicle's own IM-circuit fuse — which is sized for the
+  instrument module, not for our conductor. See the deviation note in
+  [`../../firmware/docs/reference/bike-power-injection.md`](../../firmware/docs/reference/bike-power-injection.md).
+- **The 1 A rail joint test has not been run.** It is not yet meaningful: with
+  only the transceiver drawing, the row-1 rail carries ~1 mA. It becomes required
+  **before the power board is connected**, because that is when the same rail
+  first carries ~0.5 A continuous / ~1.0 A peak.
+
 ## 12V feed — DECIDED (split point S2)
 
 This is settled, not proposed. The row-1 rail **is** the split:

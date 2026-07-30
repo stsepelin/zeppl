@@ -1,5 +1,13 @@
 # BOM — protected bike-power chain (12V → 5V)
 
+> **⚠ CURRENT DEVIATION — F1 is NOT installed.** F1 is specified inline in the
+> harness at the IM pin-6 tap; it is not fitted. The `j1850_signal_board` (v4) is
+> drawing from pin 6 **unfused**, backed only by the vehicle's own IM-circuit fuse,
+> which is sized for the instrument module and not for our conductor. **Blocking:
+> fit F1 before the next on-bike session and unconditionally before the power board
+> is connected.** Detail:
+> [`../../firmware/docs/reference/bike-power-injection.md`](../../firmware/docs/reference/bike-power-injection.md).
+
 Bill of materials for the `bike-power-chain.py/.svg` drawing. Derived from the
 parts table in [`../../firmware/docs/reference/bike-power-injection.md`](../../firmware/docs/reference/bike-power-injection.md);
 keep the three in sync (drawn part = parts-table part = BOM row). Order is

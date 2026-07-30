@@ -58,14 +58,16 @@ The first phase that touches the bike. Full detail:
 | 4 | TX + IM replay | ✅ **on-bike validated (2026-07-24)** |
 | 5 | Companion: telemetry, GPS cal, DTC | ⏳ telemetry/GPS/config/fuel done; DTC read done, clear+view open |
 
-- **⏳ Board changeover — NOT DONE.** The transceiver currently fitted to the bike
-  is the [`j1850_perfboard`](../docs/schematics/j1850_perfboard.md) build (a
-  perfboard assembly; "fabricated PCB" in the logs is loose wording, user-confirmed
-  2026-07-29). The v4 [`j1850_signal_board`](../docs/schematics/j1850_signal_board.md)
-  — transceiver **plus** the six 12V dividers — is soldered but **not yet
-  installed**. Swapping it in is a distinct step: ring-out per
-  `j1850_signal_board.md`, assign + wiggle-test the six divider GPIOs, then
-  replace. Until then `j1850_perfboard.md` stays authoritative for the fitted board.
+- **Fitted board: [`j1850_signal_board`](../docs/schematics/j1850_signal_board.md)
+  (v4).** Transceiver **plus** the six 12V dividers on one 18×24 perfboard. It is
+  the board on the bike and the one that carries every logged on-bike result —
+  "fabricated PCB" in the logs means this board. **Its remaining gate is a ride**
+  ([`../firmware/docs/rides/ride-3-plan.md`](../firmware/docs/rides/ride-3-plan.md));
+  engine-off, engine-on and cold-start crank are all validated. The transceiver
+  half is in service; the divider lanes are populated but unconnected at both ends
+  and their GPIOs are unassigned. **F1 is not yet installed** — see the deviation
+  note in
+  [`../firmware/docs/reference/bike-power-injection.md`](../firmware/docs/reference/bike-power-injection.md).
 - **Stage 4 — on-bike validated (2026-07-24).** The fabricated PCB does full
   bidirectional J1850 on the live bike: **312 consecutive clean TX sends, 0
   watchdog faults** across engine-off/on + two cold-start cranks; stock cluster
