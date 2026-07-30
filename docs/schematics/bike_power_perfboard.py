@@ -76,7 +76,7 @@ ax.text(9.9,Y(4)-0.55,"band→",ha="center",fontsize=6,color="#8a2a12")
 # protected node
 flow(10,11,4)
 ax.add_patch(Circle((X(11),Y(4)),0.17,facecolor="#d1242f",edgecolor="#333",lw=0.8,zorder=6))
-ax.text(11,Y(4)+0.5,"protected 12V",ha="center",fontsize=7,color="#9a2233",fontweight="bold",path_effects=LBL)
+ax.text(11.15,Y(4)+1.15,"protected 12V",ha="center",fontsize=7,color="#9a2233",fontweight="bold",path_effects=LBL)
 # +12V tap up to signal board
 jumper(11,4,11,1,"#d1242f")
 ax.add_patch(Circle((X(11),Y(1)),0.2,facecolor="#f3c6c6",edgecolor="#cf222e",lw=1.1,zorder=6))
@@ -93,7 +93,12 @@ jumper(17,6,17,11,"#1f6feb")        # GO -> GND
 
 # D4 ideal-diode module
 flow(17,19,4,"#2da44e")
-module(19,3,21,6,"D4\nXL74610\nideal-diode",[(19,4,"IN"),(21,4,"OUT"),(19,6,"GND")])
+# D4's name is drawn ABOVE the body, not centred in it: the module is only two
+# columns wide, so a centred name overlapped its own IN/OUT pin labels and read
+# as "IN XL74610OUT". D4 is directional and this printout is the build reference.
+module(19,3,21,6,"",[(19,4,"IN"),(21,4,"OUT"),(19,6,"GND")])
+ax.text(20,Y(2)+0.2,"D4  XL74610\nideal-diode",ha="center",va="bottom",fontsize=8,
+        fontweight="bold",color="#26456e",zorder=7,path_effects=LBL)
 jumper(19,6,19,11,"#1f6feb")
 # VCC_5V node
 flow(21,22,4,"#2da44e")
