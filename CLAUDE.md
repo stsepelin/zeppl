@@ -87,5 +87,5 @@ palette, JBM Bold font discipline, etc.) are in `firmware/CLAUDE.md`.
   then re-add and re-commit. Never `git add` a hook-modified file blind: it will
   silently absorb any other unstaged change to the same file.
 - **`for f in *.py` in the `docs/schematics/` regenerate command rewrites all
-  nine SVGs** — always confirm which SVGs actually changed under normalization
+  eight SVGs** — always confirm which SVGs actually changed under normalization
   before staging.
