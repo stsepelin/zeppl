@@ -36,6 +36,7 @@ proxy development harness, full reversibility to stock.
 | **12-Pin Sealed Waterproof Connector** | [AliExpress](https://www.aliexpress.com/item/1005011688911042.html) | ~€23 | Pluggable interface between proxy box and DIY display. (BOM note: the DIY-side connector has since moved to a Deutsch DTM pair — see [`../../firmware/docs/PINS.md`](../../firmware/docs/PINS.md) / connector notes.) |
 | **Mini560 Buck Converter 5V (10pcs)** | [AliExpress](https://www.aliexpress.com/item/1005007167054073.html) | ~€4.24 | 12V→5V for the ESP32-P4 power. |
 | **Silicone Wire 18-22 AWG (Red/Black, 10m)** | [AliExpress](https://www.aliexpress.com/item/1005007007160447.html) | ~€3 | Heat-resistant, flexible — critical for motorcycle vibration. |
+| **Tinned solid bus wire** (bare, single-core) | *needs sourcing — no part recorded* | — | The perfboard rails. **Not a convenience jumper: a current-carrying part.** Under split point S2 the signal board's row-1 rail carries the full power-board current (~0.5 A cont / ~1.0 A peak on the 12V side), so it must be one continuous run, not solder bridges. Diameter is **not recorded anywhere in this repo** — neither the T-tap nor the silicone-wire rows above are this wire. `MEASURE: diameter = ___ mm` (micrometer); see `../schematics/j1850_signal_board.md` for the drop table and the 1 A joint test. |
 
 ### Prototyping supplies
 
@@ -93,7 +94,13 @@ Bike 12-pin                                                  │
        ┌───────────────────────┘                             │
        ├─ J1850 Data ──► DIY transceiver ──► P4 GPIO         │
        │                  (IRLZ44N + 2N2907A + zener)        │
-       ├─ +12V(sw) ─► protected chain ─► Mini560 ─► hdr 5V   │
+       ├─ +12V(sw) ─► F1 2A (harness) ─┬─► signal board rail   │
+       │                                │    ─► Q2 emitter     │
+       │                                │    (fused, NOT       │
+       │                                │     reverse-prot.)   │
+       │                                └─► power board: D2 ─►  │
+       │                                    TVS1 ─► Mini560 ─►  │
+       │                                    D4 ─► hdr 5V       │
        ├─ Ground ──► common GND                              │
        ├─ Turn L/R, High beam, Neutral, Oil ──► dividers ──► GPIO
        ├─ Fuel sender ──► P4 ADC pin                         │
@@ -198,6 +205,8 @@ flag (see ROADMAP Phase 3) — the divider hardware is identical ×6.
 │  │  DIY J1850 Transceiver (IRLZ44N + 2N2907A + 7.5V  │        │
 │  │  zener + resistors) ──► Pin 7 (J1850 data)         │        │
 │  │  6× voltage dividers (10kΩ + 2.7kΩ) for 2,3,4,6,9,10│       │
+│  │  (pin 6 also powers the board — lane G6 can only    │       │
+│  │   read "on". OPEN: see phases/phase3-cluster.md)    │       │
 │  │  Pins routed through screw terminals               │        │
 │  └──────────────────────────────────────────────────┘        │
 │  SCREW TERMINALS → P4 via dupont (dev) OR 12-pin conn (test)  │

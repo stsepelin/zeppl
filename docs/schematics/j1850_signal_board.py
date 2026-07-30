@@ -29,8 +29,19 @@ def res(c1,r1,c2,r2,label,color,loff=(0.24,0),fs=6.2):
     t=ax.text((X(c1)+X(c2))/2+loff[0],(Y(r1)+Y(r2))/2+loff[1],label,ha="left",va="center",fontsize=fs,fontweight="bold",color="#222",zorder=6); t.set_path_effects(LBL)
 def zen(c1,r1,c2,r2,label,loff=(0.2,0),fs=5.5):
     ax.plot([X(c1),X(c2)],[Y(r1),Y(r2)],color="#e3a008",lw=4.0,solid_capstyle="round",zorder=3); used(c1,r1);used(c2,r2)
-    ax.add_patch(Rectangle((X(c1)-0.14,Y(r1)-0.02),0.28,0.09,facecolor="#7a5c00",zorder=4))
-    t=ax.text((X(c1)+X(c2))/2+loff[0],(Y(r1)+Y(r2))/2,label,ha="left",va="center",fontsize=fs,fontweight="bold",color="#9a6700",zorder=6); t.set_path_effects(LBL)
+    # Cathode band always at the c1 end. Drawn ACROSS the body (so it reads as a
+    # band on either orientation) and above the pad (5) / node (6) circles: the
+    # earlier version sat at zorder 4 under node(4,9), which left D1 - the one
+    # part with no second polarity cue - with no visible band at all.
+    bx,by=X(c1),Y(r1)
+    if r1==r2:                                   # horizontal body -> tall narrow band
+        bx+= 0.22 if c2>c1 else -0.22
+        bw,bh=0.09,0.30
+    else:                                        # vertical body -> wide flat band
+        by+= 0.22 if Y(r2)>Y(r1) else -0.22
+        bw,bh=0.30,0.09
+    ax.add_patch(Rectangle((bx-bw/2,by-bh/2),bw,bh,facecolor="#7a5c00",zorder=7))
+    t=ax.text((X(c1)+X(c2))/2+loff[0],(Y(r1)+Y(r2))/2+loff[1],label,ha="left",va="center",fontsize=fs,fontweight="bold",color="#9a6700",zorder=6); t.set_path_effects(LBL)
 def jump(c1,r1,c2,r2,color="#b9b090",lw=1.4):
     ax.plot([X(c1),X(c2)],[Y(r1),Y(r2)],color=color,lw=lw,zorder=2.5,solid_capstyle="round"); used(c1,r1);used(c2,r2)
 def node(c,r,label="",dx=0.22,dy=0.2,col="#ffd33d"):
@@ -69,7 +80,8 @@ def screw(pins,title,tx,ty,vert=False,flip=False):
             ax.text(X(c),Y(r)+0.62,lab,ha="center",va="center",fontsize=4.4,fontweight="bold",color="white",zorder=9)
     ax.text(tx,ty,title,ha="center",fontsize=6.0,fontweight="bold",color="#3d3524",zorder=8)
 
-RED="#d1242f"; BLU="#1f6feb"; PUR="#7a5cff"; GRN="#1a7f37"; TEAL="#0a7ea4"; VIO="#6f42c1"; GPIO="#2f8f4e"
+RED="#d1242f"; BLU="#1f6feb"; PUR="#7a5cff"; GRN="#1a7f37"; TEAL="#0a7ea4"; VIO="#6f42c1"
+C_GPIO="#2f8f4e"   # COLOUR, not a pin number - see the comb_pins warning below
 
 # ===== rails =====
 bus(1,1,18,RED,"+12V",9,0.3)
@@ -114,9 +126,13 @@ ax.plot([X(18),X(18)],[Y(11),Y(24)],color=BLU,lw=4.2,solid_capstyle="round",zord
 # comb shell drawn as a light BACKGROUND (low zorder) so the RX/TX wires that meet the pins stay visible
 ax.add_patch(FancyBboxPatch((X(15)-0.42,Y(24)-0.45),0.84,(Y(6)-Y(24))+0.9,boxstyle="round,pad=0.02,rounding_size=0.1",
     facecolor="#efeaff",edgecolor=VIO,lw=1.4,zorder=1.3))
+# WARNING: the integers here are PERFBOARD ROWS, not GPIO numbers, and C_GPIO is
+# a colour. Rows 20/22/24 coincide with real claimed pins (20 = J1850 RX,
+# 22 = reserved fuel ADC, 24 = J1850 TX) - do not read them as assignments. The
+# six divider GPIOs are unassigned; see PINS.md and j1850_signal_board.md.
 comb_pins=[("RX·GP20",6,GRN),("TX",8,PUR),("GND",11,BLU),
-           ("t-L",12,GPIO),("t-R",14,GPIO),("beam",16,GPIO),
-           ("neu",20,GPIO),("oil",22,GPIO),("ign",24,GPIO)]
+           ("t-L",12,C_GPIO),("t-R",14,C_GPIO),("beam",16,C_GPIO),
+           ("neu",20,C_GPIO),("oil",22,C_GPIO),("ign",24,C_GPIO)]
 jump(12,8,15,8,PUR,1.5)                             # TX node(12,8) -> comb(15,8) STRAIGHT; (13,8) passes UNDER R2 body
 jump(13,6,15,6,GRN,1.5)                             # RX NODE_B(13,6) -> comb(15,6) STRAIGHT (no bend)
 for lab,r,co in comb_pins:
@@ -141,9 +157,9 @@ def lane(g,rr,gap):
     jump(1,rr,8,rr,"#2da44e",1.2)                      # thin input wire: screw -> Ra
     res(8,rr,11,rr,"10k",TEAL,loff=(0,-0.55),fs=4.2)   # Ra 10k, node at col11
     node(11,rr)
-    jump(11,rr,15,rr,GPIO,1.4)                          # node -> comb pin (output, col15)
+    jump(11,rr,15,rr,C_GPIO,1.4)                        # node -> comb pin (output, col15)
     jump(15,rr,16,rr,"#8a6d3b",1.1)                     # comb pin -> zener via a short jumper (like the Rb; keeps the pin hole free)
-    zen(16,rr,18,rr,"",fs=4)                            # 3V3 clamp: -> GND rail(18)
+    zen(16,rr,18,rr,"3V3",loff=(-0.5,0.34),fs=4)        # 3V3 clamp: band/cathode at col16, anode -> GND rail(18)
     jump(11,rr,11,gap,TEAL,1.1)                         # node -> gap row
     res(11,gap,14,gap,"2k7",TEAL,loff=(0,0.42),fs=3.8) # Rb HORIZONTAL in the gap row (body clear of the comb col)
     jump(14,gap,18,gap,BLU,1.1)                         # Rb -> right GND rail (thin wire under the header)

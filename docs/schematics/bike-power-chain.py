@@ -1,5 +1,15 @@
 # Protected bike-power chain: 12V (V-Rod, ignition-switched) -> mini560 buck
-# -> board 40-pin header 5V. Power injects at the HEADER (soldered feed, USB-C
+# -> board 40-pin header 5V.
+#
+# 12V topology (settled, split point S2 - this file is the source of truth):
+#   IM pin 6 -> F1 2A inline in the HARNESS -> signal board PWR/BUS (1,3)
+#   -> signal board row-1 rail [Q2 emitter taps off here] -> transit (18,2)
+#   -> power board IN -> D2 -> TVS1 -> mini560 -> D4 -> P4 header 5V
+# The signal board's rail IS the split. The power board sources nothing back to
+# it, and F1 is not a part of either board. Because the signal board sits
+# upstream of D2, its rail is fused but NOT reverse-protected.
+#
+# Power injects at the HEADER (soldered feed, USB-C
 # left free for data). The header 5V sits on the board's common VCC_5V rail
 # AFTER the board's on-board USB reverse protection, so it gives the mini560
 # NO reverse block -- D4 adds that. USB-C data can stay plugged in: the board's
@@ -13,10 +23,25 @@ with schemdraw.Drawing(file="bike-power-chain.svg", show=False) as d:
     d.config(unit=2.0, fontsize=10)
     GNDY = -3.2
 
-    # ===== +12V input protection (top rail, left -> right) =====
+    # ===== harness: F1 at the tap, upstream of BOTH boards (not a board part) =====
     start = d.add(elm.Dot(open=True)
                   .label("+12V bike\n(IM pin 6 Grey,\nignition-switched)", loc="left"))
-    d.add(elm.Fuse().right().label("F1  2A\nblade fuse"))
+    d.add(elm.Fuse().right().label("F1  2A blade\n(harness, at the tap)"))
+
+    # ===== signal board: the row-1 rail IS the split (S2) =====
+    # Everything downstream of F1 is fused; only what is downstream of D2 is
+    # reverse-protected. The signal board sits BEFORE D2, so its rail (and Q2's
+    # emitter) is fused but NOT reverse-protected. Drawn so the split is visible:
+    # this file is the source of truth for the 12V direction.
+    split = d.add(elm.Dot())
+    d.add(elm.Line().up().at(split.center).length(2.6))
+    d.add(elm.Dot(open=True).label(
+        "to SIGNAL BOARD row-1 rail\n"
+        "-> Q2 emitter (high-side TX)\n"
+        "FUSED, NOT reverse-protected", loc="right", fontsize=9))
+    d.add(elm.Line().right().at(split.center).length(1.5))
+
+    # ===== power board: fed BY the signal board's transit terminal (18,2) =====
     d.add(elm.Schottky().right().label("D2  SB560\nreverse-polarity"))
     nA = d.add(elm.Dot())
 
@@ -71,8 +96,10 @@ with schemdraw.Drawing(file="bike-power-chain.svg", show=False) as d:
 
     # ===== captions (self-contained bench printout) =====
     d.add(elm.Label().at((1.5, -5.6)).label(
-        "Order matters: fuse first (protects the whole run), then reverse-polarity, "
-        "then the load-dump TVS on the mini560 input.\n"
+        "Order matters: F1 first, inline in the HARNESS at the tap (protects the whole run, both branches), "
+        "then the signal-board rail, then reverse-polarity, then the load-dump TVS on the mini560 input.\n"
+        "The signal board is upstream of D2: its rail and Q2's emitter are FUSED but NOT reverse-protected. "
+        "Reversed feed polarity reaches the signal board unprotected - key the harness connector.\n"
         "Board draws ~1.0 A continuous / ~2.0 A peak at 5V (~1 A at 12V). "
         "Everything rated with >=2x margin.\n"
         "TVS1 P6KE16A (axial): 16V standoff (stays off below the 15V charging spike), ~26V clamp "

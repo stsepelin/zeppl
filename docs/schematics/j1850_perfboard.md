@@ -1,5 +1,17 @@
 # J1850 transceiver — perfboard build (5x7 cm, pad-per-hole, bike build)
 
+> **Superseded as a DESIGN — still the board on the bike.**
+> - Superseded **only** as the design for the permanent build, by
+>   [`j1850_signal_board.md`](j1850_signal_board.md) (v4), which is a superset of
+>   this circuit.
+> - **This is the board physically fitted to the bike as of 2026-07-24** — the
+>   standard-VPW high-side TX was validated on it
+>   ([`../../firmware/docs/rides/stage4-tx-bench-log.md`](../../firmware/docs/rides/stage4-tx-bench-log.md)).
+> - **The netlist and ring-out table below remain authoritative for that board.**
+>   Use them if you are working on the fitted transceiver.
+> - **The changeover to the v4 signal board has NOT happened.** It is a distinct,
+>   not-yet-done step tracked in [`../ROADMAP.md`](../ROADMAP.md) (Phase 3).
+
 Soldering map for the validated bench circuit (bare-divider RX + high-side TX)
 transferred to a 5x7 cm pad-per-hole perfboard. Top / component-side view.
 Coordinates are **(column, row)**, row 1 at the top. Bare-wire buses:

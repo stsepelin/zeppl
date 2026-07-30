@@ -206,6 +206,12 @@ committed on its own (see the `fix(j1850)` commit on this branch).
 
 #### PCB re-test (2026-07-19) — Step 2 GREEN on the fabricated board
 
+> **Wording note (added later, user-confirmed 2026-07-29):** "fabricated PCB"
+> below is loose phrasing for a **perfboard assembly**, not a fab-house PCB. It is
+> the [`j1850_perfboard`](../../../docs/schematics/j1850_perfboard.md) build.
+> Confirmed by the person who built it. The original phrasing is left in place as
+> history rather than rewritten.
+
 Re-ran Step 2 on the **fabricated PCB** (replacing the breadboard) — same
 selftest firmware (`j1850_tx_reset()` fix in), fresh hard-reset, verbatim:
 ```

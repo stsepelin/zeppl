@@ -1,5 +1,14 @@
 # 12V discrete-signal divider (x6: turn L/R, high beam, neutral, oil
-# pressure, ignition sense) — Phase 3. Sized for the real electrical
+# pressure, ignition sense) — Phase 3.
+#
+# OPEN — pin 6 does double duty: the label below lists pins 2/3/4/6/9/10, but
+# under split point S2 pin 6 is the board's power feed, so lane G6 ("ignition")
+# can only ever read "on". Left listed as six deliberately; trimming it to five
+# would pick an option. See ../phases/phase3-cluster.md ("OPEN: pin 6 does
+# double duty"). The drawn label is unchanged on purpose - editing it would
+# regenerate the .svg.
+#
+# Sized for the real electrical
 # system: "12V" is ~14.4V with the engine running; 10k/2.7k gives 3.06V
 # at 14.4V and 2.55V at 12V. The optional 3.3V zener is belt-and-braces.
 # Regenerate: see README.md in this directory.

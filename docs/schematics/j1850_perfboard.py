@@ -1,4 +1,15 @@
 # J1850 transceiver perfboard layout (Phase 2 Stage 4 bench -> bike board).
+#
+# SUPERSEDED AS A DESIGN, STILL THE BOARD ON THE BIKE.
+#   - Superseded ONLY as the design for the permanent build, by
+#     j1850_signal_board (v4), which is a superset of this circuit.
+#   - This is the board PHYSICALLY FITTED TO THE BIKE as of 2026-07-24 - the
+#     standard-VPW high-side TX was validated on it (docs/rides/
+#     stage4-tx-bench-log.md, ROADMAP Phase 2 Stage 4).
+#   - Its netlist + ring-out table in j1850_perfboard.md remain AUTHORITATIVE
+#     FOR THAT BOARD.
+#   - The changeover to the v4 signal board HAS NOT HAPPENED. It is a distinct,
+#     not-yet-done step tracked in ../ROADMAP.md (Phase 3).
 # Physical pad-per-hole placement of the validated bench circuit (RX bare
 # divider + high-side TX) on a 5x7 cm perfboard. Companion to the schemdraw
 # schematics j1850_tx.py / j1850_rx.py, which stay the electrical source of

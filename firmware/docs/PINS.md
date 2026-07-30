@@ -41,6 +41,7 @@ GND 47 52 48 32 51 24 GND 50  2  3 3V3 28 20 21 GND 29 SCL SDA 3V3
 |---|---|---|
 | 20 | J1850 RX (divider node) | `CONFIG_VROD_J1850_RX_GPIO` |
 | **22** | **RESERVED: fuel-level sender ADC (Phase 3)** | — |
+| **24** | **J1850 TX** (Q1 gate via R3) | `CONFIG_VROD_J1850_TX_GPIO` (`main/Kconfig.projbuild:301` default 24, `sdkconfig:1353`); **on-bike validated 2026-07-24** |
 
 GPIO 21 is the **GPS NMEA RX** again (`VROD_GPS_RX_GPIO`) — the optional NEO-6M
 map-position module reads on it when `CONFIG_VROD_GPS_UART` is enabled (see
@@ -67,10 +68,15 @@ Details in the roadmap's Phase 3 fuel-sender caveat.)
 
 ## Free on the header (Phase 3 discrete inputs, etc.)
 
-2, 3, 4, 5, 24, 25, 28, 29, 30, 31, 32, 34, 36, 46, 47, 48, 49, 50,
+2, 3, 4, 5, 25, 28, 29, 30, 31, 32, 34, 36, 46, 47, 48, 49, 50,
 51, 52 (21 is GPS RX again when the NEO-6M module is fitted) — plenty for the six 12V discrete
 dividers (turn L/R, high beam, neutral, oil, ignition) plus the VSS
 pulse input.
+
+**GPIO 24 was removed from this pool** — it is J1850 TX (claimed above). The six
+divider GPIOs are still **unassigned**: pick them from this pool, confirm each
+physically with the wiggle test below, then record them here and in
+`../../docs/schematics/j1850_signal_board.md`.
 
 ## Physically confirming a pin
 

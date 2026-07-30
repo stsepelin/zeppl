@@ -58,6 +58,14 @@ The first phase that touches the bike. Full detail:
 | 4 | TX + IM replay | ✅ **on-bike validated (2026-07-24)** |
 | 5 | Companion: telemetry, GPS cal, DTC | ⏳ telemetry/GPS/config/fuel done; DTC read done, clear+view open |
 
+- **⏳ Board changeover — NOT DONE.** The transceiver currently fitted to the bike
+  is the [`j1850_perfboard`](../docs/schematics/j1850_perfboard.md) build (a
+  perfboard assembly; "fabricated PCB" in the logs is loose wording, user-confirmed
+  2026-07-29). The v4 [`j1850_signal_board`](../docs/schematics/j1850_signal_board.md)
+  — transceiver **plus** the six 12V dividers — is soldered but **not yet
+  installed**. Swapping it in is a distinct step: ring-out per
+  `j1850_signal_board.md`, assign + wiggle-test the six divider GPIOs, then
+  replace. Until then `j1850_perfboard.md` stays authoritative for the fitted board.
 - **Stage 4 — on-bike validated (2026-07-24).** The fabricated PCB does full
   bidirectional J1850 on the live bike: **312 consecutive clean TX sends, 0
   watchdog faults** across engine-off/on + two cold-start cranks; stock cluster

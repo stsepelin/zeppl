@@ -1,7 +1,9 @@
 # Bike power board: perfboard layout of the protected 12V->5V chain that
-# bike-power-chain.py draws schematically (fuse -> reverse-polarity Schottky
-# -> load-dump TVS -> mini560 buck @5.0V -> XL74610 ideal-diode -> 5V to the
-# board). Separate board from the signal board (switcher noise/current). Parts
+# bike-power-chain.py draws schematically (reverse-polarity Schottky ->
+# load-dump TVS -> mini560 buck @5.0V -> XL74610 ideal-diode -> 5V to the
+# board). Its 12V input is fed BY the signal board's transit terminal (split
+# point S2); F1 is inline in the harness, not on this board, and this board
+# sources nothing back. Separate board from the signal board (switcher noise/current). Parts
 # + ratings in bike-power-chain.bom.md / firmware/docs/reference/bike-power-injection.md.
 # matplotlib, NOT schemdraw. Regenerate: python3 bike_power_perfboard.py (needs matplotlib).
 import matplotlib
@@ -63,24 +65,24 @@ def terminal(c1,r1,c2,r2,name,pins):
 # ground bus
 busline(11,2,23,"#1f6feb","GND bus (bare wire)",12,-0.35)
 
-# IN screw terminal (2p): +12V + GND
-terminal(1,3,2,7,"IN 2p (harness)",[(2,4,"12V","#d1242f"),(2,6,"GND","#1f6feb")])
-ax.text(1.6,Y(8)+0.1,"+12V bike (IM p6)\nGND chassis (IM p5)",ha="left",va="top",fontsize=6.8,color="#666")
+# IN screw terminal (2p): +12V + GND, fed BY the signal board (split point S2)
+terminal(1,3,2,7,"IN 2p (from signal board)",[(2,4,"12V","#d1242f"),(2,6,"GND","#1f6feb")])
+ax.text(1.6,Y(8)+0.1,"IN from the SIGNAL board\ntransit (18,2)/(18,4).\nF1 2A: inline in the HARNESS,\nnot on this board.",
+        ha="left",va="top",fontsize=6.3,color="#666")
 jumper(2,6,2,11,"#1f6feb")           # IN GND -> GND bus
 
-# F1 fuse
-flow(2,4,4); part(4,4,6,4,"F1 2A","#e3a008",loff=(-0.1,0.55),fs=7.5)
+# F1 is NOT a part of this board: it is a 2A blade fuse inline in the harness at
+# the 12V tap, upstream of the signal board. This board's first element is D2.
+flow(2,8,4)
 # D2 reverse-polarity schottky (band/cathode -> right/output)
-flow(6,8,4); part(8,4,10,4,"D2 SB560","#cf4b2a",loff=(-0.4,0.55),fs=7.5)
+part(8,4,10,4,"D2 SB560","#cf4b2a",loff=(-0.4,0.55),fs=7.5)
 ax.text(9.9,Y(4)-0.55,"band→",ha="center",fontsize=6,color="#8a2a12")
 # protected node
 flow(10,11,4)
 ax.add_patch(Circle((X(11),Y(4)),0.17,facecolor="#d1242f",edgecolor="#333",lw=0.8,zorder=6))
 ax.text(11.15,Y(4)+1.15,"protected 12V",ha="center",fontsize=7,color="#9a2233",fontweight="bold",path_effects=LBL)
-# +12V tap up to signal board
-jumper(11,4,11,1,"#d1242f")
-ax.add_patch(Circle((X(11),Y(1)),0.2,facecolor="#f3c6c6",edgecolor="#cf222e",lw=1.1,zorder=6))
-ax.text(11.3,Y(1),"→ +12V to SIGNAL board (transceiver)",ha="left",va="center",fontsize=7.5,fontweight="bold",color="#9a2233")
+# This board sources nothing: under S2 the signal board feeds it, not the other
+# way round. There is no +12V output back to the signal board.
 # TVS1 down to GND (band/cathode at top -> +rail)
 part(11,6,11,9,"TVS1\nP6KE16A","#e3a008",loff=(0.25,0),fs=6.8)
 jumper(11,4,11,6); jumper(11,9,11,11,"#1f6feb")
@@ -113,7 +115,7 @@ ax.text(23,Y(8)+0.1,"→ Waveshare\nJ8 pin40 = 5V\n(powers all of P4)",ha="cente
 ax.text(12.5,1.75,"Zeppl power board — protected 12V→5V (separate board, same perfboard style)",
         ha="center",fontsize=12.5,fontweight="bold")
 ax.text(12.5,-12.9,
- "Order: fuse → reverse-polarity → load-dump TVS → buck → output reverse-block.  ~1.0A cont/~2.0A peak @5V; parts ≥2×.  "
+ "Order: F1 (inline in the harness, upstream) → reverse-polarity → load-dump TVS → buck → output reverse-block.  ~1.0A cont/~2.0A peak @5V; parts ≥2×.  "
  "TVS P6KE16A 16V standoff/~26V clamp.  Set mini560 to 5.0V for XL74610 (~0V drop); fallback D4=SS34 → 5.35V, verify ~5.0V under load.",
  ha="center",fontsize=7.5,color="#666")
 

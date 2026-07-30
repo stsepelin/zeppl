@@ -55,7 +55,7 @@ margin on these.
 
 | Ref | Part | Rating | Package | Why this rating |
 |---|---|---|---|---|
-| **F1** | Automotive **blade fuse 2 A** + inline holder | 2 A, 32 V | ATM/mini | ~1 A peak on 12V → 2 A = 2× margin. Protects the **feed wiring** against a short (bike battery sources huge fault current), not just the load. Place at the tap. Blade fuses are slightly slow → tolerate the mini560 inrush. Bump to 3 A only if inrush nuisance-blows. |
+| **F1** *(HARNESS part — not on either board)* | Automotive **blade fuse 2 A** + inline holder | 2 A, 32 V | ATM/mini | ~1 A peak on 12V → 2 A = 2× margin. Protects the **feed wiring** against a short (bike battery sources huge fault current), not just the load. **Inline in the harness at the tap, upstream of the signal board** — it fuses both branches (see `:138`). Blade fuses are slightly slow → tolerate the mini560 inrush. Bump to 3 A only if inrush nuisance-blows. |
 | **D2** | **Schottky, series reverse-polarity** — SB560 (60 V/5 A) or SS54 (40 V/5 A) | ≥40 V, ≥3 A | DO-201AD / SMC | Blocks a swapped +12V/GND at the mini560 input. ≥3 A ≫ 1 A load; 60 V (SB560) adds load-dump headroom on this part. ~0.4 V drop / ~0.4 W @ 1 A on the 12V side = negligible. **Alt (low-loss): a P-channel MOSFET** (see below). |
 | **TVS1** | **TVS, unidirectional — P6KE16A** (across the mini560 12V input) | 16 V standoff, ~26 V clamp @ I_PP, **600 W** | axial (DO-15) | Clamps load-dump / regulator spikes **below the mini560's ~28 V max**. Leaded/axial so it mounts in the potted flying module (the SMD SMBJ was replaced by this through-hole part). 16 V standoff stays off through the ~15 V charging spike; ~26 V clamp keeps a safe margin under 28 V. Higher-energy axial alternative: **1.5KE16A** (1500 W) — note that either way the ~26 V clamp sits only ~2 V under the mini560 ~28 V abs-max, so it's a deliberate margin call, not the drawn part. |
 | **mini560** | MP1584-class **12V→5V buck module**, output trimmed | Vin 4.5–28 V, Iout ~3 A | module | Set the output so the board sees ~5.0 V **after D4** (below). |
@@ -102,8 +102,14 @@ margin on these.
 Do this on a **bench PSU**, never the bike, with the board **disconnected** until
 the very end.
 
+> **F1 is a harness part, not a board part** — it sits inline at the 12V tap,
+> upstream of the signal board (see `:138` and
+> `../../../docs/schematics/bike-power-chain.py`). The board test below therefore
+> starts at **D2**. Feed through F1 as well if it is already made up, but the
+> board under test begins at D2 and nothing here validates F1.
+
 1. **Build the chain minus the board.** Bench PSU → 12.0 V, current-limit ~1.5 A,
-   into F1.
+   into **D2** (the board's first element).
 2. **Trim the mini560.** Measure the mini560 output (before D4) with a DMM;
    adjust the trimpot to **5.0 V** (the XL74610 ideal-diode path — its drop is
    negligible). *(SS34 fallback: 5.35 V instead.)*
@@ -116,8 +122,16 @@ the very end.
    current, so confirm the 5.35 V setpoint actually lands at ~5.0 V at the board
    at ~1–1.5 A and re-trim if it's off; ramp briefly to ~2 A and re-check.)*
    Check D2 / D4 / mini560 for excess heat.
-5. **Reverse-polarity test.** Swap the PSU leads at F1 — output must stay **0 V**
-   (D2 blocks), no smoke, fuse intact. Restore polarity.
+5. **Reverse-polarity test — this is a D2 test.** Swap the PSU leads **at the
+   board's 12V input terminal, immediately ahead of D2** (not at F1 — F1 is
+   upstream in the harness and is not part of this board). Output must stay
+   **0 V** (D2 blocks), no smoke. Restore polarity.
+
+   > **What this test does NOT cover:** under split point S2 the **signal board
+   > sits upstream of D2**, so it is **fused but NOT reverse-protected**. A
+   > reversed feed reaches the signal board's row-1 rail and Q2's emitter with no
+   > protection at all. Accepted trade-off — key the harness connector and verify
+   > polarity with a DMM before every connection.
 6. **Load-dump test (optional, careful).** Briefly step the input to ~20 V — the
    mini560 input node must clamp (TVS1) and stay < 28 V; the 5 V output holds.
    Skip if unsure; TVS1 is a static safety net regardless.

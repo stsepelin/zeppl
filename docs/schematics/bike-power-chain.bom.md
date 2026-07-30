@@ -7,7 +7,7 @@ bike-side to board.
 
 | Ref | Part | Value / Rating | Package | Qty | Notes (purpose) |
 |---|---|---|---|---|---|
-| F1 | Automotive blade fuse + inline holder | 2 A, 32 V | ATM / mini blade | 1 | Protects the feed wiring against a short at the tap; blade fuse is slightly slow so it tolerates the mini560 inrush. Bump to 3 A only if inrush nuisance-blows. |
+| F1 **(HARNESS — do not solder to the power board)** | Automotive blade fuse + inline holder | 2 A, 32 V | ATM / mini blade | 1 | Protects the feed wiring against a short at the tap; blade fuse is slightly slow so it tolerates the mini560 inrush. Bump to 3 A only if inrush nuisance-blows. **Inline in the harness at the 12V tap, upstream of the signal board** — it fuses both branches. The row stays in this BOM because F1 is the chain's first part and still has to be bought; it is simply not a board component. |
 | D2 | Schottky, series reverse-polarity — SB560 (60 V/5 A) or SS54 (40 V/5 A) | ≥40 V, ≥3 A | DO-201AD / SMC | 1 | Blocks a swapped +12V/GND at the mini560 input. Low-loss alternative: a P-channel MOSFET. |
 | TVS1 | TVS, unidirectional — P6KE16A | 16 V standoff, ~26 V clamp @ I_PP, 600 W | axial (DO-15) | 1 | Load-dump / spike clamp across the mini560 12V input; ~26 V clamp sits ~2 V under the mini560 ~28 V abs-max. Axial/leaded for the potted flying module. Higher-energy alternative: 1.5KE16A (1500 W). |
 | mini560 | MP1584-class 12V→5V buck module | Vin 4.5–28 V, Iout ~3 A, **set 5.0 V** | module | 1 | Steps 12V down to 5.0 V. Trim to exactly 5.0 V for the XL74610 ideal-diode path (no drop compensation). |
