@@ -45,19 +45,17 @@ and a `.png`; only the `.py` + `.svg` are committed, the `.png` is gitignored
 
 ## Conventions
 
-- Component designators are **NOT** currently stable across drawings. Two
-  collisions exist, and both are live on the v4 signal board, which carries one
-  part from each family:
-  - **R2** = 10k/**4.7k** RX divider (`j1850_rx.py`) vs 10k/**2.7k** discrete
-    divider (`discrete_divider.py`).
-  - **D1** = **7.5 V** BUS clamp (`j1850_rx.py`) vs **3.3 V** discrete clamp
-    (`discrete_divider.py`).
+- Component designators are stable across drawings, in **two families** that
+  never share a name. The v4 signal board carries parts from both, so read the
+  family, not just the letter:
+  - **J1850 front end** — `R1` 10k / `R2` 4.7k divider, `D1` 7.5 V BUS clamp,
+    plus `R3` 1k, `R4`/`R6` 10k, `R5` 100 Ω, `Rg` 10k, `Q1` IRLZ44N, `Q2`
+    2N2907A. Match the prose in `../reference/J1850-BUS.md`.
+  - **12V discrete divider** (×6) — `Ra` 10k / `Rb` 2.7k, `Dz` 3.3 V clamp.
 
-  Fitting a 3.3 V zener in the D1 position would clamp the **bike's J1850 bus**
-  at 3.3 V. Until this is renumbered, always read a designator together with the
-  drawing it came from; `j1850_signal_board.md`'s placement table distinguishes
-  the two positions unambiguously. Transceiver designators (R1, R3–R6, Rg, Q1,
-  Q2) do match the prose in `../reference/J1850-BUS.md`.
+  The distinction is load-bearing: a 3.3 V `Dz` fitted in the `D1` position would
+  clamp the **bike's J1850 bus** at 3.3 V. `j1850_signal_board.md`'s placement
+  table lists both families with their holes.
 - Values that came out of analysis carry their reasoning as a caption
   inside the drawing (e.g. the 14.4V charging-voltage math), so a
   printout taken to the bench is self-contained.

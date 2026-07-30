@@ -20,14 +20,14 @@ with schemdraw.Drawing(file="discrete_divider.svg", show=False) as d:
 
     d.add(elm.Dot(open=True).label("12V discrete signal\n(harness pins 2/3/4/6/9/10)", loc="left"))
     d.add(elm.Line().right().length(1))
-    d.add(elm.Resistor().right().label("R1\n10k"))
+    d.add(elm.Resistor().right().label("Ra\n10k"))
     node = d.add(elm.Dot())
-    d.add(elm.Resistor().down().at(node.center).label("R2\n2.7k", loc="bottom"))
+    d.add(elm.Resistor().down().at(node.center).label("Rb\n2.7k", loc="bottom"))
     d.add(elm.Ground())
 
-    # Optional clamp in parallel with R2 (cathode up).
+    # Optional clamp in parallel with Rb (cathode up).
     d.add(elm.Line().right().at(node.center).length(1.2))
-    z = d.add(elm.Zener().down().reverse().label("D1  3.3V\n(optional)", loc="bottom"))
+    z = d.add(elm.Zener().down().reverse().label("Dz  3.3V\n(optional)", loc="bottom"))
     d.add(elm.Ground())
 
     d.add(elm.Line().up().at(node.center).length(1))
